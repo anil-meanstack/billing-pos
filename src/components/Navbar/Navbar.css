@@ -1,0 +1,203 @@
+.header {
+  /* background: linear-gradient(135deg, #f59e0b, #d97706); */
+  /* background: #fff; */
+  /* color: #000; */
+  /* border-bottom: 1px solid #e5e7eb; */
+  /* position: sticky; */
+  /* top: 0; */
+  /* z-index: 1000; */
+  /* box-shadow: 0 2px 6px rgba(0,0,0,0.04); */
+  grid-column: 1 / -1;
+  background: #fff;
+  border-bottom: 1px solid var(--bd);
+  box-shadow: var(--sm);
+  display: flex;
+  align-items: center;
+  padding: 0 22px;
+  gap: 14px;
+  z-index: 20;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 17px;
+  font-weight: 600;
+  color: #1a1916;
+  letter-spacing: -.4px;
+  flex-shrink: 0;
+}
+
+/* Restaurant Name */
+.restaurant-name {
+  font-weight: 700;
+  font-size: 17px;
+  /* color: #fff; */
+}
+
+.lm {
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  background: #e05c20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(224, 92, 32, .35);
+}
+
+/* Icons */
+.icon-shop,
+.icon-refresh,
+.icon-logout {
+  font-size: 17px;
+  /* color: #ffff; */
+  transition: 0.2s ease;
+}
+
+.icon-shop:hover,
+.icon-refresh:hover,
+.icon-logout:hover {
+  color: #FC8019;
+}
+
+/* Login Button */
+.login-btn {
+  background: #FC8019;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 20px;
+  font-weight: 600;
+  transition: 0.2s ease;
+}
+
+.login-btn:hover {
+  background: #e66f10;
+}
+
+/* User Badge */
+.user-badge {
+  background: #ffff;
+  color: #171826;
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.user-badge i {
+  color: #b84416;
+}
+
+/* Remove bottom bar style */
+.bottom-bar {
+  display: none;
+}
+
+
+.pos-header {
+  height: 60px;
+  background: #ffffff;
+  border-bottom: 1px solid #eee;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  /* z-index: 20; */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, .07), 0 1px 2px rgba(0, 0, 0, .04);
+}
+
+/* LEFT */
+.pos-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.logo-box {
+  width: 32px;
+  height: 32px;
+  background: #e05c20;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+}
+
+.brand {
+  font-weight: 600;
+  font-size: 16px;
+  color: #111;
+}
+
+.brand span {
+  color: #e05c20;
+}
+
+/* STATUS */
+.status {
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+  gap: 6px;
+  color: #333;
+  
+}
+
+.dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.green {
+  background: #22c55e;
+}
+
+.red {
+  background: #ef4444;
+}
+
+/* RIGHT */
+.pos-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.time {
+  font-size: 13px;
+  color: #555;
+}
+
+.shift {
+  background: #e0edf8;
+    color: #164e8e;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* USER */
+.user {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e05c20;
+  color: #fff;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}

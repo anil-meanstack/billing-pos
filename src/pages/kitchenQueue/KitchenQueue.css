@@ -1,0 +1,276 @@
+body {
+    background: #f8f7f4;
+    font-family: sans-serif;
+}
+
+.kitchan-heading h2 {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a1916;
+    letter-spacing: -.3px;
+}
+
+.kitchan-heading h6 {
+    font-size: 13px;
+    color: #a09d95;
+    margin-top: 2px;
+}
+
+/* GRID */
+.columns-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+}
+
+.column {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid #eee;
+}
+
+.column-header {
+    padding: 14px;
+    font-weight: 600;
+    font-size: 14px;
+    text-transform: uppercase;
+}
+
+.new-header {
+    background: #FFF6F6;
+    color: #c0392b;
+    border-radius: 16px 16px 0px 0px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+}
+
+.preparing-header {
+    background: #f0f5ff;
+    color: #164e8e;
+    border-radius: 16px 16px 0px 0px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ready-header {
+    background: #f0f8ee;
+    color: #2d6010;
+    border-radius: 16px 16px 0px 0px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.counts {
+    background: #77777724;
+    padding: 1px 0px 0px 8px;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+}
+
+.column-content {
+    padding: 12px;
+    max-height: 70vh;
+    overflow-y: auto;
+}
+
+.empty-state {
+    text-align: center;
+    color: #999;
+    padding: 20px;
+}
+
+/* CARD */
+.order-card {
+    background: #f6f4ef !important;
+    border-radius: 16px;
+    border: 1px solid #eee;
+    padding: 14px;
+    margin-bottom: 14px;
+}
+
+.status-card {
+    flex: 1 1;
+    background: #fff;
+    border-radius: 16px;
+    padding: 10px 18px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    min-width: 70px;
+    text-align: center;
+}
+
+/* Number Circle */
+.count {
+    width: 44px;
+    height: 44px;
+    margin: 0 auto 0px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 18px;
+}
+
+/* Labels */
+.label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #666;
+    letter-spacing: 0.5px;
+}
+
+/* Colors */
+.status-card.new .count {
+    color: #d62828;
+}
+
+.status-card.preparing .count {
+    color: #1d4ed8;
+}
+
+.status-card.readys .count {
+    color: #2b9348;
+}
+
+/* TOP */
+.order-top {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.order-type {
+    background: #f3f3f3;
+    padding: 6px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+}
+
+.order-time {
+    font-size: 11px;
+    text-align: right;
+}
+
+.order-time strong {
+    display: block;
+    font-size: 14px;
+}
+
+/* USER */
+.order-user {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.avatar {
+    width: 34px;
+    height: 34px;
+    background: #f4c7ab;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* META */
+.order-meta {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    margin-bottom: 10px;
+}
+
+.priority {
+    background: #fff3cd;
+    padding: 3px 6px;
+    border-radius: 6px;
+}
+
+.waiting {
+    margin-left: auto;
+    color: #000;
+    background: #817a682b;
+    padding: 2px 4px;
+    border-radius: 6px;
+}
+
+/* ITEMS */
+.items-list {
+    max-height: 200px;
+    overflow-y: auto;
+    margin-bottom: 10px;
+    /* background-color: #fff; */
+    padding: 6px;
+    /* border-radius: 8px; */
+}
+
+.item-card {
+    display: flex;
+    justify-content: space-between;
+    border: 1px solid #eee;
+    border-radius: 10px;
+    padding: 8px;
+    margin-bottom: 6px;
+    background-color: #ffff;
+    align-items: center;
+}
+.item-title{
+    font-size: 12px;
+}
+.item-sub {
+    font-size: 10px;
+    color: #777;
+}
+
+.qty {
+    background: #e05c20;
+    color: white;
+    padding: 4px 6px;
+    border-radius: 6px;
+    font-size: 12px;
+    height: 26px;
+}
+
+/* BUTTONS */
+.order-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.order-card::before {
+    background-color: #e05c20 !important;
+}
+
+.start {
+    background: #e05c20 !important;
+    color: white !important;
+    font-size: 12px !important;
+}
+
+.delay {
+    background: #f7e3c3;
+}
+
+.cancel {
+    background: #f8d7da !important;
+    font-size: 12px !important;
+    padding: 6px !important;
+    border: none !important;
+
+}
+
+.ready,
+.served {
+    background: green !important;
+    color: white !important;
+    font-size: 12px !important;
+}

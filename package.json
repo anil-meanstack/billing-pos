@@ -1,0 +1,94 @@
+{
+  "name": "billing-pos",
+  "version": "0.1.0",
+  "proxy": "http://localhost:3000",
+  "homepage": "./",
+  "private": true,
+  "dependencies": {
+    "@reduxjs/toolkit": "^2.11.2",
+    "bootstrap": "^5.3.8",
+    "bootstrap-icons": "^1.13.1",
+    "js-cookie": "^3.0.5",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
+    "react-hot-toast": "^2.6.0",
+    "react-redux": "^9.2.0",
+    "react-router-dom": "^6.30.3",
+    "react-scripts": "5.0.1",
+    "web-vitals": "^2.1.4",
+    "workbox-webpack-plugin": "^7.4.0"
+  },
+  "main": "main.js",
+  "build": {
+    "appId": "com.netsaprked.billingpos",
+    "productName": "Billing POS",
+    "npmRebuild": true,
+    "buildDependenciesFromSource": true,
+    "extends": null,
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "build/**/*",
+      "main.js",
+      "preload.js",
+      "!**/*.map",
+      "!**/*.log",
+      "!src/**",
+      "!public/**",
+      "!node_modules/.cache",
+      "!**/test/**",
+      "!**/__tests__/**",
+      "!**/*.md",
+      "!**/*.ts",
+      "!**/*.tsx"
+    ],
+    "extraMetadata": {
+      "main": "main.js"
+    },
+    "extraResources": [],
+    "asar": true,
+    "compression": "maximum",
+    "win": {
+      "target": "nsis",
+      "icon": "./billing.ico"
+    },
+    "nsis": {
+      "installerIcon": "billing.ico",
+      "uninstallerIcon": "billing.ico"
+    }
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "react-build": "react-scripts build",
+    "electron": "electron .",
+    "dist": "npm run react-build && electron-builder"
+  },
+  "eslintConfig": {
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ]
+  },
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  },
+  "devDependencies": {
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "electron": "^28.3.3",
+    "electron-builder": "^26.8.1",
+    "electron-rebuild": "^3.2.9"
+  }
+}
