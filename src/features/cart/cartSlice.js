@@ -118,17 +118,22 @@ const cartSlice = createSlice({
     removeFromCart: (state, action) => {
       const { itemId, sizeKey } = action.payload;
 
-      state.items = state.items.filter(
-        (item) => !(item.id === itemId && item.size === sizeKey),
-      );
+      // state.items = state.items.filter(
+      //   (item) => !(item.id === itemId && item.size === sizeKey),
+      // );
+       state.items = state.items.filter(
+    (item) =>
+      item.cartItemId !== itemId &&
+      item.id !== itemId
+  );
     },
 
     updateQuantity: (state, action) => {
       const { itemId, sizeKey, quantity } = action.payload;
 
       const item = state.items.find(
-        (i) => i.id === itemId && i.size === sizeKey,
-      );
+  (i) => i.cartItemId === itemId
+)
 
       if (item) {
         item.quantity = quantity;
@@ -249,23 +254,57 @@ const cartSlice = createSlice({
                 return sum + (Number(addon.price) || 0);
               }, 0) || 0;
 
-            // In loadCart.fulfilled, update the item mapping:
+            // return {
+            //   // id: item.menu_item_id || item.id || "",
+            //   id: item.cart_item_id,
+            //   cartItemId: item.cart_item_id,
+            //   menu_item_id: item.menu_item_id || item.id || "",
+            //   name: item.menu_item_name || item.name || "",
+            //   image: item.menu_item_image || item.image || "",
+            //   category: item.menu_item_category || item.category || "",
+            //   quantity: Number(item.quantity) || 1,
+            //   selectedPrice: Number(item.variant_price) || Number(item.unit_price) || 0,
+            //   variant_id: item.variant_id || item.variant || "",
+            //   size: item.variant || item.size || "",
+            //   sizeName: item.variant_name || item.sizeName || "",
+            //   sizePrice: Number(item.variant_price) || Number(item.sizePrice) || 0,
+            //   addons: item.addons || [],
+            //   finalPrice: Number(item.item_total) || Number(item.unit_price) || Number(item.variant_price) + addonsTotal || 0,
+            //   cartItemId: item.cart_item_id || "",
+            //   instructions: item.special_instructions || item.instructions || "",
+            //   menu_item: item.menu_item || null,
+            // };
             return {
-              id: item.menu_item_id || item.id || "",
-              menu_item_id: item.menu_item_id || item.id || "",
-              name: item.menu_item_name || item.name || "",
-              image: item.menu_item_image || item.image || "",
-              category: item.menu_item_category || item.category || "",
+              id: item.cart_item_id, 
+              cartItemId: item.cart_item_id,
+
+              menu_item_id: item.menu_item_id || "",
+              name: item.menu_item_name || item.name|| "",
+              image: item.menu_item_image || "",
+              category: item.menu_item_category || "",
+
               quantity: Number(item.quantity) || 1,
-              selectedPrice: Number(item.variant_price) || Number(item.unit_price) || 0,
-              variant_id: item.variant_id || item.variant || "",
-              size: item.variant || item.size || "",
-              sizeName: item.variant_name || item.sizeName || "",
-              sizePrice: Number(item.variant_price) || Number(item.sizePrice) || 0,
+
+              selectedPrice:
+                Number(item.variant_price) || Number(item.unit_price) || 0,
+
+              variant_id: item.variant_id || "",
+              size: item.variant || "",
+              sizeName: item.variant_name || "",
+
+              sizePrice: Number(item.variant_price) || 0,
+
               addons: item.addons || [],
-              finalPrice: Number(item.item_total) || Number(item.unit_price) || Number(item.variant_price) + addonsTotal || 0,
-              cartItemId: item.cart_item_id || "",
-              instructions: item.special_instructions || item.instructions || "",
+
+              finalPrice:
+                Number(item.item_total) ||
+                Number(item.unit_price) ||
+                Number(item.variant_price) + addonsTotal ||
+                0,
+
+              instructions:
+                item.special_instructions || item.instructions || "",
+
               menu_item: item.menu_item || null,
             };
           });
@@ -329,7 +368,7 @@ const cartSlice = createSlice({
 
         state.items = response.cart.items.map((item) => ({
           id: item.menu_item_id || "",
-          name: item.menu_item_name || "",
+          name: item.menu_item_name ||item.name|| "",
           image: item.menu_item_image || "",
           category: item.menu_item_category || "",
 
@@ -423,7 +462,7 @@ const cartSlice = createSlice({
 
         state.items = [];
         state.cartId = null;
-        state.cartData = null; 
+        state.cartData = null;
         state.cartSummary = null;
         state.tableNumber = "";
         state.customerInfo = {};
@@ -455,7 +494,8 @@ export const selectCartTotal = (state) => {
   if (!Array.isArray(state.cart.items)) return 0;
 
   return state.cart.items.reduce((total, item) => {
-    const itemTotal = Number(item.finalPrice) || 0;
+    // const itemTotal = Number(item.finalPrice) || 0;
+    const itemTotal = (Number(item.finalPrice) || 0) * (Number(item.quantity) || 1);
     return total + itemTotal;
   }, 0);
 };

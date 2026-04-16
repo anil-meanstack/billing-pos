@@ -73,7 +73,7 @@ body {
 }
 
 .column-content {
-    padding: 12px;
+    padding: 10px;
     max-height: 70vh;
     overflow-y: auto;
 }
@@ -86,11 +86,11 @@ body {
 
 /* CARD */
 .order-card {
-    background: #f6f4ef !important;
-    border-radius: 16px;
+    background: #fffbfb!important;
+    border-radius: 8px;
     border: 1px solid #eee;
-    padding: 14px;
-    margin-bottom: 14px;
+    padding: 12px;
+    margin-bottom: 10px;
 }
 
 .status-card {
@@ -144,22 +144,20 @@ body {
 .order-top {
     display: flex;
     justify-content: space-between;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
 }
 
 .order-type {
-    background: #f3f3f3;
-    padding: 6px 10px;
-    border-radius: 20px;
-    font-size: 12px;
+    font-size: 10px;
+    color: #a09d95;
 }
 
-.order-time {
+.order-times {
     font-size: 11px;
     text-align: right;
 }
 
-.order-time strong {
+.order-times strong {
     display: block;
     font-size: 14px;
 }
@@ -186,7 +184,7 @@ body {
     display: flex;
     gap: 10px;
     font-size: 12px;
-    margin-bottom: 10px;
+    margin-bottom: 6px;
 }
 
 .priority {
@@ -197,10 +195,15 @@ body {
 
 .waiting {
     margin-left: auto;
-    color: #000;
-    background: #817a682b;
-    padding: 2px 4px;
+    color: #8b1a1a;
+    background: #fdeaea;
+    padding: 3px 8px;
     border-radius: 6px;
+}
+.kotid {
+    font-size: 13px;
+    font-weight: 600;
+    color: #1a1916;
 }
 
 /* ITEMS */
@@ -208,23 +211,21 @@ body {
     max-height: 200px;
     overflow-y: auto;
     margin-bottom: 10px;
-    /* background-color: #fff; */
-    padding: 6px;
-    /* border-radius: 8px; */
 }
 
 .item-card {
     display: flex;
     justify-content: space-between;
-    border: 1px solid #eee;
+    border: 1px solid rgb(0 0 0 / 8%);
     border-radius: 10px;
-    padding: 8px;
+    padding: 5px 8px;
     margin-bottom: 6px;
     background-color: #ffff;
     align-items: center;
 }
 .item-title{
     font-size: 12px;
+    font-weight: 500;
 }
 .item-sub {
     font-size: 10px;
@@ -232,12 +233,12 @@ body {
 }
 
 .qty {
-    background: #e05c20;
-    color: white;
-    padding: 4px 6px;
-    border-radius: 6px;
-    font-size: 12px;
-    height: 26px;
+    background: #f6f4ef;
+    color: #1a1916;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
 }
 
 /* BUTTONS */
@@ -254,6 +255,7 @@ body {
     background: #e05c20 !important;
     color: white !important;
     font-size: 12px !important;
+    width: 100%;
 }
 
 .delay {
@@ -265,12 +267,14 @@ body {
     font-size: 12px !important;
     padding: 6px !important;
     border: none !important;
+    width: 100%;
 
 }
 
 .ready,
 .served {
-    background: green !important;
+    background: #2d6010 !important;
     color: white !important;
     font-size: 12px !important;
+    width: 100%;
 }

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { useSelector } from "react-redux";
 
 const MenuItem = ({ item, onAddToCart, onItemClick }) => {
@@ -5,10 +6,10 @@ const MenuItem = ({ item, onAddToCart, onItemClick }) => {
 
   const getItemCount = () => {
     return cartItems
-      ?.filter(cartItem => cartItem.id === item.id)
+      ?.filter(cartItem => cartItem.menu_item_id === item.id)
       ?.reduce((total, curr) => total + curr.quantity, 0);
   };
-  const itemCount = getItemCount();
+  const itemCount = getItemCount() || 0;
 
   const getStartingPrice = () => {
     return item.has_variants
@@ -43,6 +44,7 @@ const MenuItem = ({ item, onAddToCart, onItemClick }) => {
           {itemCount}
         </div>
       )}
+
       <div className="itemImageContainer mb-1 d-flex justify-content-between">
         <img src={item.image} alt={item.name} className="itemImage" />
 
@@ -62,8 +64,10 @@ const MenuItem = ({ item, onAddToCart, onItemClick }) => {
         <div className="itemHeader">
           <h3 className="itemName">{item.name}</h3>
         </div>
+        {item.description > 0 && (
+          <p className="itemDescription">{item.description}</p>
+        )}
 
-        <p className="itemDescription">{item.description}</p>
 
         <div className="d-flex justify-content-between">
           <div className="itemPrice">

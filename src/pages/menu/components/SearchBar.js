@@ -1,87 +1,3 @@
-// import React ,{useState}from 'react';
-// import { useSelector, useDispatch } from 'react-redux';
-// import { setSearchTerm } from '../../../features/menu/menuSlice';
-// // import { fetchMenuData } from '../../../features/menu/menuSlice';
-
-// const SearchBar = () => {
-//   const dispatch = useDispatch();
-//   const { searchTerm } = useSelector((state) => state.menu);
-//   const [showFilter, setShowFilter] = useState(false);
-
-//   // const handleRefresh = () => {
-//   //   dispatch(fetchMenuData());
-//   // };
-//   const styeBtn = {
-//     padding: "8px 14px",
-//     borderRadius: "12px",
-//     border: "1px solid rgb(0 0 0 / 13%)",
-//     background: "#fff",
-//     fontSize: "12px",
-//     color: "#68665c",
-//     cursor: "pointer",
-//     display: "inline-flex",
-//     alignItems: "center",
-//     gap: "6px",
-//     boxShadow: "0 1px 2px rgba(0, 0, 0, .05)",
-//     whiteSpace: "nowrap"
-//   }
-//   return (
-//     <div className="searchContainer" style={{ position: "relative" }}>
-//       <input
-//         type="text"
-//         placeholder="Search menu items..."
-//         value={searchTerm}
-//         onChange={(e) => dispatch(setSearchTerm(e.target.value))}
-//         className="searchInput"
-//       />
-//       <button style={styeBtn} onClick={() => setShowFilter(!showFilter)}>
-// <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-//   <path d="M2 4h12M5 8h6M7 12h2"></path>
-// </svg>
-//         Filter
-//       </button>
-//       <button style={styeBtn}>
-// <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
-//   <circle cx="8" cy="8" r="5.5"></circle>
-//   <path d="M8 5.5v5M5.5 8h5"></path>
-// </svg>
-//         Add Item
-//       </button>
-//       {/* <button
-//         className="refreshButton"
-//         onClick={handleRefresh}
-//         title="Refresh menu data"
-//       >
-//         <i className="bi bi-arrow-clockwise" style={{fontWeight:"800",fontSize:"22px",color:"#000"}}></i>
-//       </button> */}
-
-//       {showFilter && (
-//         <div
-//           className="filterDropdown"
-//           style={{
-//             position: "absolute",
-//             top: "40px",
-//             right: "0",
-//             background: "#fff",
-//             border: "1px solid #eee",
-//             borderRadius: "10px",
-//             padding: "10px",
-//             boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
-//             zIndex: 10
-//           }}
-//         >
-//           <button >All</button>
-//           <button>Veg</button>
-//           <button >Non Veg</button>
-//         </div>
-//       )}
-//     </div>
-//   );
-// };
-
-// export default SearchBar;
-
-
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setSearchTerm, setFoodType, setSortBy } from '../../../features/menu/menuSlice';
@@ -137,19 +53,20 @@ const SearchBar = () => {
       />
 
       <button style={styeBtn} onClick={() => setShowFilter(!showFilter)}>
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
           <path d="M2 4h12M5 8h6M7 12h2"></path>
         </svg>
         Filter
       </button>
 
       <button style={styeBtn} onClick={() => setShowModal(true)}>
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
           <circle cx="8" cy="8" r="5.5"></circle>
           <path d="M8 5.5v5M5.5 8h5"></path>
         </svg>
-        Add Item
+        Open Item
       </button>
+      
 
       {showFilter && (
         <div style={{

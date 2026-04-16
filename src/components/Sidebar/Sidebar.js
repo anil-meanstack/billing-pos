@@ -51,51 +51,6 @@ const Sidebar = () => {
 
   const totalKitchenOrder = (newCount || 0) + (preparingCount || 0) + (readyCount || 0);
 
-  // const handleTableClick = (table) => {
-  //   // Check if table is occupied
-  //   if (table.status?.toLowerCase() === "occupied") {
-  //     setShowAlert({
-  //       show: true,
-  //       message: `Table ${table.tableNumber} is currently occupied and cannot be selected`,
-  //       type: "danger",
-  //     });
-  //     return; 
-  //   }
-
-  //   if (table.status?.toLowerCase() === "reserved") {
-  //     setShowAlert({
-  //       show: true,
-  //       message: `Table ${table.tableNumber} is reserved and cannot be selected`,
-  //       type: "warning",
-  //     });
-  //     return; 
-  //   }
-
-  //   const unavailableStatuses = ["occupied", "reserved", "booked", "maintenance"];
-  //   if (unavailableStatuses.includes(table.status?.toLowerCase())) {
-  //     setShowAlert({
-  //       show: true,
-  //       message: `Table ${table.tableNumber} is ${table.status} and cannot be selected`,
-  //       type: "danger",
-  //     });
-  //     return; 
-  //   }
-
-  //   dispatch(setTableNumber(table.tableNumber));
-  //   dispatch(setTableId(table.id));
-
-  //   localStorage.setItem('selectedTable', JSON.stringify({
-  //     number: table.tableNumber,
-  //     id: table.id
-  //   }));
-
-  //   setShowAlert({
-  //     show: true,
-  //     message: `Table ${table.tableNumber} selected successfully`,
-  //     type: "success",
-  //   });
-  // };
-
   const handleTableClick = (table) => {
     if (table.status?.toLowerCase() === "occupied") {
       setShowAlert({
@@ -125,7 +80,6 @@ const Sidebar = () => {
       return;
     }
 
-    // ✅ SET SELECTED TABLE
     setSelectedTableId(table.id);
 
     dispatch(setTableNumber(table.tableNumber));
@@ -176,11 +130,6 @@ const Sidebar = () => {
           <span className="badge orange">{totalKitchenOrder}</span>
         </NavLink>
 
-        {/* <NavLink to="/reservations" className={({ isActive }) => isActive ? "item active" : "item"}>
-          <i className="bi bi-card-text"></i>
-          <span>Reservations</span>
-          <span className="badge green">4</span>
-        </NavLink> */}
       </div>
 
       {/* TABLES */}
@@ -232,17 +181,7 @@ const Sidebar = () => {
 
 
       </div>
-      {/* REPORTS */}
-      {/* <div className="section">
-        <p className="section-title">REPORTS & ADMIN</p>
-
-        <NavLink to="/order-history" className={({ isActive }) => isActive ? "item active" : "item"}>
-          <i className="bi bi-bar-chart"></i>
-          <span>Today's Sales</span>
-        </NavLink>
-
-      </div> */}
-
+     
       <Alert
         show={showAlert.show}
         message={showAlert.message}

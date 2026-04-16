@@ -12,6 +12,7 @@ import CartItem from "./CartItem";
 import Coupons from "./Coupons"
 import PrintTemplate from "../PrintTemplate";
 import OrderDetailsModal from "../../pages/components/OrderDetailsModal"
+import CancelModal from "../../pages/menu/components/Modal/CancelModal";
 
 // Constants
 const CONSTANTS = {
@@ -50,8 +51,7 @@ const CartSummary = (props) => {
   const [cash, setCash] = useState("");
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [lastOrder, setLastOrder] = useState(null);
-
-
+  const tables = useSelector((state) => state.tables.list);
 
   const [showAlert, setShowAlert] = useState({
     show: false,
@@ -80,10 +80,6 @@ const CartSummary = (props) => {
       : total;
   }, [cartSummary, total, items.length]);
 
-  // const taxAmount = useMemo(() => {
-  //   if (items.length === 0) return 0;
-  //   return Number(cartSummary?.tax_amount) || subtotal * tax_breakdown
-  // }, [cartSummary, subtotal, items.length]);
 
   const taxAmount = useMemo(() => {
     if (items.length === 0) return 0;
@@ -247,6 +243,24 @@ const CartSummary = (props) => {
     }
   }, [cartSummary?.discount_amount, discounts]);
 
+  // const validateCheckout = useCallback(() => {
+  //   if (items.length === 0) {
+  //     showError("Your cart is empty! Please add items first.");
+  //     return false;
+  //   }
+
+  //   if (!validateCustomerInfo()) {
+  //     return false;
+  //   }
+
+  //   if (isDineIn && !tableNumber) {
+  //     showError("Table number is required");
+  //     return false;
+  //   }
+
+  //   return true;
+  // }, [items.length, validateCustomerInfo, isDineIn, tableNumber, showError]);
+
   const validateCheckout = useCallback(() => {
     if (items.length === 0) {
       showError("Your cart is empty! Please add items first.");
@@ -257,14 +271,30 @@ const CartSummary = (props) => {
       return false;
     }
 
-    if (isDineIn && !tableNumber) {
-      showError("Table number is required");
-      return false;
+    if (isDineIn) {
+      if (!tableNumber || !selectedTableId) {
+        showError("Table number is required");
+        return false;
+      }
+
+      // 🔥 NEW: Check table status
+      const selectedTable = tables.find(t => t.id === selectedTableId);
+
+      if (!selectedTable) {
+        showError("Selected table not found");
+        return false;
+      }
+
+      const status = selectedTable.status?.toLowerCase();
+
+      if (["occupied", "reserved", "booked", "maintenance"].includes(status)) {
+        showError(`⚠️ Table ${selectedTable.tableNumber} is ${status}. Cannot place order.`);
+        return false;
+      }
     }
 
     return true;
-  }, [items.length, validateCustomerInfo, isDineIn, tableNumber, showError]);
-
+  }, [items.length, validateCustomerInfo, isDineIn, tableNumber, selectedTableId, tables, showError]);
   const handleOrderTypeChange = useCallback((type) => {
     dispatch(setOrderType(type));
   }, [dispatch]);
@@ -340,7 +370,7 @@ const CartSummary = (props) => {
         time: new Date(),
         customerName: customerInfo.name,
         customerPhone: customerInfo.phone,
-        orderNotes: orderNote
+        orderNotes: orderNote,
       });
 
       setShowReceiptModal(true);
@@ -415,9 +445,9 @@ const CartSummary = (props) => {
     const removeDiscountIfCartEmpty = async () => {
       if (items.length === 0 && selectedDiscount) {
         try {
-          await deleteDiscount();   // 🔥 remove from backend
-          setSelectedDiscount(null); // remove from UI
-          dispatch(loadCart());     // refresh cart
+          await deleteDiscount();
+          setSelectedDiscount(null);
+          dispatch(loadCart());
 
           showSuccess("Discount removed (empty cart)");
         } catch (error) {
@@ -456,7 +486,6 @@ const CartSummary = (props) => {
     }
   };
 
-
   const handleCancel = useCallback(async () => {
     if (items.length > 0) {
       setShowCancelConfirm(true);
@@ -477,8 +506,8 @@ const CartSummary = (props) => {
           <h2 className="orderTitle">Current Order</h2>
           <a className="oclr" onClick={handleCancel}>Clear all</a>
         </div>
-        <div className="p-2">
-          <div className="orderTypeSwitch my-1 ">
+        <div className="px-2">
+          <div className="orderTypeSwitch mb-1 ">
             {Object.values(CONSTANTS.ORDER_TYPES).map((type) => (
               <button
                 key={type}
@@ -594,48 +623,16 @@ const CartSummary = (props) => {
           onClose={() => setShowAlert({ ...showAlert, show: false })}
         />
 
-        {/* {showCustomerModal && (
-        <CustomerModal
-          orderType={orderType}
-          customerInfo={customerInfo}
-          dispatch={dispatch}
-          onClose={() => setShowCustomerModal(false)}
-          onPlaceOrder={handleCheckout}
-        />
-      )} */}
-
         {showCancelConfirm && (
-          <div className="pos-modal-overlay">
-            <div className="pos-modal">
-              <h4>Cancel Order?</h4>
-              <p>All items will be removed from cart.</p>
-              <div className="pos-modal-actions">
-                <button
-                  className="btn btn-secondary"
-                  onClick={() => setShowCancelConfirm(false)}
-                >
-                  No
-                </button>
-
-                <button
-                  className="btn btn-danger"
-                  onClick={() => {
-                    dispatch(clearCartServer()).then(() => {
-                      dispatch(loadCart());
-                    });
-                    setShowCancelConfirm(false);
-                  }}
-                  style={{
-                    backgroundColor: "#e05c20",
-                    borderRadius: "10px",
-                  }}
-                >
-                  Yes, Cancel
-                </button>
-              </div>
-
-            </div>
-          </div>
+          <CancelModal show={showCancelConfirm}
+            onClose={() => setShowCancelConfirm(false)}
+            onConfirm={async () => {
+              await dispatch(clearCartServer());
+              await dispatch(loadCart());
+              setShowCancelConfirm(false);
+            }}
+            message="All items will be removed from cart."
+            />
         )}
 
         {showPaymentModal && (
@@ -650,7 +647,6 @@ const CartSummary = (props) => {
               <div className="modal-dialog modal-dialog-centered">
                 <div className="modal-content rounded-4  ">
 
-                  {/* Header */}
                   <div className="d-flex justify-content-between border-bottom align-items-center p-3">
                     <h5 className="fw-semibold">Confirm Payment</h5>
                     <button
@@ -659,7 +655,6 @@ const CartSummary = (props) => {
                     ></button>
                   </div>
 
-                  {/* Amount Details */}
                   <div className=" text-muted small p-3">
                     <div className="d-flex justify-content-between">
                       <span>Subtotal</span>
@@ -680,7 +675,6 @@ const CartSummary = (props) => {
                       </span>
                     </div>
 
-                    {/* Payment */}
                     <div className="d-flex justify-content-between text-muted small mb-3">
                       <span>Payment</span>
                       <span>
@@ -692,7 +686,6 @@ const CartSummary = (props) => {
                       </span>
                     </div>
 
-                    {/* Show input ONLY for CASH */}
                     {paymentMethod === CONSTANTS.PAYMENT_METHODS.CASH && (
                       <div className="d-flex align-items-center justify-content-between gap-2 mb-4">
                         <input
@@ -724,7 +717,6 @@ const CartSummary = (props) => {
                     )}
                   </div>
 
-                  {/* Footer */}
                   <div className="d-flex justify-content-end gap-2 p-3">
                     <button
                       className="btn btn-light px-4"
@@ -742,22 +734,27 @@ const CartSummary = (props) => {
                       }}
                       style={{
                         backgroundColor: "#e05c20",
-                        borderRadius: "10px", 
+                        borderRadius: "10px",
                       }}
                     >
                       Confirm & Print KOT
                     </button>
                   </div>
-
                 </div>
               </div>
             </div>
           </>
         )}
 
-        <div style={{ position: "absolute", left: "-9999px" }}>
-
-          {/* KOT */}
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            opacity: 0,
+            pointerEvents: "none"
+          }}
+        >
           <div ref={kotRef}>
             <PrintTemplate
               type="kot"

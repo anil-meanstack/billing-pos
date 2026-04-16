@@ -21,7 +21,7 @@ const Coupons = (props) => {
         </p>
       )}
 
-      <div className="coupon-grid">
+      <div className="coupon-grid my-2">
         {props.discounts.map((c, i) => (
           <div
             key={i}

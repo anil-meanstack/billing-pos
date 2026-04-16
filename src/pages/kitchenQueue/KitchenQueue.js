@@ -27,11 +27,6 @@ const KitchenQueue = () => {
             ]);
             const normalize = (res) =>
                 Array.isArray(res) ? res : res?.results || [];
-            // const allOrders = [
-            //     ...(pending.results || []),
-            //     ...(preparing.results || []),
-            //     ...(ready.results || []),
-            // ];
             const allOrders = [
                 ...normalize(pending),
                 ...normalize(preparing),
@@ -78,14 +73,6 @@ const KitchenQueue = () => {
         }
     };
 
-    const formatTime = (time) => {
-        if (!time) return "Just now";
-        const diff = (Date.now() - new Date(time)) / 1000;
-        if (diff < 60) return "Just now";
-        if (diff < 3600) return Math.floor(diff / 60) + "m ago";
-        return Math.floor(diff / 3600) + "h ago";
-    };
-
     const getMinutes = (time) => {
         return Math.floor((Date.now() - new Date(time)) / 60000);
     };
@@ -101,34 +88,20 @@ const KitchenQueue = () => {
             <div className="order-card">
                 {/* Top */}
                 <div className="order-top">
-                    <div className="order-type fw-semibold"># {detail?.order?.order_type_display} - <span>{detail?.order?.table_number}</span></div>
-                    <div className="order-time">
-                        {/* <span>ORDERED</span> */}
-                        <strong>
-                            {new Date(order.created_at).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                            })}
-                        </strong>
+                    <div>
+                        <span className="kotid">KOT #{order?.kot_number}</span>
+                        <div className="order-type">
+                        {detail?.order?.table_number && (
+                            <span>
+                                Table: {detail?.order?.table_number} - 
+                            </span>
+                        )}
+                         {detail?.order?.order_type_display}
                     </div>
-                </div>
-
-                {/* Guest */}
-                {/* <div className="order-user">
-          <div className="avatar">G</div>
-          <div>
-            <div className="guest-name">Guest</div>
-            <div className="guest-time">
-              {formatTime(order.created_at)}
-            </div>
-          </div>
-        </div> */}
-
-                {/* Meta */}
-                <div className="order-meta">
-                    <span>ITEMS ({detail?.order?.items?.length || 0})</span>
-                    {/* <span className="priority">★ PRIORITY</span> */}
-                    <span className="waiting">{getMinutes(order.created_at)} min</span>
+                    </div>
+                    <div className="order-times">
+                        <span className="waiting">{getMinutes(order.created_at)}m ago</span>
+                    </div>
                 </div>
 
                 {/* Items */}
@@ -181,7 +154,6 @@ const KitchenQueue = () => {
                             >
                                 ▶ Start
                             </button>
-                            {/* <button className="btn delay">🕒 Delay</button> */}
                             <button className="btn cancel">✕ Cancel</button>
                         </>
                     )}
@@ -193,7 +165,7 @@ const KitchenQueue = () => {
                                 handleStatusChange(order.id, "ready")
                             }
                         >
-                            Mark Ready
+                           ✓ Mark Ready
                         </button>
                     )}
 
@@ -204,7 +176,7 @@ const KitchenQueue = () => {
                                 handleStatusChange(order.id, "served")
                             }
                         >
-                            Served - Close
+                           ✓ Served - Close
                         </button>
                     )}
                 </div>

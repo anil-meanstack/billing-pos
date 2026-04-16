@@ -1,34 +1,4 @@
-// import React from 'react';
-// import { useSelector, useDispatch } from 'react-redux';
-// import { setSelectedCategory } from '../../../features/menu/menuSlice';
-
-// const Categories = () => {
-//   const dispatch = useDispatch();
-//   const { categories, selectedCategory } = useSelector((state) => state.menu);
-
-//   return (
-//     <div className="categoriesContainer">
-//       <div className="categoriesScroll">
-//         {categories.map((category) => (
-//           <button
-//             key={category.id}
-//             className={`categoryButton ${
-//               selectedCategory === category.id ? 'active' : ''
-//             }`}
-//             onClick={() => dispatch(setSelectedCategory(category.id))}
-//           >
-//             {category.name}
-//           </button>
-//         ))}
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default Categories;
-
-
-import React, { useRef,useEffect } from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setSelectedCategory } from '../../../features/menu/menuSlice';
 
@@ -48,17 +18,16 @@ const Categories = () => {
     }
   };
 
-  // const handleWheel = (e) => {
-  //   e.preventDefault();
-  //   scrollRef.current.scrollLeft += e.deltaY;
-  // };
-useEffect(() => {
+
+  useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
 
     const handleWheel = (e) => {
       e.preventDefault();
-      el.scrollLeft += e.deltaY;
+
+      const speed = 4;
+      el.scrollLeft += e.deltaY * speed;
     };
 
     el.addEventListener("wheel", handleWheel, { passive: false });
@@ -67,6 +36,8 @@ useEffect(() => {
       el.removeEventListener("wheel", handleWheel);
     };
   }, []);
+
+
   return (
     <div className="categoriesWrapper ">
 
@@ -82,15 +53,14 @@ useEffect(() => {
       <div
         className="categoriesContainer"
         ref={scrollRef}
-        // onWheel={handleWheel}
+      // onWheel={handleWheel}
       >
         <div className="categoriesScroll">
           {categories.map((category) => (
             <button
               key={category.id}
-              className={`categoryButton ${
-                selectedCategory === category.id ? 'active' : ''
-              }`}
+              className={`categoryButton ${selectedCategory === category.id ? 'active' : ''
+                }`}
               onClick={() => dispatch(setSelectedCategory(category.id))}
             >
               {category.name}

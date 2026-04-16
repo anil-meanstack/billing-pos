@@ -8,7 +8,8 @@ const OrderDetailsModal = ({
     printContent,
 }) => {
     const navigate = useNavigate();
-    const printRef = useRef();
+    const receiptRef = useRef();
+    const billRef = useRef();
     if (!lastOrder || !lastOrder.items) return null;
 
     const getAuthData = () => {
@@ -28,10 +29,11 @@ const OrderDetailsModal = ({
         return {
             restaurant: auth?.currentRestaurant?.name || "No Restaurant Selected",
             address: auth?.currentRestaurant?.address || "",
+            gst_number: auth?.currentRestaurant?.gst_number || "",
         };
     };
 
-    const { restaurant, address } = restaurantName();
+    const { restaurant, address, gst_number } = restaurantName();
 
     const getOrderDateTime = (order) => {
         return order?.created_at || order?.time || null;
@@ -43,15 +45,20 @@ const OrderDetailsModal = ({
             <div className="modal d-block">
                 <div className="modal-dialog modal-dialog-centered">
                     <div className="modal-content receipt-card">
-                        <div id="print-area" ref={printRef}>
+                        <div id="print-area" ref={receiptRef}>
                             <div className="text-center mb-2">
                                 <h5 className="fw-bold mb-0">{restaurant}</h5>
                                 <p className="receipt-address"> {address} </p>
                             </div> <div className="divider" />
                             <div className="receipt-row">
+                                <span>Order No - </span>
+                                <span>#{lastOrder?.kot_number}</span>
+                            </div>
+                            <div className="receipt-row">
                                 <span>Table</span>
                                 <span>{lastOrder?.tableNumber ?? lastOrder?.table_number ?? "-"}</span>
                             </div>
+
                             <div className="receipt-row">
                                 <span>Date & Time</span>
                                 <span>
@@ -107,7 +114,7 @@ const OrderDetailsModal = ({
                                 </div>
                             ))
                             }
-                            {lastOrder?.discount_amount != 0 && (
+                            {lastOrder?.discount_amount !== 0 && (
                                 <div className="receipt-row  ">
                                     <span >Discount</span>
                                     <span >
@@ -137,11 +144,11 @@ const OrderDetailsModal = ({
                             </button>
                             <button className="btn btn-print w-50" onClick={() => {
                                 if (window.electronAPI) {
-                                    const content = printRef.current.innerHTML;
+                                    const content = billRef.current.innerHTML;
                                     window.electronAPI.printBill(content);
                                     setShowReceiptModal(false);
                                 } else {
-                                    printContent(printRef);
+                                    printContent(billRef);
 
                                 }
                             }} >
@@ -153,22 +160,33 @@ const OrderDetailsModal = ({
             </div>
 
 
-            <div style={{ position: "absolute", left: "-9999px" }}>
-                <div ref={printRef}>
+            <div
+                style={{
+                    position: "fixed",
+                    top: 0,
+                    left: 0,
+                    opacity: 0,
+                    pointerEvents: "none"
+                }}
+            >
+                <div ref={billRef}>
                     <PrintTemplate
                         type="bill"
                         items={lastOrder.items}
-                        tableNumber={lastOrder.tableNumber}
-                        orderType={lastOrder.orderType}
+                        tableNumber={lastOrder.tableNumber ?? lastOrder.table_number}
+                        orderType={lastOrder.order_type_display ?? lastOrder.orderType}
                         subtotal={lastOrder.subtotal}
                         tax_breakdown={lastOrder.tax_breakdown}
                         total_amount={lastOrder.total_amount}
-                        paymentMethod={lastOrder.paymentMethod}
+                        paymentMethod={lastOrder.paymentMethod ?? lastOrder.payment_method_display}
                         restaurant={restaurant}
+                        gst_number={gst_number}
                         customerName={lastOrder?.customerName}
                         customerPhone={lastOrder?.customerPhone}
                         orderNotes={lastOrder?.order_notes}
                         discountAmount={lastOrder?.discount_amount}
+                        address={address}
+                        orderNumber={lastOrder?.kot_number}
                     />
                 </div>
             </div>

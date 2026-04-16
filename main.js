@@ -1,6 +1,6 @@
 const { app, BrowserWindow, ipcMain, Menu } = require("electron");
 const path = require("path");
-  
+
 
 let win;
 
@@ -17,7 +17,6 @@ function createWindow() {
     },
   });
 
-  // win.webContents.openDevTools();
   Menu.setApplicationMenu(null);
   win.setMenuBarVisibility(false);
 
@@ -33,14 +32,50 @@ app.on("window-all-closed", () => {
 const printContent = async (content) => {
   const printWindow = new BrowserWindow({
     show: false,
+    webPreferences: {
+      offscreen: true
+    }
   });
 
   try {
     await printWindow.loadURL(
-      "data:text/html;charset=utf-8," + encodeURIComponent(content)
+      "data:text/html;charset=utf-8," +
+      encodeURIComponent(`
+        <html>
+          <head>
+            <style>
+              * {
+                margin: 0 !important;
+                padding: 0 !important;
+                box-sizing: border-box;
+              }
+
+              html, body {
+                margin: 0 !important;
+                padding: 0 !important;
+                overflow: hidden;
+              }
+
+              body {
+                font-family: monospace;
+              }
+            </style>
+          </head>
+          <body>
+            ${content}
+          </body>
+        </html>
+      `)
     );
 
-    // Auto detect printer
+    await printWindow.webContents.executeJavaScript(`
+  new Promise(resolve => {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(resolve);
+    });
+  });
+`);
+
     let deviceName = "";
     try {
       const printers = await win.webContents.getPrintersAsync();
@@ -56,8 +91,7 @@ const printContent = async (content) => {
           silent: true,
           printBackground: true,
           deviceName,
-          margins: { marginType: "none" },
-          pageSize: { width: 58000, height: 200000 },
+          margins: { marginType: "none" }
         },
         (success, errorType) => {
           if (!success) {
@@ -79,7 +113,6 @@ const printContent = async (content) => {
     return { success: false, error: err.message };
   }
 };
-
 ipcMain.handle("print-kot", async (_, content) => {
   return await printContent(content);
 });

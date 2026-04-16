@@ -84,7 +84,14 @@ const CartItem = ({ item }) => {
     }
 
     // Path 4: Check direct price fields on item
-    const directPrice = item?.price || item?.base_price || item?.sizePrice || item?.selectedPrice;
+    // const directPrice =  item?.unit_price || item?.price || item?.base_price || item?.sizePrice || item?.selectedPrice;
+    const directPrice =
+      item?.unit_price ||   // normal item
+      item?.price ||        // custom item (IMPORTANT)
+      item?.base_price ||
+      item?.sizePrice ||
+      item?.selectedPrice;
+
     if (directPrice) {
       const price = parseFloat(directPrice);
       if (!isNaN(price) && price > 0) return price;
@@ -96,7 +103,7 @@ const CartItem = ({ item }) => {
   // Safe getters for item properties
   const getItemName = () => {
     const menuItem = getMenuItem();
-    return menuItem?.name || item?.name || "Item";
+    return menuItem?.name || item?.name || item?.custom_name || "Item";
   };
 
   const getItemQuantity = () => {
@@ -109,7 +116,7 @@ const CartItem = ({ item }) => {
   };
 
   const getCartItemId = () => {
-    return item?.cartItemId || item?.id || "";
+    return item?.cart_item_id || item?.cartItemId ||  "";
   };
 
   const getItemSize = () => {
@@ -142,8 +149,13 @@ const CartItem = ({ item }) => {
   const basePrice = getBasePrice();
   const finalPrice = getFinalPrice();
   const itemQuantity = getItemQuantity();
-  const itemId = getItemId();
-  const cartItemId = getCartItemId();
+  // const itemId = getItemId();
+  // const cartItemId = getCartItemId();
+  // const cartItemId = getCartItemId();
+  // const itemId = cartItemId;
+  // const cartItemId = item?.cartItemId;
+  // const cartItemId = item?.cartItemId || item?.id;
+  const cartItemId = item?.cartItemId;
   const itemSize = getItemSize();
   const itemSizeName = getItemSizeName();
   const itemName = getItemName();
@@ -157,7 +169,7 @@ const CartItem = ({ item }) => {
     // Update local state immediately
     dispatch(
       updateQuantity({
-        itemId: itemId,
+        itemId: cartItemId || item.id,
         sizeKey: itemSize,
         quantity: newQuantity,
       })
@@ -178,22 +190,40 @@ const CartItem = ({ item }) => {
     }
   };
 
-  const handleRemove = () => {
-    if (cartItemId && navigator.onLine) {
-      dispatch(removeCartItem(cartItemId)).then(() => {
-        dispatch(loadCart());
-      });
-    }
+  // const handleRemove = () => {
+  //   if (cartItemId && navigator.onLine) {
+  //     dispatch(removeCartItem(cartItemId)).then(() => {
+  //       dispatch(loadCart());
+  //     });
+  //   }
 
-    dispatch(
-      updateQuantity({
-        itemId: itemId,
-        sizeKey: itemSize,
-        quantity: 0,
-      })
-    );
-  };
+  //   dispatch(
+  //     updateQuantity({
+  //       itemId: itemId,
+  //       sizeKey: itemSize,
+  //       quantity: 0,
+  //     })
+  //   );
+  // };
+const handleRemove = () => {
+  const uniqueId = item?.cartItemId;
 
+  // API remove
+  if (item?.cartItemId && navigator.onLine) {
+    dispatch(removeCartItem(item.cartItemId)).then(() => {
+      dispatch(loadCart());
+    });
+  }
+
+  // Local remove
+  dispatch(
+    updateQuantity({
+      itemId: uniqueId,
+      sizeKey: itemSize,
+      quantity: 0,
+    })
+  );
+};
   // Don't render if item is invalid
   if (!item) {
     return null;
@@ -209,9 +239,12 @@ const CartItem = ({ item }) => {
           <div className="cartItemName">
             {itemName}
             <br />
-            {itemSizeName && (
+            {/* {itemSizeName && (
               <span className="cartItemSize">({itemSizeName}) {formatPrice(basePrice)} </span>
-            )}
+            )} */}
+            <span className="cartItemSize">
+              {itemSizeName ? `(${itemSizeName})` : ""} {formatPrice(basePrice)}
+            </span>
           </div>
 
         </div>

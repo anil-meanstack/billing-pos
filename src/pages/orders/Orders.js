@@ -6,6 +6,7 @@ import { setKitchenCounts } from "../../features/kitchen/kitchenSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { orderStatus } from "../../features/table/tableApi";
 import OrderDetailsModal from "../components/OrderDetailsModal";
+import CancelModal from "../menu/components/Modal/CancelModal";
 
 const Orders = () => {
     const dispatch = useDispatch();
@@ -18,6 +19,8 @@ const Orders = () => {
     const [order, setOrders] = useState([]);
     const [showReceiptModal, setShowReceiptModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
+    const [showCancelModal, setShowCancelModal] = useState(false);
+    const [cancelOrderId, setCancelOrderId] = useState(null);
 
     useEffect(() => {
         dispatch(fetchOrderHistory());
@@ -65,7 +68,7 @@ const Orders = () => {
             preparing: preparingOrders.length,
             ready: readyOrders.length
         }));
-    }, [order]);
+    }, [dispatch, newOrders.length, preparingOrders.length, readyOrders.length]);
 
 
 
@@ -74,7 +77,6 @@ const Orders = () => {
 
         const today = new Date();
 
-        // Start of today (00:00:00)
         const startOfDay = new Date(
             today.getFullYear(),
             today.getMonth(),
@@ -82,7 +84,6 @@ const Orders = () => {
             0, 0, 0, 0
         );
 
-        // End of today (23:59:59)
         const endOfDay = new Date(
             today.getFullYear(),
             today.getMonth(),
@@ -138,7 +139,25 @@ const Orders = () => {
             console.error("Failed to update order status:", error);
         }
     };
+    const handleConfirmCancel = async () => {
+        try {
+            dispatch({
+                type: 'orders/updateOrderStatusLocal',
+                payload: { orderId: cancelOrderId, status: "cancelled" }
+            });
 
+            await orderStatus.updateOrderStatus(cancelOrderId, {
+                status: "cancelled"
+            });
+
+            dispatch(fetchOrderHistory());
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setShowCancelModal(false);
+            setCancelOrderId(null);
+        }
+    };
     const filteredOrders = useMemo(() => {
         if (!todayOrders) return [];
         let filtered = [...todayOrders];
@@ -181,16 +200,6 @@ const Orders = () => {
     };
 
 
-    const getItemCount = (order) => {
-        if (order.items && Array.isArray(order.items)) {
-            return order.items.length;
-        }
-        if (order.item_count) {
-            return order.item_count;
-        }
-        return 0;
-    };
-
     const getCustomerName = (order) => {
         if (order.customer_name) return order.customer_name;
         if (order.customer?.name) return order.customer.name;
@@ -220,6 +229,29 @@ const Orders = () => {
         }));
     };
 
+    const getPaymentIcon = (method) => {
+        const type = (method || "").toLowerCase();
+
+        switch (type) {
+            case "cash":
+                return <i className="bi bi-cash-stack"></i>;
+
+            case "upi":
+                return <i className="bi bi-phone"></i>;
+
+            case "card":
+            case "credit card":
+            case "debit card":
+                return <i className="bi bi-credit-card"></i>;
+
+            case "online":
+                return <i className="bi bi-globe"></i>;
+
+            default:
+                return <i className="bi bi-wallet2"></i>;
+        }
+    };
+
 
     return (
         <div className="orders-container">
@@ -246,7 +278,6 @@ const Orders = () => {
                 </div>
             </div>
 
-            {/* Statistics Cards */}
             <div className="stats-grid">
                 <div className="stat-card stat-card-primary">
                     <div className="stat-icon"><i className="bi bi-cash-stack"></i></div>
@@ -335,44 +366,35 @@ const Orders = () => {
 
                 {filteredOrders.map((order) => (
                     <div key={order.id} className={`order-cards order-type-${order.order_type || 'dine_in'}`}>
-                        <span>
-                            {order?.kot_number && (
-                                <span className="fw-semibold">
-                                    KOT: #{order.kot_number}
-                                </span>
-                            )}
-                        </span>
-                        <div className="order-card-header">
+                        <div className="orders-cards">
+                            <div className="order-left">
 
-                            <div className="order-type-badge">
-                                <span className="order-type-icon"> {getOrderTypeIcon(order.order_type)}</span>
-                                <span className="order-type-text">
-                                    {order.order_type_display || order.order_type || 'Dine In'}
-                                </span>
-
-                            </div>
-
-                            <span className="order-time">
-                                {new Date(order.created_at).toLocaleTimeString('en-US', {
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                })}
-                            </span>
-                        </div>
-
-                        <div className="order-main-info">
-                            <div className="customer-section">
-                                <h3 className="customer-name">{getCustomerName(order)}</h3>
-                                {getTableInfo(order) && (
-                                    <div className="table-badge">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                            <rect x="3" y="3" width="18" height="18" rx="2"></rect>
-                                            <line x1="3" y1="9" x2="21" y2="9"></line>
-                                            <line x1="9" y1="21" x2="9" y2="9"></line>
-                                        </svg>
-                                        Table {getTableInfo(order)}
-                                    </div>
+                                {order?.kot_number && (
+                                    <span className="order-id">
+                                        #{order.kot_number}
+                                    </span>
                                 )}
+
+                                <div className="order-info">
+                                    <div className="table-text">
+                                        {getTableInfo(order) && `Table: ${getTableInfo(order)} -`} {" "}
+                                        <span className="order-type-icon"> {getOrderTypeIcon(order.order_type)}</span>
+                                        {order.order_type_display || order.order_type || "Dine In"}
+                                    </div>
+
+                                    {/* Time */}
+                                    <div className="order-time">
+                                        <h5 className="customer-name">{getCustomerName(order)} -</h5>
+                                        {new Date(order.created_at).toLocaleTimeString("en-US", {
+                                            hour: "2-digit",
+                                            minute: "2-digit",
+                                        })}{" "}
+                                    </div>
+
+                                </div>
+                            </div>
+                            <div className={`order-status ${order.status}`}>
+                                {order.status}
                             </div>
 
                         </div>
@@ -382,7 +404,7 @@ const Orders = () => {
                                 {order.items && order.items.length > 0 && (
                                     <div className={`order-items-preview ${expandedOrders[order.id] ? "expanded" : ""}`}>
                                         <div className="items-inner">
-                                            {(expandedOrders[order.id] ? order.items : order.items.slice(0, 2))
+                                            {(expandedOrders[order.id] ? order.items : order.items.slice(0, 6))
                                                 .map((item, idx) => (
                                                     <div key={idx} className="preview-item">
                                                         <span className="item-quantity">{item.quantity}x</span>
@@ -410,14 +432,14 @@ const Orders = () => {
                                                 ))}
                                         </div>
 
-                                        {order.items.length > 2 && (
+                                        {order.items.length > 6 && (
                                             <div
                                                 className="more-items"
                                                 onClick={() => toggleItems(order.id)}
                                             >
                                                 {expandedOrders[order.id]
                                                     ? "Show Less"
-                                                    : `+${order.items.length - 2} more`}
+                                                    : `+${order.items.length - 6} more`}
                                             </div>
                                         )}
                                     </div>
@@ -425,10 +447,12 @@ const Orders = () => {
                             </div>
                         )}
 
-                        <div className="order-summary">
+                        <div className="order-summarys">
                             <div className="items-info">
-                                <span><i className="bi bi-cart4"></i></span>
-                                <span>{getItemCount(order)} {getItemCount(order) === 1 ? 'Item' : 'Items'}</span>
+                                <span>
+                                    {getPaymentIcon(order.paymentMethod || order.payment_method_display)}
+                                </span>
+                                <span >{order.paymentMethod ?? order.payment_method_display}</span>
                             </div>
                             <div className="total-amount">
                                 <span>₹{parseFloat(order.total_amount || order.total || 0).toFixed(2)}</span>
@@ -460,7 +484,15 @@ const Orders = () => {
 
                             {order.status !== "completed" && (
                                 <div className="action-buttons">
-                                    <button className="btn-cancel">Cancel</button>
+                                    <button
+                                        className="btn-cancel"
+                                        onClick={() => {
+                                            setCancelOrderId(order.id);
+                                            setShowCancelModal(true);
+                                        }}
+                                    >
+                                        Cancel
+                                    </button>
                                 </div>
                             )}
 
@@ -473,9 +505,15 @@ const Orders = () => {
                 <OrderDetailsModal
                     lastOrder={selectedOrder}
                     setShowReceiptModal={setShowReceiptModal}
-
                 />
             )}
+
+            <CancelModal
+                show={showCancelModal}
+                onClose={() => setShowCancelModal(false)}
+                onConfirm={handleConfirmCancel}
+                message="Are you sure you want to cancel this order?"
+            />
         </div>
     );
 };

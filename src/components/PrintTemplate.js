@@ -12,46 +12,60 @@ const PrintTemplate = ({
     paymentMethod,
     restaurant,
     orderNotes,
-    discountAmount
+    discountAmount,
+    gst_number,
+    address,
+    orderNumber
 }) => {
     const isBill = type === "bill";
 
     return (
         <div
             style={{
-                width: "200px",
+                width: "180px",
                 fontFamily: "monospace",
-                padding: "0px",
-                margin: "0px",
-                fontSize: "11px",
+                padding: "2px",
+                margin: "0",
+                fontSize: "10px",
+                lineHeight: "1.2",
                 color: "#000"
             }}
         >
             {/* HEADER */}
-            <div style={{ textAlign: "center", marginBottom: "4px" }}>
-                <div style={{ fontWeight: "bold", fontSize: "13px" }}>
+            <div style={{ textAlign: "center" }}>
+                <div style={{ fontWeight: "bold", fontSize: "12px" }}>
                     {isBill ? restaurant || "RECEIPT" : "KITCHEN ORDER"}
+                    {isBill && address && (
+                        <div style={{fontSize:"10px"}}>
+                            {address}
+                        </div>
+                    )}
                 </div>
             </div>
+            {isBill && gst_number && (
+                <div style={{ fontWeight: "bold", fontSize: "12px" }}>
+                    GST No: {gst_number}
+                </div>
+            )}
 
             {/* ORDER INFO */}
-            <div style={{ fontSize: "10px" }}>
-                <div>Tbl: {tableNumber || "-"}</div>
-                <div>Type: {orderType}</div>
+            <div style={{ fontSize: "10px" ,fontWeight:"600" }}>
+                <div>Order No : #{orderNumber}</div>
+                <div>Tbl: {tableNumber || "-"} , <span>Type: {orderType}</span></div>
                 <div>{new Date().toLocaleString()}</div>
             </div>
 
-            <div style={{ borderTop: "1px dashed #000", margin: "4px 0" }} />
+            <div style={{ borderTop: "1px dashed #000", margin: "2px 0" }} />
 
             {/* ITEMS */}
             {items.map((item, i) => (
-                <div key={i} style={{ marginBottom: "4px" }}>
+                <div key={i} style={{ marginBottom: "2px" }}>
                     {/* ITEM ROW */}
                     <div
                         style={{
                             display: "flex",
                             // justifyContent: "space-between",
-                            alignItems: "flex-start",
+                            alignItems: "center",
                             fontWeight: isBill ? "normal" : "bold"
                         }}
                     >
@@ -59,6 +73,7 @@ const PrintTemplate = ({
                             width: isBill ? "130px" : "100%",
                             wordWrap: "break-word",
                             fontSize: isBill ? "11px" : "12px",
+                            fontWeight:"600"
                         }}>
                             {item.quantity}x {item.name}
                             {item.sizeName ? ` (${item.sizeName})` : ""}
@@ -69,7 +84,8 @@ const PrintTemplate = ({
                                 width: "60px",
                                 textAlign: "right",
                                 whiteSpace: "nowrap",
-                                paddingRight: "4px"
+                                paddingRight: "4px",
+                                fontWeight:"600"
                             }}>
                                 ₹{(parseFloat(item.finalPrice ?? item.price ?? 0) || 0).toFixed(2)}
                             </span>
@@ -78,7 +94,7 @@ const PrintTemplate = ({
 
                     {/* ADDONS */}
                     {item.addons?.length > 0 && (
-                        <div style={{ fontSize: "9px", marginLeft: "6px" }}>
+                        <div style={{ fontSize: "8px", marginLeft: "4px" ,lineHeight: "1.1" }}>
                             {item.addons.map((addon, idx) => (
                                 <div key={idx}>+ {addon.name}</div>
                             ))}
@@ -122,7 +138,7 @@ const PrintTemplate = ({
                         <Row key={i} label={tax.name} value={`₹${(parseFloat(tax.amount) || 0).toFixed(2)}`} />
                     ))}
 
-                    {discountAmount !== 0 && (
+                    {Number(discountAmount) > 0 && (
                         <Row
                             label="Discount"
                             value={`₹${(parseFloat(discountAmount) || 0).toFixed(2)}`}
@@ -139,12 +155,12 @@ const PrintTemplate = ({
                         big
                     />
 
-                    <div style={{ marginTop: "4px", fontSize: "10px" }}>
+                    <div style={{ marginTop: "4px", fontSize: "10px" ,fontWeight:"600"}}>
                         Pay: {paymentMethod}
                     </div>
                 </>
             )}
-            <div style={{ textAlign: "center", marginBottom: "4px" }}>
+            <div style={{ textAlign: "center", marginBottom: "4px" ,fontWeight:"600"}}>
                 {isBill && <div>Thank You 🙏</div>}
             </div>
         </div>
@@ -157,7 +173,7 @@ const Row = ({ label, value, bold, big }) => (
         style={{
             display: "flex",
             justifyContent: "space-between",
-            alignItems: "center"
+            alignItems: "center",
         }}
     >
         {/* LEFT */}
@@ -165,7 +181,8 @@ const Row = ({ label, value, bold, big }) => (
             style={{
                 width: "110px",
                 fontWeight: bold ? "bold" : "normal",
-                fontSize: big ? "12px" : "10px"
+                fontSize: big ? "12px" : "10px",
+                fontWeight:"600"
             }}
         >
             {label}
@@ -175,11 +192,14 @@ const Row = ({ label, value, bold, big }) => (
         <span
             style={{
                 width: "90px",
-                textAlign: "center",
-                fontWeight: bold ? "bold" : "normal",
-                fontSize: big ? "12px" : "10px",
+                textAlign: "right",
+                fontWeight: bold ? "bold" : "bold",
+                fontSize: big ? "11px" : "9px",
+                lineHeight: "1.2",
+                overflow: "hidden",
+                textOverflow: "ellipsis",
                 whiteSpace: "nowrap",
-                paddingRight: "6px"
+                paddingRight: "2px"
             }}
         >
             {value}

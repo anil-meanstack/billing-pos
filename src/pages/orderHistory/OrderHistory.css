@@ -316,7 +316,7 @@
 }
 
 /* ====== STATUS BADGES ====== */
-.order-status {
+/* .order-status {
   padding: 6px 12px;
   border-radius: 30px;
   font-size: 12px;
@@ -325,9 +325,9 @@
   text-align: center;
   min-width: 90px;
   letter-spacing: 0.3px;
-}
+} */
 
-.order-status.delivered {
+/* .order-status.delivered {
   background: green;
   color: #fff;
   box-shadow: 0 2px 8px rgba(21, 128, 61, 0.2);
@@ -343,9 +343,9 @@
   background: red;
   color: #fff;
   box-shadow: 0 2px 8px rgba(185, 28, 28, 0.2);
-}
+} */
 
-.order-status.on-the-way {
+/* .order-status.on-the-way {
   background: #008ac3;
   color: #fff;
   box-shadow: 0 2px 8px rgba(3, 105, 161, 0.2);
@@ -361,7 +361,7 @@
   background: linear-gradient(135deg, #d9f99d, #bef264);
   color: #3f6212;
   box-shadow: 0 2px 8px rgba(63, 98, 18, 0.2);
-}
+} */
 
 /* ====== ORDER TYPE BADGE ====== */
 .order-type-badge {

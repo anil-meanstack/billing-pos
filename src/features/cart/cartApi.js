@@ -116,11 +116,9 @@ export const getOrdersApi = async () => {
   const token = getToken();
   const userType = getUserType();
 
-  // Check if we're offline
   const isOffline = !navigator.onLine;
 
   try {
-    // If offline, skip API call and get from offline storage
     if (isOffline) {
       throw new Error("Offline mode");
     }
