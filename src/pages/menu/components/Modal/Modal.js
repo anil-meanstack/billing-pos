@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch ,useSelector} from "react-redux";
 import { placeOrder, loadCart } from "../../../../features/cart/cartSlice";
 import "./Modal.css";
 import Alert from "../../../../components/Alert/Alert";

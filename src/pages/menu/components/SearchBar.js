@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { setSearchTerm, setFoodType, setSortBy } from '../../../features/menu/menuSlice';
+import { setSearchTerm, setFoodType, setSortBy, setSelectedCategory } from '../../../features/menu/menuSlice';
 import AddItemModal from './Modal/AddItemModal';
 import { addToCart } from "../../../features/cart/cartSlice";
 
@@ -66,17 +66,28 @@ const SearchBar = ({ setActiveTab, activeTab }) => {
         </svg>
         Open Item
       </button>
-      <button style={{
-        ...styeBtn, background: activeTab === "combo" ? "#e05c20" : "#fff",
-        color: activeTab === "combo" ? "#fff" : "#68665c",
-      }} className='' onClick={() =>
-        setActiveTab((prev) => (prev === "combo" ? "menu" : "combo"))
-      }>
-        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+     
+      <button
+        style={{
+          ...styeBtn,
+          background: activeTab === "combo" ? "#e05c20" : "#fff",
+          color: activeTab === "combo" ? "#fff" : "#68665c",
+        }}
+        onClick={() => {
+          const next = activeTab === "combo" ? "menu" : "combo";
+
+          setActiveTab(next);
+
+          if (next === "combo") {
+            dispatch(setSelectedCategory("all"));
+          }
+        }}
+      >
+         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
           <circle cx="8" cy="8" r="5.5"></circle>
           <path d="M8 5.5v5M5.5 8h5"></path>
         </svg>
-        {activeTab === "combo" ? "Menu Items" : "Combos & Meals"}
+        Combos & Meals
       </button>
 
       {showFilter && (

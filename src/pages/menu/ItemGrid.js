@@ -43,6 +43,12 @@ const ItemGrid = () => {
   }, [dispatch]);
 
   useEffect(() => {
+    if (activeTab === "combo" && selectedCategory !== "all") {
+      setActiveTab("menu");
+    }
+  }, [selectedCategory, activeTab]);
+
+  useEffect(() => {
     if (orderId && table?.id) {
       const orders = JSON.parse(
         localStorage.getItem("restaurantOrders") || "[]"
@@ -160,7 +166,11 @@ const ItemGrid = () => {
       const payload = {
         menu_item_id: item.id,
         quantity: 1,
+        order_type: orderType || "dine_in"
       };
+      if (orderType === "dine_in" && tableId) {
+        payload.table_id = tableId;
+      }
 
       if (item?.variants?.length > 0) {
         const defaultVariant =
@@ -215,8 +225,8 @@ const ItemGrid = () => {
 
         <div className="menuSection">
 
-          <SearchBar setActiveTab={setActiveTab} activeTab={activeTab}/>
-          <Categories />
+          <SearchBar setActiveTab={setActiveTab} activeTab={activeTab} />
+          <Categories setActiveTab={setActiveTab} activeTab={activeTab} />
 
           <div className="menuGrid">
             {filteredItems.map((item) => (

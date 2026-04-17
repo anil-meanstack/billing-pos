@@ -1,9 +1,5 @@
 import getCsrfToken from "../../utils/csrf";
 
-// const API_BASE_URL =
-//   process.env.NODE_ENV === "production"
-//     ? process.env.REACT_APP_API_BASE_URL
-//     : "/api";
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
 const getAuthData = () => {
@@ -17,11 +13,6 @@ const getAuthData = () => {
     return null;
   }
 };
-
-// const getRestaurantId = () => {
-//   const auth = getAuthData();
-//   return auth?.currentRestaurant?.id || auth?.restaurant?.id || null;
-// };
 
 const getRestaurantSlug = () => {
   const auth = getAuthData();
@@ -49,14 +40,10 @@ export const placeOrderApi = async (orderData) => {
     ...orderData
   };
 
-  // Log what we're trying to save
-  // console.log("placeOrderApi called with payload:", payload);
 
-  // Check if we're offline
   const isOffline = !navigator.onLine;
 
   try {
-    // If offline, skip API call and go directly to offline storage
     if (isOffline) {
       throw new Error("Offline mode");
     }
@@ -71,7 +58,6 @@ export const placeOrderApi = async (orderData) => {
       body: JSON.stringify(payload),
     });
 
-    // Check if response is OK before parsing JSON
     if (!response.ok) {
       const text = await response.text();
       try {
@@ -90,15 +76,12 @@ export const placeOrderApi = async (orderData) => {
 
     let itemsToSave = [];
 
-    // Case 1: payload has items array (like from your API)
     if (payload.items && payload.items.length > 0) {
       itemsToSave = payload.items;
     }
-    // Case 2: payload itself is a cart item (single item add)
     else if (payload.menu_item_id) {
       itemsToSave = [payload];
     }
-    // Case 3: payload has cart_items property
     else if (payload.cart_items && payload.cart_items.length > 0) {
       itemsToSave = payload.cart_items;
     }
@@ -147,7 +130,7 @@ export const getOrdersApi = async () => {
   } catch (error) {
     console.log("Fetching cart from offline storage");
 
-  
+
 
     return {
       offline: true
@@ -246,6 +229,24 @@ export const removeCartItemApi = async (itemId) => {
     return { offline: true };
   }
 };
+
+export const tableSelectable = async (res) => {
+  const slug = getRestaurantSlug();
+  const token = getToken();
+  const userType = getUserType();
+  await fetch(
+    `${API_BASE_URL}/${userType}/cart/${slug}/`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "X-CSRFToken": getCsrfToken(),
+      },
+      body: JSON.stringify(res)
+    },
+  );
+}
 
 export const clearCartApi = async () => {
   const slug = getRestaurantSlug();

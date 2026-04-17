@@ -2,7 +2,7 @@ import React, { useRef, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { setSelectedCategory } from '../../../features/menu/menuSlice';
 
-const Categories = () => {
+const Categories = ({ setActiveTab, activeTab }) => {
   const dispatch = useDispatch();
   const { categories, selectedCategory } = useSelector((state) => state.menu);
 
@@ -59,9 +59,17 @@ const Categories = () => {
           {categories.map((category) => (
             <button
               key={category.id}
-              className={`categoryButton ${selectedCategory === category.id ? 'active' : ''
-                }`}
-              onClick={() => dispatch(setSelectedCategory(category.id))}
+              className={`categoryButton 
+                          ${activeTab === "combo" ? "comboActive" : ""}
+                          ${selectedCategory === category.id && activeTab === "menu" ? "active" : ""}
+                        `}
+              onClick={() => {
+                dispatch(setSelectedCategory(category.id));
+                if (activeTab !== "menu") {
+                  setActiveTab("menu");
+                }
+
+              }}
             >
               {category.name}
             </button>

@@ -95,7 +95,6 @@ const cartSlice = createSlice({
   initialState,
 
   reducers: {
-    /* Add Item (Local Only) */
     addToCart: (state, action) => {
       const { item, sizeKey, price } = action.payload;
 
@@ -116,11 +115,8 @@ const cartSlice = createSlice({
     },
 
     removeFromCart: (state, action) => {
-      const { itemId, sizeKey } = action.payload;
+      const { itemId } = action.payload;
 
-      // state.items = state.items.filter(
-      //   (item) => !(item.id === itemId && item.size === sizeKey),
-      // );
       state.items = state.items.filter(
         (item) =>
           item.cartItemId !== itemId &&
@@ -129,7 +125,7 @@ const cartSlice = createSlice({
     },
 
     updateQuantity: (state, action) => {
-      const { itemId, sizeKey, quantity } = action.payload;
+      const { itemId, quantity } = action.payload;
 
       const item = state.items.find(
         (i) => i.cartItemId === itemId
@@ -256,20 +252,15 @@ const cartSlice = createSlice({
             // For simple items (no variant)
             const isSimpleItem = !item.variant_id && !item.variant;
 
-            // Get the base price (without addons)
             let basePrice = 0;
             if (isSimpleItem) {
-              // Simple item: use unit_price as base (should be without addons)
               basePrice = Number(item.unit_price) || 0;
             } else {
-              // Variant item: use variant_price
               basePrice = Number(item.variant_price) || 0;
             }
 
-            // Get the final price (with addons)
             let finalPrice = Number(item.item_total) || 0;
 
-            // If item_total is not provided, calculate it
             if (!finalPrice && basePrice > 0) {
               finalPrice = basePrice + addonsTotal;
             }
@@ -283,19 +274,15 @@ const cartSlice = createSlice({
               category: item.menu_item_category || "",
               quantity: Number(item.quantity) || 1,
 
-              // Store base price separately
-              basePrice: basePrice,  // ← Add this
-              selectedPrice: basePrice,  // ← Use base price here
+              basePrice: basePrice,  
+              selectedPrice: basePrice,  
 
               variant_id: item.variant_id || "",
               size: item.variant || "",
               sizeName: item.variant_name || "",
               sizePrice: Number(item.variant_price) || 0,
               addons: item.addons || [],
-
-              // Store final price (base + addons)
-              finalPrice: finalPrice,  // ← This already includes addons
-
+              finalPrice: finalPrice,  
               instructions: item.special_instructions || item.instructions || "",
               menu_item: item.menu_item || null,
             };

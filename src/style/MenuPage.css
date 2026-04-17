@@ -472,6 +472,10 @@ textarea {
   border:1px solid #e05c20;
 
 }
+.categoryButton.comboActive {
+   background: #ffffff;
+   color: #1e293b;
+}
 .categoriesWrapper {
   position: relative;
   display: flex;
