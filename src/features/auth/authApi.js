@@ -19,12 +19,12 @@ export const loginUser = async (loginData) => {
   if (!res.ok || !data.success) {
     throw new Error(data.message || "Login failed");
   }
-   const accessToken = data.token;
-  const refreshToken = data.refresh_token;
+  //  const accessToken = data.token;
+  // const refreshToken = data.refresh_token;
 
   // Save tokens separately if needed
-  localStorage.setItem("accessToken", accessToken);
-  localStorage.setItem("refreshToken", refreshToken);
+  // localStorage.setItem("accessToken", accessToken);
+  // localStorage.setItem("refreshToken", refreshToken);
 
 
   return data;
@@ -45,6 +45,6 @@ export const isAuthenticated = () => {
 
 export const logoutUser = () => {
   localStorage.removeItem("user");
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
+  // localStorage.removeItem("accessToken");
+  // localStorage.removeItem("refreshToken");
 };

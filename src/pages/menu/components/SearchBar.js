@@ -4,7 +4,7 @@ import { setSearchTerm, setFoodType, setSortBy } from '../../../features/menu/me
 import AddItemModal from './Modal/AddItemModal';
 import { addToCart } from "../../../features/cart/cartSlice";
 
-const SearchBar = () => {
+const SearchBar = ({ setActiveTab, activeTab }) => {
   const dispatch = useDispatch();
   const { searchTerm, filters } = useSelector((state) => state.menu);
   const [showModal, setShowModal] = useState(false);
@@ -27,19 +27,19 @@ const SearchBar = () => {
   };
 
 
- const handleSaveItem = (item) => {
-  dispatch(
-    addToCart({
-      item: {
-        id: Date.now(),
-        name: item.name,
+  const handleSaveItem = (item) => {
+    dispatch(
+      addToCart({
+        item: {
+          id: Date.now(),
+          name: item.name,
+          price: item.price,
+        },
+        sizeKey: "regular",
         price: item.price,
-      },
-      sizeKey: "regular",
-      price: item.price,
-    })
-  );
-};
+      })
+    );
+  };
 
   return (
     <div className="searchContainer" style={{ position: "relative" }}>
@@ -66,7 +66,18 @@ const SearchBar = () => {
         </svg>
         Open Item
       </button>
-      
+      <button style={{
+        ...styeBtn, background: activeTab === "combo" ? "#e05c20" : "#fff",
+        color: activeTab === "combo" ? "#fff" : "#68665c",
+      }} className='' onClick={() =>
+        setActiveTab((prev) => (prev === "combo" ? "menu" : "combo"))
+      }>
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+          <circle cx="8" cy="8" r="5.5"></circle>
+          <path d="M8 5.5v5M5.5 8h5"></path>
+        </svg>
+        {activeTab === "combo" ? "Menu Items" : "Combos & Meals"}
+      </button>
 
       {showFilter && (
         <div style={{

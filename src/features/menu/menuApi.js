@@ -75,9 +75,10 @@ export const menuApi = {
     try {
       const slug = getRestaurantSlug();
 
-      const [categoriesRes, menuRes] = await Promise.all([
+      const [categoriesRes, menuRes,comboRes] = await Promise.all([
         fetch(`${API_BASE_URL}/public/categories/?restaurant=${slug}`),
-        fetch(`${API_BASE_URL}/public/menu-items/?restaurant_id=${slug}`)
+        fetch(`${API_BASE_URL}/public/menu-items/?restaurant_id=${slug}`),
+        fetch(`${API_BASE_URL}/public/combos/?restaurant_id=${slug}&is_available=true`)
       ]);
 
       if (!categoriesRes.ok || !menuRes.ok) {
@@ -86,12 +87,14 @@ export const menuApi = {
 
       const categoriesJson = await categoriesRes.json();
       const menuJson = await menuRes.json();
+      const comboJson = await comboRes.json();
 
       const categories = categoriesJson.results || categoriesJson;
       const menu = menuJson.results || menuJson;
+      const combos = comboJson.results || comboJson;
 
 
-      return transformData(categories, menu);
+      return transformData(categories, menu,combos);
 
     } catch (error) {
 
@@ -100,76 +103,11 @@ export const menuApi = {
       return getFallbackData();
     }
   }
-//   fetchMenuData: async () => {
-//   try {
-//     const slug = getRestaurantSlug();
-
-//     // ✅ OFFLINE MODE
-//     if (!navigator.onLine && window.electronAPI) {
-//       console.log("Offline → loading from SQLite");
-
-//       const local = await window.electronAPI.getMenu();
-
-//       if (local.menu.length > 0) {
-//         return {
-//           restaurant_name: "Offline Restaurant",
-//           categories: local.categories,
-//           items: local.menu,
-//         };
-//       }
-//     }
-
-//     // ✅ ONLINE MODE
-//     const [categoriesRes, menuRes] = await Promise.all([
-//       fetch(`${API_BASE_URL}/public/categories/?restaurant=${slug}`),
-//       fetch(`${API_BASE_URL}/public/menu-items/?restaurant_id=${slug}`)
-//     ]);
-
-//     if (!categoriesRes.ok || !menuRes.ok) {
-//       throw new Error("API failed");
-//     }
-
-//     const categoriesJson = await categoriesRes.json();
-//     const menuJson = await menuRes.json();
-
-//     const categories = categoriesJson.results || categoriesJson;
-//     const menu = menuJson.results || menuJson;
-
-//     const transformed = transformData(categories, menu);
-
-//     // ✅ SAVE TO SQLITE
-//     if (window.electronAPI) {
-//       await window.electronAPI.saveMenu(
-//         transformed.categories,
-//         transformed.items
-//       );
-//     }
-
-//     return transformed;
-
-//   } catch (error) {
-//     console.log("API failed → fallback to SQLite");
-
-//     if (window.electronAPI) {
-//       const local = await window.electronAPI.getMenu();
-
-//       if (local.menu.length > 0) {
-//         return {
-//           restaurant_name: "Offline Restaurant",
-//           categories: local.categories,
-//           items: local.menu,
-//         };
-//       }
-//     }
-
-//     return getFallbackData();
-//   }
-// }
 };
-const transformData = (categoriesData, menuData) => {
+const transformData = (categoriesData, menuData,combosData = []) => {
   const categories = extractArray(categoriesData);
   const menuItems = extractArray(menuData);
-
+ const combos = extractArray(combosData); 
   const getRestaurantName = () => {
     if (menuItems && menuItems.length > 0) {
       const firstItem = menuItems[0];
@@ -221,11 +159,37 @@ const transformData = (categoriesData, menuData) => {
       has_addons: item.has_addons || false,
     };
   });
+   const comboCategory = categories.find(c =>
+    c.name.toLowerCase().includes("combo")
+  );
+
+  const transformedCombos = combos.map(combo => ({
+    id: `combo-${combo.id}`,
+    name: combo.name,
+    description: combo.description || "",
+    image: combo.image,
+    restaurant_name: combo.restaurant_name,
+
+    base_price: Number(combo.price),
+    min_price: Number(combo.price),
+    max_price: Number(combo.price),
+
+    category: comboCategory?.id?.toString() || "combo",
+    category_id: comboCategory?.id || "combo",
+    category_name: comboCategory?.name || "Combos & Meals",
+
+    food_type: "combo",
+    combo_items: combo.items || [],
+
+    has_variants: false,
+    has_addons: false,
+  }));
+
 
   return {
     restaurant_name: restaurantName,
     categories: transformedCategories,
-    items: transformedItems,
+    items: [...transformedItems, ...transformedCombos],
   };
 };
 

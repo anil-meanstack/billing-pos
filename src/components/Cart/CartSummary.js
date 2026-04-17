@@ -89,11 +89,10 @@ const CartSummary = (props) => {
     }, 0);
   }, [tax_breakdown, items.length]);
 
+
   useEffect(() => {
-    if (!orderType) {
-      dispatch(setOrderType(CONSTANTS.ORDER_TYPES.DINE_IN));
-    }
-  }, [orderType, dispatch]);
+    dispatch(setOrderType(CONSTANTS.ORDER_TYPES.DINE_IN));
+  }, [dispatch]);
 
   const discountAmount = useMemo(() =>
     Number(cartSummary?.discount_amount) || 0,
@@ -632,7 +631,7 @@ const CartSummary = (props) => {
               setShowCancelConfirm(false);
             }}
             message="All items will be removed from cart."
-            />
+          />
         )}
 
         {showPaymentModal && (

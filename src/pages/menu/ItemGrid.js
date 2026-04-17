@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { fetchMenuData } from "../../features/menu/menuSlice";
 import { addToCart, loadOrderToCart, loadCart, placeOrder } from "../../features/cart/cartSlice";
+import { addComboApi } from "../../features/cart/cartApi";
 import { loadTablesFromApi } from "../../features/table/tableSlice"
 import { fetchOrderHistory } from "../../features/orders/ordersSlice";
 import Categories from "./components/Categories";
@@ -18,15 +19,15 @@ const ItemGrid = () => {
   const dispatch = useDispatch();
   const location = useLocation();
 
-  const { items, selectedCategory, searchTerm, error, loading, filters  } = useSelector(
+  const { items, selectedCategory, searchTerm, error, loading, filters } = useSelector(
     (state) => state.menu
   );
 
-  // const { table, orderId } = location.state || {};
   const { table, tableId, tableNumber, orderType, orderId } = location.state || {};
 
   const [showModal, setShowModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
+  const [activeTab, setActiveTab] = useState("menu");
 
   useEffect(() => {
     dispatch(fetchMenuData());
@@ -93,32 +94,38 @@ const ItemGrid = () => {
     );
   };
 
-  // const filteredItems = items.filter((item) => {
-  //   const matchesCategory =
-  //     selectedCategory === "all" || item.category === selectedCategory;
 
-  //   const matchesSearch =
-  //     item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //     item.description?.toLowerCase().includes(searchTerm.toLowerCase());
-
-  //   return matchesCategory && matchesSearch;
-  // });
   const filteredItems = items
     .filter((item) => {
-      // ✅ Category
-      const matchesCategory =
-        selectedCategory === "all" || item.category === selectedCategory;
 
-      // ✅ Search
-      const matchesSearch =
-        item.name.toLowerCase().includes(searchTerm.toLowerCase());
+      if (activeTab === "menu" && item.food_type === "combo") {
+        return false;
+      }
 
-      // ✅ Food Type (MULTI SELECT)
-      const matchesFoodType =
-        filters.foodTypes.length === 0 ||
-        filters.foodTypes.includes(item.food_type?.toLowerCase());
+      if (activeTab === "combo" && item.food_type !== "combo") {
+        return false;
+      }
 
-      return matchesCategory && matchesSearch && matchesFoodType;
+      if (activeTab === "menu") {
+        if (selectedCategory !== "all" && item.category !== selectedCategory) {
+          return false;
+        }
+      }
+
+      if (!item.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+        return false;
+      }
+
+      if (activeTab === "menu") {
+        if (
+          filters.foodTypes.length > 0 &&
+          !filters.foodTypes.includes(item.food_type?.toLowerCase())
+        ) {
+          return false;
+        }
+      }
+
+      return true;
     })
     .sort((a, b) => {
       const priceA = Number(a.base_price || a.min_price || 0);
@@ -132,10 +139,19 @@ const ItemGrid = () => {
       return 0;
     });
 
-
   const handleAddToCart = async (item, sizeKey) => {
     try {
       const restaurantId = getRestaurantId();
+      const isCombo = item.id.toString().startsWith("combo-");
+
+      if (isCombo) {
+        const comboId = item.id.replace("combo-", "");
+
+        await addComboApi(comboId, 1);
+
+        dispatch(loadCart());
+        return;
+      }
 
       if (!restaurantId) {
         alert("Restaurant ID not found. Please login again.");
@@ -199,7 +215,7 @@ const ItemGrid = () => {
 
         <div className="menuSection">
 
-          <SearchBar />
+          <SearchBar setActiveTab={setActiveTab} activeTab={activeTab}/>
           <Categories />
 
           <div className="menuGrid">
@@ -216,7 +232,6 @@ const ItemGrid = () => {
         </div>
 
         <div className="orderSection">
-          {/* <CartSummary table={table?.id || null} /> */}
           <CartSummary
             tableId={tableId}
             tableNumber={tableNumber}

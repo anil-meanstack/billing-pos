@@ -52,7 +52,7 @@ const OrderDetailsModal = ({
                             </div> <div className="divider" />
                             <div className="receipt-row">
                                 <span>Order No - </span>
-                                <span>#{lastOrder?.kot_number}</span>
+                                <span>#{lastOrder?.daily_number}</span>
                             </div>
                             <div className="receipt-row">
                                 <span>Table</span>
@@ -186,7 +186,7 @@ const OrderDetailsModal = ({
                         orderNotes={lastOrder?.order_notes}
                         discountAmount={lastOrder?.discount_amount}
                         address={address}
-                        orderNumber={lastOrder?.kot_number}
+                        orderNumber={lastOrder?.daily_number}
                     />
                 </div>
             </div>

@@ -63,21 +63,44 @@ const Modal = ({ show, onClose, item }) => {
     return selected.variants[first.group_id];
   }, [selected, variantGroups]);
 
-  const addonSteps = useMemo(() => {
-    if (!mainVariant) return [];
+  // const addonSteps = useMemo(() => {
+  //   if (!mainVariant) return [];
 
+  //   return addonCategories
+  //     .filter((cat) =>
+  //       cat.name?.toLowerCase().trim() ===
+  //       mainVariant.name?.toLowerCase().trim()
+  //     )
+  //     .map((cat) => ({
+  //       ...cat,
+  //       type: "addon",
+  //     }));
+  // }, [mainVariant, addonCategories]);
+
+  const addonSteps = useMemo(() => {
+    // ✅ if no variants → show all addons directly
+    if (!item.has_variants) {
+      return addonCategories.map((cat) => ({
+        ...cat,
+        type: "addon",
+      }));
+    }
+
+    // ✅ if variants → filter by variant
+    if (!mainVariant) return [];
+    const normalize = (str) => str?.toLowerCase().replace(/\s+/g, "").trim();
     return addonCategories
-      .filter((cat) =>
-        cat.name?.toLowerCase().trim() ===
-        mainVariant.name?.toLowerCase().trim()
+      .filter((cat) => normalize(cat.name) === normalize(mainVariant.name)
       )
       .map((cat) => ({
         ...cat,
         type: "addon",
       }));
-  }, [mainVariant, addonCategories]);
-
+  }, [mainVariant, addonCategories, item.has_variants]);
   const steps = useMemo(() => {
+    if (!item.has_variants) {
+      return addonSteps; // directly addons
+    }
     return [
       ...variantGroups.map((g) => ({
         ...g,
@@ -85,7 +108,7 @@ const Modal = ({ show, onClose, item }) => {
       })),
       ...addonSteps,
     ];
-  }, [variantGroups, addonSteps]);
+  }, [variantGroups, addonSteps, item.has_variants]);
   const nextStep = steps[activeIndex + 1];
   const activeStep = steps[activeIndex];
 
@@ -115,16 +138,15 @@ const Modal = ({ show, onClose, item }) => {
 
       let updated = [];
 
-      if (current.includes(option.id)) {
-        updated = current.filter((id) => id !== option.id);
+      if (current.includes(Number(option.id))) {
+        updated = current.filter((id) => id !== Number(option.id));
       } else {
         if (max && current.length >= max) {
           showError(`You can select only ${max} items`);
           return;
         }
-        updated = [...current, option.id];
+        updated = [...current, Number(option.id)];
       }
-
       setSelected((prev) => ({
         ...prev,
         addons: {
@@ -147,19 +169,52 @@ const Modal = ({ show, onClose, item }) => {
     }
   };
 
+  // const totalPrice = useMemo(() => {
+  //   let total = parseFloat(item.base_price || 0);
+
+  //   Object.values(selected.variants).forEach((v) => {
+  //     total += parseFloat(v.price_modifier || 0);
+  //   });
+
+  //   Object.entries(selected.addons).forEach(([catId, ids]) => {
+  //     const cat = addonCategories.find((c) => c.id === catId);
+
+  //     ids.forEach((id) => {
+  //       const addon = cat?.addons.find((a) => a.id === id);
+  //       total += parseFloat(addon?.price || 0);
+  //     });
+  //   });
+
+  //   return total * quantity;
+  // }, [selected, quantity, item, addonCategories]);
   const totalPrice = useMemo(() => {
-    let total = parseFloat(item.base_price || 0);
+    let total = 0;
 
-    Object.values(selected.variants).forEach((v) => {
-      total += parseFloat(v.price_modifier || 0);
-    });
+    // ✅ Base / Variant
+    if (item.has_variants) {
+      Object.values(selected.variants).forEach((v) => {
+        total += Number(v.final_price || 0);
+      });
+    } else {
+      total += Number(item.base_price || 0);
+    }
 
+    // ✅ Addons (NO DUPLICATE + SAFE MATCH)
     Object.entries(selected.addons).forEach(([catId, ids]) => {
-      const cat = addonCategories.find((c) => c.id === catId);
+      const cat = addonCategories.find(
+        (c) => String(c.id) === String(catId)
+      );
 
-      ids.forEach((id) => {
-        const addon = cat?.addons.find((a) => a.id === id);
-        total += parseFloat(addon?.price || 0);
+      const uniqueIds = [...new Set(ids)];
+
+      uniqueIds.forEach((id) => {
+        const addon = cat?.addons.find(
+          (a) => String(a.id) === String(id)
+        );
+
+        if (addon) {
+          total += Number(addon.price || 0);
+        }
       });
     });
 
@@ -256,7 +311,7 @@ const Modal = ({ show, onClose, item }) => {
                   const isSelected =
                     activeStep.type === "variant"
                       ? selected.variants[activeStep.group_id]?.id === opt.id
-                      : (selected.addons[activeStep.id] || []).includes(opt.id);
+                      : (selected.addons[activeStep.id] || []).includes(Number(opt.id));
 
                   return (
                     <div

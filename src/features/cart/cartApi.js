@@ -291,3 +291,52 @@ export const clearCartApi = async () => {
   }
 };
 
+export const addComboApi = async (comboId, quantity = 1) => {
+  const slug = getRestaurantSlug();
+  const token = getToken();
+  const userType = getUserType();
+
+  const isOffline = !navigator.onLine;
+
+  try {
+    if (isOffline) {
+      throw new Error("Offline mode");
+    }
+
+    const response = await fetch(
+      `${API_BASE_URL}/${userType}/cart/${slug}/add-combo/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+          "X-CSRFToken": getCsrfToken(),
+        },
+        body: JSON.stringify({
+          combo_id: comboId,
+          quantity,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      const text = await response.text();
+      try {
+        const data = JSON.parse(text);
+        throw new Error(data?.message || "Add combo failed");
+      } catch {
+        throw new Error(`Server error: ${response.status}`);
+      }
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.log("Offline → combo save locally");
+
+    return {
+      offline: true,
+      combo_id: comboId,
+      quantity,
+    };
+  }
+};

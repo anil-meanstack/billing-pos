@@ -60,14 +60,12 @@ const CartItem = ({ item }) => {
     if (menuItem?.variants && menuItem.variants.length > 0) {
       for (const variantGroup of menuItem.variants) {
         if (variantGroup.variants && variantGroup.variants.length > 0) {
-          // Try to find by variant_id
           const exactMatch = variantGroup.variants.find(v => v.id === item?.variant_id);
           if (exactMatch?.final_price) {
             const price = parseFloat(exactMatch.final_price);
             if (!isNaN(price) && price > 0) return price;
           }
 
-          // Try first variant as fallback
           const firstVariant = variantGroup.variants[0];
           if (firstVariant?.final_price) {
             const price = parseFloat(firstVariant.final_price);
@@ -77,17 +75,14 @@ const CartItem = ({ item }) => {
       }
     }
 
-    // Path 3: Check min_price
     if (menuItem?.min_price) {
       const price = parseFloat(menuItem.min_price);
       if (!isNaN(price) && price > 0) return price;
     }
 
-    // Path 4: Check direct price fields on item
-    // const directPrice =  item?.unit_price || item?.price || item?.base_price || item?.sizePrice || item?.selectedPrice;
     const directPrice =
-      item?.unit_price ||   // normal item
-      item?.price ||        // custom item (IMPORTANT)
+      item?.unit_price ||  
+      item?.price ||       
       item?.base_price ||
       item?.sizePrice ||
       item?.selectedPrice;

@@ -1,4 +1,3 @@
-import { useMemo } from "react";
 import { useSelector } from "react-redux";
 
 const MenuItem = ({ item, onAddToCart, onItemClick }) => {
@@ -22,8 +21,6 @@ const MenuItem = ({ item, onAddToCart, onItemClick }) => {
       ? item.max_price
       : item.base_price;
   };
-
-
 
   const formatPrice = (price) => `₹${Number(price || 0).toLocaleString("en-IN")}`;
 
@@ -88,9 +85,9 @@ const MenuItem = ({ item, onAddToCart, onItemClick }) => {
           </div>
         </div>
 
-        {!item.is_available && (
+        {/* {!item.is_available && (
           <div className="unavailableBadge">Unavailable</div>
-        )}
+        )} */}
       </div>
 
 

@@ -4,7 +4,7 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 import Sidebar from "./components/Sidebar/Sidebar";
 import OrderDisplay from "./pages/orderDisplay/OrderDisplay";
-import OrderHistory from "./pages/orderHistory/OrderHistory";
+// import OrderHistory from "./pages/orderHistory/OrderHistory";
 import LoginLanding from "./pages/landingPage/LoginLanding";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import KitchenQueue from "./pages/kitchenQueue/KitchenQueue"
@@ -90,14 +90,14 @@ function App() {
                   }
                 />
 
-                <Route
+                {/* <Route
                   path="/order-history"
                   element={
                     <ProtectedRoute>
                       <OrderHistory />
                     </ProtectedRoute>
                   }
-                />
+                /> */}
 
                 <Route
                   path="/reservations"

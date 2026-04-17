@@ -37,24 +37,6 @@ const AddItemModal = ({ show, onClose, onSave }) => {
     return auth?.accessToken || null;
   };
 
-  // const handleSave = () => {
-  //   if (!isValid) return;
-
-  //   // onSave({
-  //   //   name: itemName.trim(),
-  //   //   price: Number(price),
-  //   //   note: note,
-  //   //   quantity: quantity,
-  //   // });
-
-  //   // // reset
-  //   // setItemName("");
-  //   // setPrice("");
-  //   // setNote("");
-  //   // setQuantity(1);
-
-  //   // onClose();
-  // };
   const handleSave = async () => {
 
     if (!isValid) return;
@@ -86,17 +68,6 @@ const AddItemModal = ({ show, onClose, onSave }) => {
         throw new Error(data?.message || "Failed to add item");
       }
 
-      // onSave({
-      //   cartItemId: data.cart_item.id,
-      //   id: data.cart_item.id,              
-      //   name: data.cart_item.name,
-      //   quantity: data.cart_item.quantity,
-      //   unit_price: data.cart_item.price,
-      //   price: data.cart_item.price,       
-      //   item_total: data.cart_item.total,
-      //   addons: [],
-      //   is_custom: true,
-      // });
       dispatch(loadCart());
 
       setItemName("");
