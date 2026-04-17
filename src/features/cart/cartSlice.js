@@ -121,19 +121,19 @@ const cartSlice = createSlice({
       // state.items = state.items.filter(
       //   (item) => !(item.id === itemId && item.size === sizeKey),
       // );
-       state.items = state.items.filter(
-    (item) =>
-      item.cartItemId !== itemId &&
-      item.id !== itemId
-  );
+      state.items = state.items.filter(
+        (item) =>
+          item.cartItemId !== itemId &&
+          item.id !== itemId
+      );
     },
 
     updateQuantity: (state, action) => {
       const { itemId, sizeKey, quantity } = action.payload;
 
       const item = state.items.find(
-  (i) => i.cartItemId === itemId
-)
+        (i) => i.cartItemId === itemId
+      )
 
       if (item) {
         item.quantity = quantity;
@@ -212,7 +212,7 @@ const cartSlice = createSlice({
           frontendOrderType = "dine-in";
         }
 
-        if (apiOrderType) {
+        if (!state.orderType && apiOrderType) {
           state.orderType = frontendOrderType;
         }
 
@@ -249,62 +249,54 @@ const cartSlice = createSlice({
         if (items.length) {
           state.items = items.map((item) => {
             // Calculate total addons price
-            const addonsTotal =
-              item.addons?.reduce((sum, addon) => {
-                return sum + (Number(addon.price) || 0);
-              }, 0) || 0;
+            const addonsTotal = item.addons?.reduce((sum, addon) => {
+              return sum + (Number(addon.price) || 0);
+            }, 0) || 0;
 
-            // return {
-            //   // id: item.menu_item_id || item.id || "",
-            //   id: item.cart_item_id,
-            //   cartItemId: item.cart_item_id,
-            //   menu_item_id: item.menu_item_id || item.id || "",
-            //   name: item.menu_item_name || item.name || "",
-            //   image: item.menu_item_image || item.image || "",
-            //   category: item.menu_item_category || item.category || "",
-            //   quantity: Number(item.quantity) || 1,
-            //   selectedPrice: Number(item.variant_price) || Number(item.unit_price) || 0,
-            //   variant_id: item.variant_id || item.variant || "",
-            //   size: item.variant || item.size || "",
-            //   sizeName: item.variant_name || item.sizeName || "",
-            //   sizePrice: Number(item.variant_price) || Number(item.sizePrice) || 0,
-            //   addons: item.addons || [],
-            //   finalPrice: Number(item.item_total) || Number(item.unit_price) || Number(item.variant_price) + addonsTotal || 0,
-            //   cartItemId: item.cart_item_id || "",
-            //   instructions: item.special_instructions || item.instructions || "",
-            //   menu_item: item.menu_item || null,
-            // };
+            // For simple items (no variant)
+            const isSimpleItem = !item.variant_id && !item.variant;
+
+            // Get the base price (without addons)
+            let basePrice = 0;
+            if (isSimpleItem) {
+              // Simple item: use unit_price as base (should be without addons)
+              basePrice = Number(item.unit_price) || 0;
+            } else {
+              // Variant item: use variant_price
+              basePrice = Number(item.variant_price) || 0;
+            }
+
+            // Get the final price (with addons)
+            let finalPrice = Number(item.item_total) || 0;
+
+            // If item_total is not provided, calculate it
+            if (!finalPrice && basePrice > 0) {
+              finalPrice = basePrice + addonsTotal;
+            }
+
             return {
-              id: item.cart_item_id, 
+              id: item.cart_item_id,
               cartItemId: item.cart_item_id,
-
               menu_item_id: item.menu_item_id || "",
-              name: item.menu_item_name || item.name|| "",
+              name: item.menu_item_name || item.name || "",
               image: item.menu_item_image || "",
               category: item.menu_item_category || "",
-
               quantity: Number(item.quantity) || 1,
 
-              selectedPrice:
-                Number(item.variant_price) || Number(item.unit_price) || 0,
+              // Store base price separately
+              basePrice: basePrice,  // ← Add this
+              selectedPrice: basePrice,  // ← Use base price here
 
               variant_id: item.variant_id || "",
               size: item.variant || "",
               sizeName: item.variant_name || "",
-
               sizePrice: Number(item.variant_price) || 0,
-
               addons: item.addons || [],
 
-              finalPrice:
-                Number(item.item_total) ||
-                Number(item.unit_price) ||
-                Number(item.variant_price) + addonsTotal ||
-                0,
+              // Store final price (base + addons)
+              finalPrice: finalPrice,  // ← This already includes addons
 
-              instructions:
-                item.special_instructions || item.instructions || "",
-
+              instructions: item.special_instructions || item.instructions || "",
               menu_item: item.menu_item || null,
             };
           });
@@ -368,7 +360,7 @@ const cartSlice = createSlice({
 
         state.items = response.cart.items.map((item) => ({
           id: item.menu_item_id || "",
-          name: item.menu_item_name ||item.name|| "",
+          name: item.menu_item_name || item.name || "",
           image: item.menu_item_image || "",
           category: item.menu_item_category || "",
 

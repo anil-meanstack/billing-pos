@@ -91,8 +91,10 @@ const CartSummary = (props) => {
 
 
   useEffect(() => {
+  if (!orderType) {
     dispatch(setOrderType(CONSTANTS.ORDER_TYPES.DINE_IN));
-  }, [dispatch]);
+  }
+}, [dispatch, orderType]);
 
   const discountAmount = useMemo(() =>
     Number(cartSummary?.discount_amount) || 0,
