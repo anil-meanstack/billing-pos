@@ -61,12 +61,11 @@ const MenuItem = ({ item, onAddToCart, onItemClick }) => {
         <div className="itemHeader">
           <h3 className="itemName">{item.name}</h3>
         </div>
-        {item.description > 0 && (
+        {item.description && (
           <p className="itemDescription">{item.description}</p>
         )}
 
-
-        <div className="d-flex justify-content-between">
+        <div className="d-flex mt-1 justify-content-between">
           <div className="itemPrice">
             {getStartingPrice() === getMaxPrice() ? (
               <span>{formatPrice(getStartingPrice())}</span>

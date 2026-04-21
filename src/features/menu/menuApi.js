@@ -166,7 +166,7 @@ const transformData = (categoriesData, menuData,combosData = []) => {
   const transformedCombos = combos.map(combo => ({
     id: `combo-${combo.id}`,
     name: combo.name,
-    description: combo.description || "",
+    description: combo.description || combo.items_display || "",
     image: combo.image,
     restaurant_name: combo.restaurant_name,
 

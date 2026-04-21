@@ -11,16 +11,16 @@ import { checkoutOrder } from "../../features/orders/ordersSlice";
 import CartItem from "./CartItem";
 import Coupons from "./Coupons"
 import PrintTemplate from "../PrintTemplate";
-import OrderDetailsModal from "../../pages/components/OrderDetailsModal"
+import OrderDetailsModal from "../../pages/components/OrderDetailsModal";
 import CancelModal from "../../pages/menu/components/Modal/CancelModal";
 
 // Constants
 const CONSTANTS = {
   PHONE_REGEX: /^\d{10}$/,
   PAYMENT_METHODS: {
-    CASH: 'CASH',
-    SCANNER: 'UPI',
-    CARD: 'CARD',
+    CASH: 'cash',
+    SCANNER: 'upi',
+    CARD: 'card',
 
   },
   ORDER_TYPES: {
