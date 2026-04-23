@@ -77,7 +77,7 @@ const OrderDetailsModal = ({
                             {lastOrder.items.map((item, i) => (<div key={i} className="receipt-item">
                                 <div className="receipt-row">
                                     <span className="item-name"> {item.name}{" "} {item.sizeName?.trim() && `(${item.sizeName})`} × {item.quantity}
-                                    </span> <span className="item-price"> ₹{(parseFloat(item.finalPrice ?? item.price ?? 0) || 0).toFixed(2)} </span>
+                                    </span> <span className="item-price"> ₹{(parseFloat(item.finalPrice ?? item.selectedPrice ?? item.price ?? 0) || 0).toFixed(2)} </span>
                                 </div>
                                 {item.addons?.length > 0 && (
                                     <div className="addons">

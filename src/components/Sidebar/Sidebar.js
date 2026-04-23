@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import "./Sidebar.css";
 import { NavLink } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { setTableNumber, setTableId } from "../../features/cart/cartSlice";
+import { setTableNumber, setTableId, updateTable } from "../../features/cart/cartSlice";
 import { setStaff } from "../../features/staff/staffSlice";
 import Alert from "../Alert/Alert";
 
@@ -11,6 +11,7 @@ const Sidebar = () => {
   const tables = useSelector((state) => state.tables.list);
   const { orders } = useSelector((state) => state.orders);
   const [selectedTableId, setSelectedTableId] = useState(null);
+  const orderType = useSelector((state) => state.cart.orderType);
   const { newCount = 0, preparingCount = 0, readyCount = 0 } = useSelector(
     (state) => state.kitchen
   );
@@ -51,26 +52,54 @@ const Sidebar = () => {
 
   const totalKitchenOrder = (newCount || 0) + (preparingCount || 0) + (readyCount || 0);
 
+  // const handleTableClick = (table) => {
+
+  //   if (table.status?.toLowerCase() === "reserved") {
+  //     setShowAlert({
+  //       show: true,
+  //       message: `Table ${table.tableNumber} is reserved and cannot be selected`,
+  //       type: "warning",
+  //     });
+  //     return;
+  //   }
+
+  //   const unavailableStatuses = [ "reserved", "booked", "maintenance"];
+  //   if (unavailableStatuses.includes(table.status?.toLowerCase())) {
+  //     setShowAlert({
+  //       show: true,
+  //       message: `Table ${table.tableNumber} is ${table.status} and cannot be selected`,
+  //       type: "danger",
+  //     });
+  //     return;
+  //   }
+
+  //   setSelectedTableId(table.id);
+
+  //   dispatch(setTableNumber(table.tableNumber));
+  //   dispatch(setTableId(table.id));
+  //   if (orderType === "dine_in") {
+  //     dispatch(updateTable({
+  //       table_id: table.id,
+  //       order_type: "dine_in",
+  //     }));
+  //   }
+
+  //   localStorage.setItem('selectedTable', JSON.stringify({
+  //     number: table.tableNumber,
+  //     id: table.id
+  //   }));
+
+  //   setShowAlert({
+  //     show: true,
+  //     message: `Table ${table.tableNumber} selected successfully`,
+  //     type: "success",
+  //   });
+  // };
+
   const handleTableClick = (table) => {
-    if (table.status?.toLowerCase() === "occupied") {
-      setShowAlert({
-        show: true,
-        message: `Table ${table.tableNumber} is currently occupied and cannot be selected`,
-        type: "danger",
-      });
-      return;
-    }
 
-    if (table.status?.toLowerCase() === "reserved") {
-      setShowAlert({
-        show: true,
-        message: `Table ${table.tableNumber} is reserved and cannot be selected`,
-        type: "warning",
-      });
-      return;
-    }
+    const unavailableStatuses = ["reserved", "booked", "maintenance"];
 
-    const unavailableStatuses = ["occupied", "reserved", "booked", "maintenance"];
     if (unavailableStatuses.includes(table.status?.toLowerCase())) {
       setShowAlert({
         show: true,
@@ -80,20 +109,32 @@ const Sidebar = () => {
       return;
     }
 
+    const isOccupied = table.status?.toLowerCase() === "occupied";
+
     setSelectedTableId(table.id);
 
     dispatch(setTableNumber(table.tableNumber));
     dispatch(setTableId(table.id));
+
+    if (orderType === "dine_in") {
+      dispatch(updateTable({
+        table_id: table.id,
+        order_type: "dine_in",
+      }));
+    }
 
     localStorage.setItem('selectedTable', JSON.stringify({
       number: table.tableNumber,
       id: table.id
     }));
 
+    // ✅ SINGLE ALERT (fix)
     setShowAlert({
       show: true,
-      message: `Table ${table.tableNumber} selected successfully`,
-      type: "success",
+      message: isOccupied
+        ? `⚠️ Opening running order for Table ${table.tableNumber}`
+        : `Table ${table.tableNumber} selected successfully`,
+      type: isOccupied ? "warning" : "success",
     });
   };
 
@@ -103,7 +144,7 @@ const Sidebar = () => {
   };
 
   const isTableSelectable = (status) => {
-    const unavailableStatuses = ["occupied", "reserved", "booked", "maintenance"];
+    const unavailableStatuses = ["reserved", "booked", "maintenance"];
     return !unavailableStatuses.includes(status?.toLowerCase());
   };
 
@@ -150,11 +191,11 @@ const Sidebar = () => {
                   ${getStatusClass(t.status)}
                   ${!isSelectable ? "disabled" : ""}
                   ${isOccupied ? "occupied" : ""}`}
-                onClick={() => isSelectable && handleTableClick(t)}
+                onClick={() => handleTableClick(t)}
                 style={{
                   cursor: isSelectable ? "pointer" : "not-allowed",
                   opacity: isSelectable ? 1 : 0.6,
-                  pointerEvents: isSelectable ? "auto" : "none"
+                  pointerEvents: "auto"
                 }}
                 title={!isSelectable ? `Table ${t.tableNumber} is ${t.status || 'unavailable'}` : `Select Table ${t.tableNumber}`}
               >
@@ -181,7 +222,7 @@ const Sidebar = () => {
 
 
       </div>
-     
+
       <Alert
         show={showAlert.show}
         message={showAlert.message}

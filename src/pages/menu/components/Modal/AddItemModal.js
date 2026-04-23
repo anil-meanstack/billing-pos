@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { loadCart } from "../../../../features/cart/cartSlice";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
@@ -67,8 +66,6 @@ const AddItemModal = ({ show, onClose, onSave }) => {
       if (!res.ok) {
         throw new Error(data?.message || "Failed to add item");
       }
-
-      dispatch(loadCart());
 
       setItemName("");
       setPrice("");

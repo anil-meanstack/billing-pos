@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { useDispatch ,useSelector} from "react-redux";
-import { placeOrder, loadCart } from "../../../../features/cart/cartSlice";
+import { useDispatch, useSelector } from "react-redux";
+import { placeOrder } from "../../../../features/cart/cartSlice";
 import "./Modal.css";
 import Alert from "../../../../components/Alert/Alert";
 
@@ -9,6 +9,7 @@ const Modal = ({ show, onClose, item }) => {
 
   const variantGroups = useMemo(() => item?.variants || [], [item?.variants]);
   const addonCategories = useMemo(() => item?.addon_categories || [], [item?.addon_categories]);
+  const { orderType, tableId } = useSelector((state) => state.cart);
 
   const [selected, setSelected] = useState({
     variants: {},
@@ -174,17 +175,15 @@ const Modal = ({ show, onClose, item }) => {
     }
   };
 
-  
+
   const totalPrice = useMemo(() => {
     let total = 0;
 
     if (item.has_variants) {
-      // For items with variants, use variant price_modifier (no base_price)
       Object.values(selected.variants).forEach((v) => {
         total += Number(v.price_modifier || 0);
       });
     } else {
-      // For simple items without variants, use base_price
       total += Number(item.base_price || 0);
     }
 
@@ -210,32 +209,33 @@ const Modal = ({ show, onClose, item }) => {
     return total * quantity;
   }, [selected, quantity, item, addonCategories]);
 
- 
+
 
   const preparePayload = () => {
     const first = variantGroups[0];
 
-    if (!item.has_variants) {
-      return {
-        menu_item_id: item.id,
-        quantity,
-        variant_id: null,
-        addon_ids: Object.values(selected.addons).flat(),
-      };
-    }
-
-    return {
+    let payload = {
       menu_item_id: item.id,
       quantity,
-      variant_id: first ? selected.variants[first.group_id]?.id : null,
+      variant_id: null,
       addon_ids: Object.values(selected.addons).flat(),
+      order_type: orderType || "dine_in",
     };
-  };
 
+    if (item.has_variants && first) {
+      payload.variant_id =
+        selected.variants[first.group_id]?.id || null;
+    }
+
+    if (payload.order_type === "dine_in" && tableId) {
+      payload.table_id = Number(tableId);
+    }
+
+    return payload;
+  };
   const handleAddToCart = async () => {
     try {
       await dispatch(placeOrder(preparePayload())).unwrap();
-      dispatch(loadCart());
       onClose();
     } catch {
       alert("Error");

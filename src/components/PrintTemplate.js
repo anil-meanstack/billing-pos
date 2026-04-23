@@ -87,7 +87,7 @@ const PrintTemplate = ({
                                 paddingRight: "4px",
                                 fontWeight:"600"
                             }}>
-                                ₹{(parseFloat(item.finalPrice ?? item.price ?? 0) || 0).toFixed(2)}
+                                ₹{(parseFloat(item.finalPrice ?? item.selectedPrice ?? item.price ?? 0) || 0).toFixed(2)}
                             </span>
                         )}
                     </div>

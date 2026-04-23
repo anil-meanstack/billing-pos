@@ -29,7 +29,8 @@ const CustomerModal = ({ orderType, customerInfo, dispatch, onClose, onPlaceOrde
 
 
   return (
-    <div className="simple-modal-backdrop">
+    // <div className="simple-modal-backdrop">
+    <div className="modal d-block" tabIndex={-1} style={{ backgroundColor: "rgba(0, 0, 0, 0.4)" }}>
       <div className="simple-modal">
         <div className="modal-header">
           <h6>Customer Details</h6>
@@ -37,21 +38,21 @@ const CustomerModal = ({ orderType, customerInfo, dispatch, onClose, onPlaceOrde
         </div>
 
         <div className="modal-body">
-          <input
-            className="form-control mb-2"
-            placeholder="Name"
-            name="name"
-            value={form.name}
-            onChange={handleChange}
-          />
-
-          <input
+           <input
             className="form-control mb-2"
             placeholder="Phone"
             name="phone"
             value={form.phone}
             onChange={handleChange}
             maxLength="10"
+          />
+          
+          <input
+            className="form-control mb-2"
+            placeholder="Name"
+            name="name"
+            value={form.name}
+            onChange={handleChange}
           />
 
           <input

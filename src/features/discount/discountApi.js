@@ -1,10 +1,7 @@
 
-// const API_BASE_URL =
-//     process.env.NODE_ENV === "production"
-//         ? process.env.REACT_APP_API_BASE_URL
-//         : "/api";
-
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
+
+ 
 
 const getAuthData = () => {
     const data = localStorage.getItem("user");
@@ -91,7 +88,7 @@ export const applyDiscountApi = async (discountCode) => {
     if (!response.ok) {
         throw new Error(data?.message || "Failed to apply discount");
     }
-
+    
     return data;
 };
 

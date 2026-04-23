@@ -381,7 +381,7 @@
 .preview-item {
     display: flex;
     /* gap: 12px; */
-    font-size: 13px;
+    font-size: 11px;
     padding: 4px 6px;
     border-radius: 4px;
     color: #475569;
@@ -672,7 +672,7 @@
     .preview-item {
         display: flex;
         /* gap: 1px; */
-        font-size: 13px;
+        font-size: 11px;
         padding: 4px 6px;
         color: #68665c;
         background: #f6f4ef;

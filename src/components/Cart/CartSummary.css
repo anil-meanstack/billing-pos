@@ -282,10 +282,11 @@
 }
 
 .orderTitle {
-  color: #000;
+  color: #1a1916;
   font-size: 15px;
   font-weight: 600;
   background-clip: text;
+  margin-bottom: 0px;
 }
 
 .orderTypeBtn {
@@ -340,7 +341,7 @@
 
 .paymentMethodBox {
   border-radius: 12px;
-  padding: 10px;
+  padding: 10px 0px;
 }
 
 .paymentOptions {
@@ -812,8 +813,13 @@
   background: #e05c20;
 }
 
-.checkoutButtonsContainer {
+/* .checkoutButtonsContainer {
   width: 100%;
+} */
+ .checkoutButtonsContainer {
+  width: 100%;
+  display: flex;
+  gap: 10px;
 }
 
 .place-order-btn {
@@ -822,8 +828,8 @@
   color: #fff;
   border: none;
   border-radius: 16px;
-  padding: 12px 16px;
-  font-size: 16px;
+  padding: 8px 16px;
+  font-size: 14px;
   font-weight: 600;
 
   display: flex;

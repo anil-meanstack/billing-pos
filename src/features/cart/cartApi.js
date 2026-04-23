@@ -30,8 +30,7 @@ const getUserType = () => {
 };
 
 
-export const placeOrderApi = async (orderData) => {
-  // const restaurantId = getRestaurantId();
+export const addToCartItem = async (orderData) => {
   const slug = getRestaurantSlug();
   const token = getToken();
   const userType = getUserType();
@@ -40,204 +39,98 @@ export const placeOrderApi = async (orderData) => {
     ...orderData
   };
 
+  const response = await fetch(`${API_BASE_URL}/${userType}/cart/${slug}/`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+      "X-CSRFToken": getCsrfToken(),
+    },
+    body: JSON.stringify(payload),
+  });
 
-  const isOffline = !navigator.onLine;
-
-  try {
-    if (isOffline) {
-      throw new Error("Offline mode");
+  if (!response.ok) {
+    const text = await response.text();
+    try {
+      const data = JSON.parse(text);
+      throw new Error(data?.message || "Place order failed");
+    } catch {
+      throw new Error(`Server error: ${response.status}`);
     }
-
-    const response = await fetch(`${API_BASE_URL}/${userType}/cart/${slug}/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        "X-CSRFToken": getCsrfToken(),
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      try {
-        const data = JSON.parse(text);
-        throw new Error(data?.message || "Place order failed");
-      } catch {
-        throw new Error(`Server error: ${response.status}`);
-      }
-    }
-
-    const data = await response.json();
-
-    return data;
-  } catch (error) {
-    console.log("Offline → saving order locally", error.message);
-
-    let itemsToSave = [];
-
-    if (payload.items && payload.items.length > 0) {
-      itemsToSave = payload.items;
-    }
-    else if (payload.menu_item_id) {
-      itemsToSave = [payload];
-    }
-    else if (payload.cart_items && payload.cart_items.length > 0) {
-      itemsToSave = payload.cart_items;
-    }
-
-    return {
-      offline: true,
-      message: "Order saved offline",
-      items: []
-    };
   }
+  const data = await response.json();
+  return data;
 };
 
-export const getOrdersApi = async () => {
+export const updateCartItemApi = async (itemId, res) => {
   const slug = getRestaurantSlug();
   const token = getToken();
   const userType = getUserType();
 
-  const isOffline = !navigator.onLine;
-
-  try {
-    if (isOffline) {
-      throw new Error("Offline mode");
-    }
-
-    const response = await fetch(`${API_BASE_URL}/${userType}/cart/${slug}/`, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-        "X-CSRFToken": getCsrfToken(),
-      },
-    });
-
-    if (!response.ok) {
-      const text = await response.text();
-      try {
-        const data = JSON.parse(text);
-        throw new Error(data?.message || "API failed");
-      } catch {
-        throw new Error(`Server error: ${response.status}`);
-      }
-    }
-
-    const data = await response.json();
-
-    return data;
-  } catch (error) {
-    console.log("Fetching cart from offline storage");
-
-
-
-    return {
-      offline: true
-    };
-  }
-};
-export const updateCartItemApi = async (itemId, quantity) => {
-  const slug = getRestaurantSlug();
-  const token = getToken();
-  const userType = getUserType();
-
-  const isOffline = !navigator.onLine;
-
-  try {
-    if (isOffline) {
-      throw new Error("Offline mode");
-    }
-
-    const response = await fetch(
-      `${API_BASE_URL}/${userType}/cart/${slug}/items/${itemId}/`,
-      {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "X-CSRFToken": getCsrfToken(),
-        },
-        body: JSON.stringify({ quantity }),
-      }
-    );
-
-    if (!response.ok) {
-      const text = await response.text();
-      try {
-        const data = JSON.parse(text);
-        throw new Error(data?.message || "Update failed");
-      } catch {
-        throw new Error(`Server error: ${response.status}`);
-      }
-    }
-
-    const data = await response.json();
-
-    return data;
-  } catch (error) {
-    console.log("Offline → saving update locally");
-
-
-    return {
-      offline: true,
-      itemId,
-      quantity
-    };
-  }
-};
-
-export const removeCartItemApi = async (itemId) => {
-  const slug = getRestaurantSlug();
-  const token = getToken();
-  const userType = getUserType();
-
-  const isOffline = !navigator.onLine;
-
-  try {
-    if (isOffline) {
-      throw new Error("Offline mode");
-    }
-
-    const response = await fetch(
-      `${API_BASE_URL}/${userType}/cart/${slug}/items/${itemId}/`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "X-CSRFToken": getCsrfToken(),
-        },
-      },
-    );
-
-    if (!response.ok) {
-      const text = await response.text();
-      try {
-        const data = JSON.parse(text);
-        throw new Error(data?.message || "Remove failed");
-      } catch {
-        throw new Error(`Server error: ${response.status}`);
-      }
-    }
-
-
-    return {};
-  } catch (error) {
-    console.log("Offline → remove locally");
-
-    return { offline: true };
-  }
-};
-
-export const tableSelectable = async (res) => {
-  const slug = getRestaurantSlug();
-  const token = getToken();
-  const userType = getUserType();
-  await fetch(
-    `${API_BASE_URL}/${userType}/cart/${slug}/`,
+  const response = await fetch(
+    `${API_BASE_URL}/${userType}/cart/${slug}/items/${itemId}/`,
     {
       method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "X-CSRFToken": getCsrfToken(),
+      },
+      body: JSON.stringify(res),
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    try {
+      const data = JSON.parse(text);
+      throw new Error(data?.message || "Update failed");
+    } catch {
+      throw new Error(`Server error: ${response.status}`);
+    }
+  }
+  const data = await response.json();
+  return data;
+}
+export const getCartApi = async (res) => {
+  const slug = getRestaurantSlug();
+  const token = getToken();
+  const userType = getUserType();
+
+  const params = new URLSearchParams();
+
+  if (res?.order_type) {
+    params.append("order_type", res.order_type);
+  }
+
+  if (res?.order_type === "dine_in" && res?.table_id) {
+    params.append("table_id", res.table_id);
+  }
+
+  const url = `${API_BASE_URL}/${userType}/cart/${slug}/?${params.toString()}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Fetch cart failed");
+  }
+
+  return await response.json();
+};
+export const removeCartItemApi = async (itemId, res) => {
+  const slug = getRestaurantSlug();
+  const token = getToken();
+  const userType = getUserType();
+
+  const response = await fetch(
+    `${API_BASE_URL}/${userType}/cart/${slug}/items/${itemId}/`,
+    {
+      method: "DELETE",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -246,98 +139,109 @@ export const tableSelectable = async (res) => {
       body: JSON.stringify(res)
     },
   );
+
+  if (!response.ok) {
+    const text = await response.text();
+    try {
+      const data = JSON.parse(text);
+      throw new Error(data?.message || "Remove failed");
+    } catch {
+      throw new Error(`Server error: ${response.status}`);
+    }
+  }
+
+  return {};
 }
+
+export const tableSelectable = async (res) => {
+  const slug = getRestaurantSlug();
+  const token = getToken();
+  const userType = getUserType();
+
+  const response = await fetch(
+    `${API_BASE_URL}/${userType}/cart/${slug}/`,
+    {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "X-CSRFToken": getCsrfToken(),
+      },
+      body: JSON.stringify(res),
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    try {
+      const data = JSON.parse(text);
+      throw new Error(data?.message || "Table update failed");
+    } catch {
+      throw new Error(`Server error: ${response.status}`);
+    }
+  }
+
+  return await response.json();
+};
 
 export const clearCartApi = async () => {
   const slug = getRestaurantSlug();
   const token = getToken();
   const userType = getUserType();
 
-  const isOffline = !navigator.onLine;
-
-  try {
-    if (isOffline) {
-      throw new Error("Offline mode");
-    }
-
-    const response = await fetch(
-      `${API_BASE_URL}/${userType}/cart/${slug}/`,
-      {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "X-CSRFToken": getCsrfToken(),
-        },
+  const response = await fetch(
+    `${API_BASE_URL}/${userType}/cart/${slug}/`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "X-CSRFToken": getCsrfToken(),
       },
-    );
+    },
+  );
 
-    if (!response.ok) {
-      const text = await response.text();
-      try {
-        const errorData = JSON.parse(text);
-        throw new Error(errorData?.message || "Clear cart failed");
-      } catch {
-        throw new Error(`Server error: ${response.status}`);
-      }
+  if (!response.ok) {
+    const text = await response.text();
+    try {
+      const errorData = JSON.parse(text);
+      throw new Error(errorData?.message || "Clear cart failed");
+    } catch {
+      throw new Error(`Server error: ${response.status}`);
     }
-
-
-    return { success: true };
-  } catch (error) {
-    console.log("Offline → clearing cart locally");
-
-
-    return { offline: true, success: true };
   }
+
+
+  return { success: true };
 };
 
-export const addComboApi = async (comboId, quantity = 1) => {
+export const addComboApi = async (res) => {
   const slug = getRestaurantSlug();
   const token = getToken();
   const userType = getUserType();
 
-  const isOffline = !navigator.onLine;
-
-  try {
-    if (isOffline) {
-      throw new Error("Offline mode");
+  const response = await fetch(
+    `${API_BASE_URL}/${userType}/cart/${slug}/add-combo/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+        "X-CSRFToken": getCsrfToken(),
+      },
+      body: JSON.stringify(res),
     }
+  );
 
-    const response = await fetch(
-      `${API_BASE_URL}/${userType}/cart/${slug}/add-combo/`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-          "X-CSRFToken": getCsrfToken(),
-        },
-        body: JSON.stringify({
-          combo_id: comboId,
-          quantity,
-        }),
-      }
-    );
-
-    if (!response.ok) {
-      const text = await response.text();
-      try {
-        const data = JSON.parse(text);
-        throw new Error(data?.message || "Add combo failed");
-      } catch {
-        throw new Error(`Server error: ${response.status}`);
-      }
+  if (!response.ok) {
+    const text = await response.text();
+    try {
+      const data = JSON.parse(text);
+      throw new Error(data?.message || "Add combo failed");
+    } catch {
+      throw new Error(`Server error: ${response.status}`);
     }
-
-    return await response.json();
-  } catch (error) {
-    console.log("Offline → combo save locally");
-
-    return {
-      offline: true,
-      combo_id: comboId,
-      quantity,
-    };
   }
+
+  return await response.json();
 };

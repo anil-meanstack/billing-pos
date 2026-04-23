@@ -1,14 +1,14 @@
 import React from "react";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import {
-  updateQuantity,
   removeCartItem,
   updateCartItem,
-  loadCart,
 } from "../../features/cart/cartSlice";
 
 const CartItem = ({ item }) => {
+  
   const dispatch = useDispatch();
+  const { orderType, tableId } = useSelector((state) => state.cart);
 
   const formatPrice = (price) => {
     if (price === undefined || price === null) return "₹0";
@@ -17,41 +17,21 @@ const CartItem = ({ item }) => {
     return `₹${numPrice.toFixed(2)}`;
   };
 
-  // Get the base price (without addons) for display
-  const getBasePrice = () => {
-    // If we have basePrice stored, use it
-    if (item?.basePrice) return item.basePrice;
-    
-    // For simple items from menu_item
-    if (item?.menu_item && !item?.menu_item?.has_variants) {
-      return parseFloat(item.menu_item.base_price || 0);
-    }
-    
-    // For variant items
-    if (item?.sizePrice) return item.sizePrice;
-    
-    // Fallback to selectedPrice
-    return parseFloat(item?.selectedPrice || 0);
-  };
+const getBasePrice = () => {
+  if (item?.sizePrice && item.sizePrice > 0) {
+    return Number(item.sizePrice);
+  }
 
-  // Get the final price (WITH addons already included)
-  const getFinalPrice = () => {
-    // If we have finalPrice from API, use it directly
-    if (item?.finalPrice && item.finalPrice > 0) {
-      return item.finalPrice;
-    }
-    
-    // Otherwise calculate: basePrice + addons
-    const basePrice = getBasePrice();
-    const addonsTotal = item?.addons?.reduce((sum, addon) => {
-      return sum + (parseFloat(addon.price) || 0);
-    }, 0) || 0;
-    
-    return basePrice + addonsTotal;
-  };
+  if (item?.base_price && item.base_price > 0) {
+    return Number(item.base_price);
+  }
+
+  return Number(item?.selectedPrice || 0);
+};
+
+  
 
   const basePrice = getBasePrice();
-  const finalPrice = getFinalPrice();  // This already includes addons
   const itemQuantity = item?.quantity || 1;
   const cartItemId = item?.cartItemId;
 
@@ -61,27 +41,38 @@ const CartItem = ({ item }) => {
       return;
     }
 
-    dispatch(updateQuantity({
-      itemId: cartItemId,
-      sizeKey: item?.size,
-      quantity: newQuantity,
-    }));
+    const payload = {
+      quantity: newQuantity,                  
+      order_type: orderType || "dine_in",
+    };
+
+    if (orderType === "dine_in" && tableId) {
+      payload.table_id = String(tableId);    
+    }
 
     if (cartItemId && navigator.onLine) {
-      dispatch(updateCartItem({ cartItemId, quantity: newQuantity }))
-        .then(() => dispatch(loadCart()));
+      dispatch(updateCartItem({
+        cartItemId,
+        res: payload
+      }));
     }
   };
 
   const handleRemove = () => {
-    if (cartItemId && navigator.onLine) {
-      dispatch(removeCartItem(cartItemId)).then(() => dispatch(loadCart()));
+    const payload = {
+      order_type: orderType || "dine_in",
+    };
+
+    if (orderType === "dine_in" && tableId) {
+      payload.table_id = tableId;
     }
-    dispatch(updateQuantity({
-      itemId: cartItemId,
-      sizeKey: item?.size,
-      quantity: 0,
-    }));
+
+    if (cartItemId && navigator.onLine) {
+      dispatch(removeCartItem({
+        itemId: cartItemId,
+        res: payload
+      }));
+    }
   };
 
   return (
@@ -103,11 +94,10 @@ const CartItem = ({ item }) => {
           <button className="quantityButton" onClick={() => handleQuantityChange(itemQuantity + 1)}>+</button>
         </div>
         <div className="cartItemSubtotal">
-          {formatPrice(finalPrice )}
+          {formatPrice(item.selectedPrice )}
         </div>
       </div>
 
-      {/* Display addons if any */}
       {item?.addons && item.addons.length > 0 && (
         <div className="cartItemAddons">
           <small className="text-muted">Addons:</small>

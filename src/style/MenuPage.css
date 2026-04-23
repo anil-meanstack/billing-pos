@@ -64,11 +64,6 @@
   box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
 }
 
-.paymentMethodBox {
-  background: #f1f3f5;
-  border-radius: 12px;
-  padding: 10px;
-}
 
 .paymentOptions {
   display: flex;
@@ -83,16 +78,6 @@
   font-weight: 600;
   transition: all 0.3s ease;
 }
-
-/* .cancel:hover {
-  border-radius: 8px;
-  color: #ffffff !important;
-  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
-  border-color: transparent !important;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
-} */
-
 
 .charges-overlay {
   position: fixed;

@@ -2,8 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useLocation } from "react-router-dom";
 import { fetchMenuData } from "../../features/menu/menuSlice";
-import { addToCart, loadOrderToCart, loadCart, placeOrder } from "../../features/cart/cartSlice";
-import { addComboApi } from "../../features/cart/cartApi";
+import { addToCart, loadOrderToCart, placeOrder ,addCombo } from "../../features/cart/cartSlice";
 import { loadTablesFromApi } from "../../features/table/tableSlice"
 import { fetchOrderHistory } from "../../features/orders/ordersSlice";
 import Categories from "./components/Categories";
@@ -23,7 +22,8 @@ const ItemGrid = () => {
     (state) => state.menu
   );
 
-  const { table, tableId, tableNumber, orderType, orderId } = location.state || {};
+  const { table, tableNumber, orderId } = location.state || {};
+  const { orderType, tableId } = useSelector((state) => state.cart);
 
   const [showModal, setShowModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
@@ -31,15 +31,12 @@ const ItemGrid = () => {
 
   useEffect(() => {
     dispatch(fetchMenuData());
-    dispatch(loadCart());
 
   }, [dispatch]);
 
   useEffect(() => {
-
     dispatch(fetchOrderHistory());
     dispatch(loadTablesFromApi())
-
   }, [dispatch]);
 
   useEffect(() => {
@@ -152,10 +149,16 @@ const ItemGrid = () => {
 
       if (isCombo) {
         const comboId = item.id.replace("combo-", "");
+        const payload = {
+          combo_id: comboId,
+          quantity: 1,
+          order_type: orderType || "dine_in"
+        }
+        if (orderType === "dine_in" && tableId) {
+          payload.table_id = tableId;
+        }
 
-        await addComboApi(comboId, 1);
-
-        dispatch(loadCart());
+        await dispatch(addCombo(payload)).unwrap();
         return;
       }
 
@@ -183,7 +186,6 @@ const ItemGrid = () => {
       }
       await dispatch(placeOrder(payload)).unwrap();
 
-      dispatch(loadCart());
 
     } catch (error) {
       console.error("Add To Cart Error:", error);
@@ -206,7 +208,6 @@ const ItemGrid = () => {
     setShowModal(false);
     setSelectedItem(null);
   };
-
 
   if (loading) return <LoadingSpinner text="Loading Menu..." />;
 

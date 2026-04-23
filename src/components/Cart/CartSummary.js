@@ -5,7 +5,7 @@ import CustomerModal from "./CustomerModal";
 import Alert from "../Alert/Alert";
 import { getDiscounts, applyDiscountApi, deleteDiscount } from "../../features/discount/discountApi";
 import "./CartSummary.css";
-import { clearCartServer, setOrderType, setCustomerInfo, selectCartTotal, selectItemCount, loadCart } from "../../features/cart/cartSlice";
+import { clearCartServer, setOrderType, setCustomerInfo, selectCartTotal, selectItemCount, updateTable } from "../../features/cart/cartSlice";
 import { setTableStatus } from "../../features/table/tableSlice";
 import { checkoutOrder } from "../../features/orders/ordersSlice";
 import CartItem from "./CartItem";
@@ -24,7 +24,7 @@ const CONSTANTS = {
 
   },
   ORDER_TYPES: {
-    DINE_IN: 'dine-in',
+    DINE_IN: 'dine_in',
     TAKEAWAY: 'takeaway',
     DELIVERY: 'delivery'
   }
@@ -52,6 +52,7 @@ const CartSummary = (props) => {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [lastOrder, setLastOrder] = useState(null);
   const tables = useSelector((state) => state.tables.list);
+
 
   const [showAlert, setShowAlert] = useState({
     show: false,
@@ -91,10 +92,10 @@ const CartSummary = (props) => {
 
 
   useEffect(() => {
-  if (!orderType) {
-    dispatch(setOrderType(CONSTANTS.ORDER_TYPES.DINE_IN));
-  }
-}, [dispatch, orderType]);
+    if (!orderType) {
+      dispatch(setOrderType(CONSTANTS.ORDER_TYPES.DINE_IN));
+    }
+  }, [dispatch, orderType]);
 
   const discountAmount = useMemo(() =>
     Number(cartSummary?.discount_amount) || 0,
@@ -192,33 +193,34 @@ const CartSummary = (props) => {
     if (orderType === CONSTANTS.ORDER_TYPES.DINE_IN) {
       return true;
     }
+
     if (!customerInfo.name?.trim()) {
-      showError("Customer name is required");
       setShowCustomerModal(true);
+      showError("Customer name is required");
       return false;
     }
 
     if (!customerInfo.phone?.trim()) {
-      showError("Phone number is required");
       setShowCustomerModal(true);
+      showError("Phone number is required");
       return false;
     }
 
     const cleanPhone = customerInfo.phone.replace(/\D/g, '');
     if (!CONSTANTS.PHONE_REGEX.test(cleanPhone)) {
-      showError("Please enter a valid 10-digit phone number");
       setShowCustomerModal(true);
+      showError("Enter valid 10-digit phone number");
       return false;
     }
 
     if (isDelivery && !customerInfo.address?.trim()) {
-      showError("Delivery address is required");
       setShowCustomerModal(true);
+      showError("Address is required");
       return false;
     }
 
     return true;
-  }, [customerInfo, isDelivery, showError]);
+  }, [customerInfo, isDelivery, orderType, showError]);
 
   useEffect(() => {
     if (orderType === CONSTANTS.ORDER_TYPES.DINE_IN) {
@@ -244,24 +246,6 @@ const CartSummary = (props) => {
     }
   }, [cartSummary?.discount_amount, discounts]);
 
-  // const validateCheckout = useCallback(() => {
-  //   if (items.length === 0) {
-  //     showError("Your cart is empty! Please add items first.");
-  //     return false;
-  //   }
-
-  //   if (!validateCustomerInfo()) {
-  //     return false;
-  //   }
-
-  //   if (isDineIn && !tableNumber) {
-  //     showError("Table number is required");
-  //     return false;
-  //   }
-
-  //   return true;
-  // }, [items.length, validateCustomerInfo, isDineIn, tableNumber, showError]);
-
   const validateCheckout = useCallback(() => {
     if (items.length === 0) {
       showError("Your cart is empty! Please add items first.");
@@ -278,7 +262,6 @@ const CartSummary = (props) => {
         return false;
       }
 
-      // 🔥 NEW: Check table status
       const selectedTable = tables.find(t => t.id === selectedTableId);
 
       if (!selectedTable) {
@@ -287,23 +270,34 @@ const CartSummary = (props) => {
       }
 
       const status = selectedTable.status?.toLowerCase();
-
-      if (["occupied", "reserved", "booked", "maintenance"].includes(status)) {
-        showError(`⚠️ Table ${selectedTable.tableNumber} is ${status}. Cannot place order.`);
-        return false;
-      }
     }
 
     return true;
   }, [items.length, validateCustomerInfo, isDineIn, tableNumber, selectedTableId, tables, showError]);
-  const handleOrderTypeChange = useCallback((type) => {
-    dispatch(setOrderType(type));
-  }, [dispatch]);
 
-  const handleCheckout = useCallback(async (shouldPrint = false) => {
-    if (!validateCheckout()) {
+  const handleOrderTypeChange = useCallback((type) => {
+    if (orderType === type) {
       return;
     }
+
+    dispatch(setOrderType(type));
+
+    const payload = {
+      order_type: type,
+    };
+
+    if (type === CONSTANTS.ORDER_TYPES.DINE_IN) {
+      payload.table_id = selectedTableId;
+    }
+
+    dispatch(updateTable(payload));
+
+  }, [dispatch, selectedTableId, orderType]);
+
+
+  const handleCheckout = useCallback(async (shouldPrint = false) => {
+
+    if (!validateCheckout()) return;
 
     setPlacingOrder(true);
 
@@ -324,7 +318,6 @@ const CartSummary = (props) => {
       customer_phone: customerInfo.phone,
       customer_address: isDelivery ? customerInfo.address : null,
       order_type: apiOrderType,
-      // table_id: isDineIn ? (selectedTableId || tableId) : null,
       table_id: isDineIn ? selectedTableId : null,
       table_number: isDineIn ? tableNumber : null,
       order_total: cartSummary?.total_amount || Math.round(finalAmount),
@@ -347,17 +340,17 @@ const CartSummary = (props) => {
 
     try {
       const result = await dispatch(checkoutOrder(orderData)).unwrap();
-      if (shouldPrint) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+      // if (shouldPrint) {
+      //   await new Promise(resolve => setTimeout(resolve, 100));
 
-        if (window.electronAPI) {
-          const content = kotRef.current.innerHTML;
-          window.electronAPI.printKot(content);
-        } else {
-          printContent(kotRef);
+      //   if (window.electronAPI) {
+      //     const content = kotRef.current.innerHTML;
+      //     window.electronAPI.printKot(content);
+      //   } else {
+      //     printContent(kotRef);
 
-        }
-      }
+      //   }
+      // }
 
       setLastOrder({
         items,
@@ -392,9 +385,7 @@ const CartSummary = (props) => {
           }),
         );
       }
-
-      await dispatch(loadCart());
-
+      await dispatch(clearCartServer());
       setSelectedDiscount(null);
       setDeliveryCharge(0);
       setContainerCharge(0);
@@ -442,13 +433,13 @@ const CartSummary = (props) => {
       win.close();
     };
   };
+
   useEffect(() => {
     const removeDiscountIfCartEmpty = async () => {
       if (items.length === 0 && selectedDiscount) {
         try {
           await deleteDiscount();
           setSelectedDiscount(null);
-          dispatch(loadCart());
 
           showSuccess("Discount removed (empty cart)");
         } catch (error) {
@@ -459,6 +450,7 @@ const CartSummary = (props) => {
 
     removeDiscountIfCartEmpty();
   }, [items.length, selectedDiscount, dispatch, showSuccess]);
+
   const handleCouponClick = async (coupon) => {
     if (isCartEmpty) {
       showError("Add items to cart before applying discount");
@@ -479,7 +471,6 @@ const CartSummary = (props) => {
         showSuccess(`Discount ${coupon.code} applied`);
       }
 
-      await dispatch(loadCart());
 
     } catch (error) {
       console.error(error);
@@ -494,17 +485,54 @@ const CartSummary = (props) => {
     }
 
     await dispatch(clearCartServer());
-    await dispatch(loadCart());
     setDeliveryCharge(0);
     setContainerCharge(0);
     setSelectedDiscount(null);
   }, [items.length, dispatch]);
+
+  const kotPrint = async () => {
+    if (items.length === 0) {
+      showError("Cart is empty!");
+      return;
+    }
+
+    if (!validateCheckout()) return;
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      if (window.electronAPI) {
+        const content = kotRef.current.innerHTML;
+        window.electronAPI.printKot(content);
+      } else {
+        printContent(kotRef);
+      }
+      if (isDineIn && selectedTableId) {
+        dispatch(
+          setTableStatus({
+            id: selectedTableId,
+            status: "occupied",
+          }),
+        );
+      }
+      showSuccess("KOT Printed ✅");
+
+    } catch (error) {
+      console.error(error);
+      showError("Failed to print KOT");
+    }
+  };
 
   return (
     <>
       <div className="orderCard">
         <div className="orderHeader p-2">
           <h2 className="orderTitle">Current Order</h2>
+          <i
+            className="bi bi-person-circle "
+            style={{ cursor: "pointer", fontSize: "20px" }}
+            onClick={() => setShowCustomerModal(true)}
+          ></i>
           <a className="oclr" onClick={handleCancel}>Clear all</a>
         </div>
         <div className="px-2">
@@ -578,7 +606,6 @@ const CartSummary = (props) => {
             <strong style={{ color: "#e05c20" }}>{formatPrice(total_amount)}</strong>
           </div>
 
-
           <Coupons discounts={discounts} selected={selectedDiscount} onSelect={handleCouponClick} onSaveNote={setOrderNote} disabled={isCartEmpty} />
 
           <div className="paymentMethodBox">
@@ -600,6 +627,7 @@ const CartSummary = (props) => {
           </div>
 
           <div className="checkoutButtonsContainer">
+            <button className="place-order-btn" onClick={kotPrint}>🧾 KOT & Print </button>
             <button
               className="place-order-btn"
               onClick={() => setShowPaymentModal(true)}
@@ -610,11 +638,12 @@ const CartSummary = (props) => {
               ) : (
                 <>
                   <span className="btn-texts">Place Order</span>
-                  <span className="btn-amount">{formatPrice(total_amount)}</span>
+                  {/* <span className="btn-amount">{formatPrice(total_amount)}</span> */}
                 </>
               )}
             </button>
           </div>
+
         </div>
 
         <Alert
@@ -629,7 +658,6 @@ const CartSummary = (props) => {
             onClose={() => setShowCancelConfirm(false)}
             onConfirm={async () => {
               await dispatch(clearCartServer());
-              await dispatch(loadCart());
               setShowCancelConfirm(false);
             }}
             message="All items will be removed from cart."
@@ -747,45 +775,19 @@ const CartSummary = (props) => {
           </>
         )}
 
-        <div
-          style={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            opacity: 0,
-            pointerEvents: "none"
-          }}
-        >
+        <div style={{ position: "fixed", top: 0, left: 0, opacity: 0, pointerEvents: "none" }} >
           <div ref={kotRef}>
-            <PrintTemplate
-              type="kot"
-              items={items}
-              tableNumber={tableNumber}
-              orderType={orderType}
-              itemCount={itemCount}
-              orderNotes={orderNote}
-            />
+            <PrintTemplate type="kot" items={items} tableNumber={tableNumber} orderType={orderType} itemCount={itemCount} orderNotes={orderNote} />
           </div>
         </div>
 
         {showReceiptModal && lastOrder && (
-          <OrderDetailsModal
-            lastOrder={lastOrder}
-            setShowReceiptModal={setShowReceiptModal}
-            printContent={printContent}
-            billRef={billRef}
-          />
+          <OrderDetailsModal lastOrder={lastOrder} setShowReceiptModal={setShowReceiptModal} printContent={printContent} billRef={billRef} />
         )}
       </div>
 
       {showCustomerModal && (
-        <CustomerModal
-          orderType={orderType}
-          customerInfo={customerInfo}
-          dispatch={dispatch}
-          onClose={() => setShowCustomerModal(false)}
-          onPlaceOrder={handleCheckout}
-        />
+        <CustomerModal orderType={orderType} customerInfo={customerInfo} dispatch={dispatch} onClose={() => setShowCustomerModal(false)} onPlaceOrder={handleCheckout} />
       )}
     </>
   );
