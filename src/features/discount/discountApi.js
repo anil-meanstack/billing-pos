@@ -1,3 +1,5 @@
+import {getCartApi} from "../cart/cartApi"
+
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
@@ -88,7 +90,6 @@ export const applyDiscountApi = async (discountCode) => {
     if (!response.ok) {
         throw new Error(data?.message || "Failed to apply discount");
     }
-    
     return data;
 };
 

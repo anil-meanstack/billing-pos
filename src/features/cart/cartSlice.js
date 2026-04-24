@@ -1,14 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import {
-  addToCartItem,
-  updateCartItemApi,
-  removeCartItemApi,
-  clearCartApi,
-  tableSelectable,
-  addComboApi,
-  getCartApi
-} from "./cartApi";
-
+import { addToCartItem, updateCartItemApi, removeCartItemApi, clearCartApi, tableSelectable, addComboApi, getCartApi } from "./cartApi";
+import { applyDiscountApi, deleteDiscount } from "../discount/discountApi";
 
 export const placeOrder = createAsyncThunk(
   "cart/placeOrder",
@@ -36,9 +28,9 @@ export const updateCartItem = createAsyncThunk(
   "cart/updateItem",
   async ({ cartItemId, res }, { rejectWithValue }) => {
     try {
-       await updateCartItemApi(cartItemId, res);
-       const cart = await getCartApi(res);
-        return cart;
+      await updateCartItemApi(cartItemId, res);
+      const cart = await getCartApi(res);
+      return cart;
 
     } catch (err) {
       return rejectWithValue(err.message);
@@ -60,6 +52,35 @@ export const removeCartItem = createAsyncThunk(
   },
 );
 
+export const applyDiscount = createAsyncThunk(
+  "cart/applyDiscount",
+  async (discountCode, { rejectWithValue }) => {
+    try {
+      await applyDiscountApi(discountCode);
+
+      const updatedCart = await getCartApi();
+
+      return updatedCart;
+
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
+export const removeDiscount = createAsyncThunk(
+  "cart/removeDiscount",
+  async (_, { rejectWithValue }) => {
+    try {
+      await deleteDiscount();
+
+      const updatedCart = await getCartApi();
+
+      return updatedCart;
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
 export const clearCartServer = createAsyncThunk(
   "cart/clearServer",
   async (_, { rejectWithValue }) => {
@@ -220,13 +241,13 @@ const cartSlice = createSlice({
         state.cartData = response.cart;
 
         state.items = response.cart.items.map((item) => ({
-          
+
           id: item.menu_item_id || "",
           name: item.menu_item_name || item.name || "",
           image: item.menu_item_image || "",
           category: item.menu_item_category || "",
           quantity: Number(item.quantity) || 1,
-          base_price:Number(item.unit_price) || Number(item.base_price) || 0,
+          base_price: Number(item.unit_price) || Number(item.base_price) || 0,
           selectedPrice:
             Number(item.item_total) || 0,
           size: item.variant || "",
@@ -274,7 +295,7 @@ const cartSlice = createSlice({
           image: item.menu_item_image || "",
           category: item.menu_item_category || "",
           quantity: Number(item.quantity) || 1,
-          base_price:Number(item.unit_price) || Number(item.base_price) || 0,
+          base_price: Number(item.unit_price) || Number(item.base_price) || 0,
           selectedPrice: Number(item.item_total) || 0,
           size: item.variant || "",
           variant_id: item.variant || "",
@@ -321,7 +342,7 @@ const cartSlice = createSlice({
           id: item.menu_item_id || "",
           name: item.menu_item_name || item.name || "",
           quantity: Number(item.quantity) || 1,
-           base_price:Number(item.unit_price) || Number(item.base_price) || 0,
+          base_price: Number(item.unit_price) || Number(item.base_price) || 0,
           selectedPrice:
             Number(item.item_total) || 0,
 
@@ -362,51 +383,124 @@ const cartSlice = createSlice({
       })
 
       .addCase(removeCartItem.fulfilled, (state, action) => {
-  state.loading = false;
+        state.loading = false;
 
-  const res = action.payload;
+        const res = action.payload;
 
-  if (!res?.cart) return;
+        if (!res?.cart) return;
 
-  const cart = res.cart;
+        const cart = res.cart;
 
-  state.cartId = cart.id;
-  state.cartData = cart;
+        state.cartId = cart.id;
+        state.cartData = cart;
 
-  state.items = cart.items.map((item) => ({
-    id: item.menu_item_id || "",
-    name: item.menu_item_name || item.name || "",
-    quantity: Number(item.quantity) || 1,
-    selectedPrice:
-      Number(item.unit_price) || 0,
+        state.items = cart.items.map((item) => ({
+          id: item.menu_item_id || "",
+          name: item.menu_item_name || item.name || "",
+          quantity: Number(item.quantity) || 1,
+          selectedPrice:
+            Number(item.unit_price) || 0,
 
-    size: item.variant || "",
-    variant_id: item.variant || "",
-    sizeName: item.variant_name || "",
-    sizePrice: Number(item.variant_price) || 0,
+          size: item.variant || "",
+          variant_id: item.variant || "",
+          sizeName: item.variant_name || "",
+          sizePrice: Number(item.variant_price) || 0,
 
-    cartItemId: item.cart_item_id || "",
-    addons: item.addons || [],
-    instructions: item.special_instructions || "",
+          cartItemId: item.cart_item_id || "",
+          addons: item.addons || [],
+          instructions: item.special_instructions || "",
 
-    isCombo: item.is_combo || false,
-    comboDetails: item.combo_details || null,
-  }));
+          isCombo: item.is_combo || false,
+          comboDetails: item.combo_details || null,
+        }));
 
-  state.cartSummary = {
-    subtotal: Number(cart.subtotal),
-    taxAmount: Number(cart.tax_amount),
-    discountAmount: Number(cart.discount_amount),
-    deliveryCharge: Number(cart.delivery_charge),
-    total_amount: Number(cart.total_amount),
-    itemCount: cart.item_count,
-    orderType: cart.order_type,
-    tableNumber: cart.table_number,
-  };
+        state.cartSummary = {
+          subtotal: Number(cart.subtotal),
+          taxAmount: Number(cart.tax_amount),
+          discountAmount: Number(cart.discount_amount),
+          deliveryCharge: Number(cart.delivery_charge),
+          total_amount: Number(cart.total_amount),
+          itemCount: cart.item_count,
+          orderType: cart.order_type,
+          tableNumber: cart.table_number,
+        };
 
-  state.orderType = cart.order_type;
-  state.tableNumber = cart.table_number;
-})
+        state.orderType = cart.order_type;
+        state.tableNumber = cart.table_number;
+      })
+
+      .addCase(applyDiscount.fulfilled, (state, action) => {
+        const res = action.payload;
+
+        if (!res?.cart) return;
+
+        const cart = res.cart;
+        const summary = res.cart_summary || {};
+
+        state.cartId = cart.id;
+        state.cartData = cart;
+
+        state.items = (cart.items || []).map((item) => ({
+          id: item.menu_item_id || "",
+          name: item.menu_item_name || item.name || "",
+          quantity: Number(item.quantity) || 1,
+          selectedPrice: Number(item.item_total) || 0,
+          size: item.variant || "",
+          variant_id: item.variant || "",
+          sizeName: item.variant_name || "",
+          sizePrice: Number(item.variant_price) || 0,
+          cartItemId: item.cart_item_id || "",
+          addons: item.addons || [],
+          instructions: item.special_instructions || "",
+        }));
+
+        state.cartSummary = {
+          subtotal: Number(summary.subtotal || 0),
+          taxAmount: Number(summary.tax_amount || 0),
+          discountAmount: Number(summary.discount_amount || 0),
+          deliveryCharge: Number(summary.delivery_charge || 0),
+          total_amount: Number(summary.total_amount || 0),
+          itemCount: summary.item_count || 0,
+          orderType: summary.order_type || cart.order_type,
+          tableNumber: summary.table_number || cart.table_number,
+        };
+      })
+      .addCase(removeDiscount.fulfilled, (state, action) => {
+        const res = action.payload;
+
+        if (!res?.cart) return;
+
+        const cart = res.cart;
+        const summary = res.cart_summary || {};
+
+        state.cartId = cart.id;
+        state.cartData = cart;
+
+        state.items = (cart.items || []).map((item) => ({
+          id: item.menu_item_id || "",
+          name: item.menu_item_name || item.name || "",
+          quantity: Number(item.quantity) || 1,
+          selectedPrice: Number(item.item_total) || 0,
+          size: item.variant || "",
+          variant_id: item.variant || "",
+          sizeName: item.variant_name || "",
+          sizePrice: Number(item.variant_price) || 0,
+          cartItemId: item.cart_item_id || "",
+          addons: item.addons || [],
+          instructions: item.special_instructions || "",
+        }));
+
+        state.cartSummary = {
+          subtotal: Number(summary.subtotal || 0),
+          taxAmount: Number(summary.tax_amount || 0),
+          discountAmount: Number(summary.discount_amount || 0),
+          deliveryCharge: Number(summary.delivery_charge || 0),
+          total_amount: Number(summary.total_amount || 0),
+          itemCount: summary.item_count || 0,
+          orderType: summary.order_type || cart.order_type,
+          tableNumber: summary.table_number || cart.table_number,
+        };
+      })
 
       .addCase(removeCartItem.rejected, (state, action) => {
         state.loading = false;
@@ -454,7 +548,7 @@ const cartSlice = createSlice({
           id: item.menu_item_id || "",
           name: item.name || "",
           quantity: Number(item.quantity) || 1,
-           base_price:Number(item.unit_price) || Number(item.base_price) || 0,
+          base_price: Number(item.unit_price) || Number(item.base_price) || 0,
           selectedPrice:
             Number(item.unit_price) || 0,
 

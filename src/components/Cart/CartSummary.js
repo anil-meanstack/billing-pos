@@ -3,9 +3,9 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import CustomerModal from "./CustomerModal";
 import Alert from "../Alert/Alert";
-import { getDiscounts, applyDiscountApi, deleteDiscount } from "../../features/discount/discountApi";
+import { getDiscounts } from "../../features/discount/discountApi";
 import "./CartSummary.css";
-import { clearCartServer, setOrderType, setCustomerInfo, selectCartTotal, selectItemCount, updateTable } from "../../features/cart/cartSlice";
+import { clearCartServer, setOrderType, setCustomerInfo, selectCartTotal, selectItemCount, updateTable, applyDiscount, removeDiscount } from "../../features/cart/cartSlice";
 import { setTableStatus } from "../../features/table/tableSlice";
 import { checkoutOrder } from "../../features/orders/ordersSlice";
 import CartItem from "./CartItem";
@@ -98,7 +98,7 @@ const CartSummary = (props) => {
   }, [dispatch, orderType]);
 
   const discountAmount = useMemo(() =>
-    Number(cartSummary?.discount_amount) || 0,
+    Number(cartSummary?.discountAmount) || 0,
     [cartSummary]
   );
   const deliveryChargeFromSummary = useMemo(() =>
@@ -438,7 +438,7 @@ const CartSummary = (props) => {
     const removeDiscountIfCartEmpty = async () => {
       if (items.length === 0 && selectedDiscount) {
         try {
-          await deleteDiscount();
+          await dispatch(removeDiscount());
           setSelectedDiscount(null);
 
           showSuccess("Discount removed (empty cart)");
@@ -460,12 +460,11 @@ const CartSummary = (props) => {
       const isSame = selectedDiscount?.code === coupon.code;
 
       if (isSame) {
-        await deleteDiscount();
+        await dispatch(removeDiscount());
         setSelectedDiscount(null);
-
         showSuccess("Discount removed");
       } else {
-        await applyDiscountApi(coupon.code);
+        await dispatch(applyDiscount(coupon.code));
         setSelectedDiscount(coupon);
 
         showSuccess(`Discount ${coupon.code} applied`);
