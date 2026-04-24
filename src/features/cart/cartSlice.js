@@ -104,6 +104,49 @@ export const addCombo = createAsyncThunk(
   }
 );
 
+
+const updateCartState = (state, cart, summary = null) => {
+  if (!cart) return;
+
+  state.cartId = cart.id;
+  state.cartData = cart;
+
+  state.items = (cart.items || []).map((item) => ({
+    id: item.menu_item_id || "",
+    name: item.menu_item_name || item.name || "",
+    image: item.menu_item_image || "",
+    category: item.menu_item_category || "",
+    quantity: Number(item.quantity) || 1,
+    base_price: Number(item.unit_price) || Number(item.base_price) || 0,
+    selectedPrice: Number(item.item_total || item.unit_price) || 0,
+    size: item.variant || "",
+    variant_id: item.variant || "",
+    sizeName: item.variant_name || "",
+    sizePrice: Number(item.variant_price) || 0,
+    cartItemId: item.cart_item_id || "",
+    addons: item.addons || [],
+    instructions: item.special_instructions || "",
+    isCombo: item.is_combo || false,
+    comboDetails: item.combo_details || null,
+  }));
+
+  const s = summary || cart;
+
+  state.cartSummary = {
+    subtotal: Number(s.subtotal || 0),
+    taxAmount: Number(s.tax_amount || 0),
+    discountAmount: Number(s.discount_amount || 0),
+    deliveryCharge: Number(s.delivery_charge || 0),
+    total_amount: Number(s.total_amount || 0),
+    itemCount: s.item_count || 0,
+    orderType: s.order_type || cart.order_type,
+    tableNumber: s.table_number || cart.table_number,
+  };
+
+  state.orderType = cart.order_type;
+  state.tableNumber = cart.table_number;
+};
+
 const initialState = {
   items: [],
   orderType: "dine-in",
@@ -232,48 +275,9 @@ const cartSlice = createSlice({
 
       .addCase(placeOrder.fulfilled, (state, action) => {
         state.loading = false;
-
-        const response = action.payload;
-
-        if (!response?.cart) return;
-
-        state.cartId = response.cart.id;
-        state.cartData = response.cart;
-
-        state.items = response.cart.items.map((item) => ({
-
-          id: item.menu_item_id || "",
-          name: item.menu_item_name || item.name || "",
-          image: item.menu_item_image || "",
-          category: item.menu_item_category || "",
-          quantity: Number(item.quantity) || 1,
-          base_price: Number(item.unit_price) || Number(item.base_price) || 0,
-          selectedPrice:
-            Number(item.item_total) || 0,
-          size: item.variant || "",
-          variant_id: item.variant || "",
-          sizeName: item.variant_name || "",
-          sizePrice: Number(item.variant_price) || 0,
-          cartItemId: item.cart_item_id || "",
-          addons: item.addons || [],
-          instructions: item.special_instructions || "",
-          menu_item: null,
-        }));
-
-        state.cartSummary = {
-          subtotal: Number(response.cart.subtotal),
-          taxAmount: Number(response.cart.tax_amount),
-          discountAmount: Number(response.cart.discount_amount),
-          deliveryCharge: Number(response.cart.delivery_charge),
-          total_amount: Number(response.cart.total_amount),
-          itemCount: response.cart.item_count,
-          orderType: response.cart.order_type,
-          tableNumber: response.cart.table_number,
-        };
-
-        state.orderType = response.cart.order_type;
-        state.tableNumber = response.cart.table_number;
+        updateCartState(state, action.payload?.cart);
       })
+
       .addCase(placeOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Order failed";
@@ -282,44 +286,7 @@ const cartSlice = createSlice({
       .addCase(updateTable.fulfilled, (state, action) => {
         const res = action.payload;
 
-        if (!res?.cart) return;
-
-        const cart = res.cart;
-
-        state.cartId = cart.id;
-        state.cartData = cart;
-
-        state.items = cart.items.map((item) => ({
-          id: item.menu_item_id || "",
-          name: item.menu_item_name || item.name || "",
-          image: item.menu_item_image || "",
-          category: item.menu_item_category || "",
-          quantity: Number(item.quantity) || 1,
-          base_price: Number(item.unit_price) || Number(item.base_price) || 0,
-          selectedPrice: Number(item.item_total) || 0,
-          size: item.variant || "",
-          variant_id: item.variant || "",
-          sizeName: item.variant_name || "",
-          sizePrice: Number(item.variant_price) || 0,
-          cartItemId: item.cart_item_id || "",
-          addons: item.addons || [],
-          instructions: item.special_instructions || "",
-          menu_item: null,
-        }));
-
-        state.cartSummary = {
-          subtotal: Number(cart.subtotal),
-          taxAmount: Number(cart.tax_amount),
-          discountAmount: Number(cart.discount_amount),
-          deliveryCharge: Number(cart.delivery_charge),
-          total_amount: Number(cart.total_amount),
-          itemCount: cart.item_count,
-          orderType: cart.order_type,
-          tableNumber: cart.table_number,
-        };
-
-        state.orderType = cart.order_type;
-        state.tableNumber = cart.table_number;
+        updateCartState(state, action.payload?.cart);
       })
 
       .addCase(updateCartItem.pending, (state) => {
@@ -329,49 +296,7 @@ const cartSlice = createSlice({
       .addCase(updateCartItem.fulfilled, (state, action) => {
         state.loading = false;
 
-        const res = action.payload;
-
-        if (!res?.cart) return;
-
-        const cart = res.cart;
-
-        state.cartId = cart.id;
-        state.cartData = cart;
-
-        state.items = cart.items.map((item) => ({
-          id: item.menu_item_id || "",
-          name: item.menu_item_name || item.name || "",
-          quantity: Number(item.quantity) || 1,
-          base_price: Number(item.unit_price) || Number(item.base_price) || 0,
-          selectedPrice:
-            Number(item.item_total) || 0,
-
-          size: item.variant || "",
-          variant_id: item.variant || "",
-          sizeName: item.variant_name || "",
-          sizePrice: Number(item.variant_price) || 0,
-
-          cartItemId: item.cart_item_id || "",
-          addons: item.addons || [],
-          instructions: item.special_instructions || "",
-
-          isCombo: item.is_combo || false,
-          comboDetails: item.combo_details || null,
-        }));
-
-        state.cartSummary = {
-          subtotal: Number(cart.subtotal),
-          taxAmount: Number(cart.tax_amount),
-          discountAmount: Number(cart.discount_amount),
-          deliveryCharge: Number(cart.delivery_charge),
-          total_amount: Number(cart.total_amount),
-          itemCount: cart.item_count,
-          orderType: cart.order_type,
-          tableNumber: cart.table_number,
-        };
-
-        state.orderType = cart.order_type;
-        state.tableNumber = cart.table_number;
+        updateCartState(state, action.payload?.cart);
       })
       .addCase(updateCartItem.rejected, (state, action) => {
         state.loading = false;
@@ -385,121 +310,18 @@ const cartSlice = createSlice({
       .addCase(removeCartItem.fulfilled, (state, action) => {
         state.loading = false;
 
-        const res = action.payload;
-
-        if (!res?.cart) return;
-
-        const cart = res.cart;
-
-        state.cartId = cart.id;
-        state.cartData = cart;
-
-        state.items = cart.items.map((item) => ({
-          id: item.menu_item_id || "",
-          name: item.menu_item_name || item.name || "",
-          quantity: Number(item.quantity) || 1,
-          selectedPrice:
-            Number(item.unit_price) || 0,
-
-          size: item.variant || "",
-          variant_id: item.variant || "",
-          sizeName: item.variant_name || "",
-          sizePrice: Number(item.variant_price) || 0,
-
-          cartItemId: item.cart_item_id || "",
-          addons: item.addons || [],
-          instructions: item.special_instructions || "",
-
-          isCombo: item.is_combo || false,
-          comboDetails: item.combo_details || null,
-        }));
-
-        state.cartSummary = {
-          subtotal: Number(cart.subtotal),
-          taxAmount: Number(cart.tax_amount),
-          discountAmount: Number(cart.discount_amount),
-          deliveryCharge: Number(cart.delivery_charge),
-          total_amount: Number(cart.total_amount),
-          itemCount: cart.item_count,
-          orderType: cart.order_type,
-          tableNumber: cart.table_number,
-        };
-
-        state.orderType = cart.order_type;
-        state.tableNumber = cart.table_number;
+        updateCartState(state, action.payload?.cart);
       })
 
       .addCase(applyDiscount.fulfilled, (state, action) => {
         const res = action.payload;
 
-        if (!res?.cart) return;
-
-        const cart = res.cart;
-        const summary = res.cart_summary || {};
-
-        state.cartId = cart.id;
-        state.cartData = cart;
-
-        state.items = (cart.items || []).map((item) => ({
-          id: item.menu_item_id || "",
-          name: item.menu_item_name || item.name || "",
-          quantity: Number(item.quantity) || 1,
-          selectedPrice: Number(item.item_total) || 0,
-          size: item.variant || "",
-          variant_id: item.variant || "",
-          sizeName: item.variant_name || "",
-          sizePrice: Number(item.variant_price) || 0,
-          cartItemId: item.cart_item_id || "",
-          addons: item.addons || [],
-          instructions: item.special_instructions || "",
-        }));
-
-        state.cartSummary = {
-          subtotal: Number(summary.subtotal || 0),
-          taxAmount: Number(summary.tax_amount || 0),
-          discountAmount: Number(summary.discount_amount || 0),
-          deliveryCharge: Number(summary.delivery_charge || 0),
-          total_amount: Number(summary.total_amount || 0),
-          itemCount: summary.item_count || 0,
-          orderType: summary.order_type || cart.order_type,
-          tableNumber: summary.table_number || cart.table_number,
-        };
+        updateCartState(state, res?.cart, res?.cart_summary);
       })
       .addCase(removeDiscount.fulfilled, (state, action) => {
         const res = action.payload;
 
-        if (!res?.cart) return;
-
-        const cart = res.cart;
-        const summary = res.cart_summary || {};
-
-        state.cartId = cart.id;
-        state.cartData = cart;
-
-        state.items = (cart.items || []).map((item) => ({
-          id: item.menu_item_id || "",
-          name: item.menu_item_name || item.name || "",
-          quantity: Number(item.quantity) || 1,
-          selectedPrice: Number(item.item_total) || 0,
-          size: item.variant || "",
-          variant_id: item.variant || "",
-          sizeName: item.variant_name || "",
-          sizePrice: Number(item.variant_price) || 0,
-          cartItemId: item.cart_item_id || "",
-          addons: item.addons || [],
-          instructions: item.special_instructions || "",
-        }));
-
-        state.cartSummary = {
-          subtotal: Number(summary.subtotal || 0),
-          taxAmount: Number(summary.tax_amount || 0),
-          discountAmount: Number(summary.discount_amount || 0),
-          deliveryCharge: Number(summary.delivery_charge || 0),
-          total_amount: Number(summary.total_amount || 0),
-          itemCount: summary.item_count || 0,
-          orderType: summary.order_type || cart.order_type,
-          tableNumber: summary.table_number || cart.table_number,
-        };
+        updateCartState(state, res?.cart, res?.cart_summary);
       })
 
       .addCase(removeCartItem.rejected, (state, action) => {
@@ -534,50 +356,7 @@ const cartSlice = createSlice({
       .addCase(addCombo.fulfilled, (state, action) => {
         state.loading = false;
 
-        const res = action.payload;
-
-        if (!res?.cart) return;
-
-        const cart = res.cart;
-
-        // ✅ SAME AS placeOrder / updateTable
-        state.cartId = cart.id;
-        state.cartData = cart;
-
-        state.items = cart.items.map((item) => ({
-          id: item.menu_item_id || "",
-          name: item.name || "",
-          quantity: Number(item.quantity) || 1,
-          base_price: Number(item.unit_price) || Number(item.base_price) || 0,
-          selectedPrice:
-            Number(item.unit_price) || 0,
-
-          size: item.variant || "",
-          variant_id: item.variant || "",
-          sizeName: item.variant_name || "",
-          sizePrice: Number(item.variant_price) || 0,
-
-          cartItemId: item.cart_item_id || "",
-          addons: item.addons || [],
-          instructions: item.special_instructions || "",
-
-          isCombo: item.is_combo || false,
-          comboDetails: item.combo_details || null,
-        }));
-
-        state.cartSummary = {
-          subtotal: Number(cart.subtotal),
-          taxAmount: Number(cart.tax_amount),
-          discountAmount: Number(cart.discount_amount),
-          deliveryCharge: Number(cart.delivery_charge),
-          total_amount: Number(cart.total_amount),
-          itemCount: cart.item_count,
-          orderType: cart.order_type,
-          tableNumber: cart.table_number,
-        };
-
-        state.orderType = cart.order_type;
-        state.tableNumber = cart.table_number;
+        updateCartState(state, action.payload?.cart);
       })
 
       .addCase(addCombo.rejected, (state, action) => {

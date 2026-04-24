@@ -9,10 +9,9 @@ const Navbar = (props) => {
   const [time, setTime] = useState("");
   const [showLogin, setShowLogin] = useState(false);
   const [userName, setUserName] = useState(null);
-  const selectedTableId = useSelector((state) => state.cart.tableNumber);
+  const tableNumber = useSelector((state) => state.cart.tableNumber);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
-
-  // const hideSidebar = location.pathname === "/";
+  const orderType = useSelector((state) => state.cart.orderType);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -26,6 +25,19 @@ const Navbar = (props) => {
       window.removeEventListener("offline", handleOffline);
     };
   }, []);
+
+  const getOrderTypeLabel = () => {
+    switch (orderType) {
+      case "dine_in":
+        return "Dine In";
+      case "takeaway":
+        return "Take Away";
+      case "delivery":
+        return "Delivery";
+      default:
+        return "";
+    }
+  };
 
   useEffect(() => {
     const updateTime = () => {
@@ -66,6 +78,7 @@ const Navbar = (props) => {
       window.removeEventListener("storage", loadUser);
     };
   }, [location.pathname]);
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     navigate("/");
@@ -84,7 +97,11 @@ const Navbar = (props) => {
           <span className="ms-2">POS</span>
         </div>
 
-        <div className="table-badge">Table {selectedTableId} · Dine In</div>
+        <div className="table-badge">
+          {orderType === "dine_in"
+            ? `Table ${tableNumber || "-"} · ${getOrderTypeLabel()}`
+            : getOrderTypeLabel()}
+        </div>
 
         <div className="status">
           <span className="dot green"></span>
@@ -106,7 +123,6 @@ const Navbar = (props) => {
         <div className="time">{time}</div>
 
         <div className="shift">Morning Shift</div>
-
 
         {userName ? (
           <div className="d-flex align-items-center gap-3">

@@ -12,9 +12,12 @@ const PrintTemplate = ({
     paymentMethod,
     restaurant,
     orderNotes,
+    customerAddress,
     discountAmount,
     gst_number,
-    address,
+    restaurantAddress,
+    customerName,
+    customerPhone,
     orderNumber
 }) => {
     const isBill = type === "bill";
@@ -35,9 +38,9 @@ const PrintTemplate = ({
             <div style={{ textAlign: "center" }}>
                 <div style={{ fontWeight: "bold", fontSize: "12px" }}>
                     {isBill ? restaurant || "RECEIPT" : "KITCHEN ORDER"}
-                    {isBill && address && (
-                        <div style={{fontSize:"10px"}}>
-                            {address}
+                    {isBill && restaurantAddress && (
+                        <div style={{ fontSize: "10px" }}>
+                            {restaurantAddress}
                         </div>
                     )}
                 </div>
@@ -48,8 +51,23 @@ const PrintTemplate = ({
                 </div>
             )}
 
-            {/* ORDER INFO */}
-            <div style={{ fontSize: "10px" ,fontWeight:"600" }}>
+            {isBill && (
+                <>
+                    <div style={{ fontWeight: "bold", fontSize: "10px" }}>
+                        Name : {customerName}
+                    </div>
+                    <div style={{ fontWeight: "bold", fontSize: "10px" }}>
+                        Mobile No : {customerPhone}
+                    </div>
+                </>
+            )}
+            {isBill && customerAddress && (
+                <div style={{ fontWeight: "bold", fontSize: "10px" }}>
+                    Mobile No : {customerAddress}
+                </div>
+            )}
+
+            <div style={{ fontSize: "10px", fontWeight: "600" }}>
                 <div>Order No : #{orderNumber}</div>
                 <div>Tbl: {tableNumber || "-"} , <span>Type: {orderType}</span></div>
                 <div>{new Date().toLocaleString()}</div>
@@ -64,7 +82,6 @@ const PrintTemplate = ({
                     <div
                         style={{
                             display: "flex",
-                            // justifyContent: "space-between",
                             alignItems: "center",
                             fontWeight: isBill ? "normal" : "bold"
                         }}
@@ -73,7 +90,7 @@ const PrintTemplate = ({
                             width: isBill ? "130px" : "100%",
                             wordWrap: "break-word",
                             fontSize: isBill ? "11px" : "12px",
-                            fontWeight:"600"
+                            fontWeight: "600"
                         }}>
                             {item.quantity}x {item.name}
                             {item.sizeName ? ` (${item.sizeName})` : ""}
@@ -85,7 +102,7 @@ const PrintTemplate = ({
                                 textAlign: "right",
                                 whiteSpace: "nowrap",
                                 paddingRight: "4px",
-                                fontWeight:"600"
+                                fontWeight: "600"
                             }}>
                                 ₹{(parseFloat(item.finalPrice ?? item.selectedPrice ?? item.price ?? 0) || 0).toFixed(2)}
                             </span>
@@ -94,7 +111,7 @@ const PrintTemplate = ({
 
                     {/* ADDONS */}
                     {item.addons?.length > 0 && (
-                        <div style={{ fontSize: "8px", marginLeft: "4px" ,lineHeight: "1.1" }}>
+                        <div style={{ fontSize: "8px", marginLeft: "4px", lineHeight: "1.1", fontWeight: "bold" }}>
                             {item.addons.map((addon, idx) => (
                                 <div key={idx}>+ {addon.name}</div>
                             ))}
@@ -155,12 +172,12 @@ const PrintTemplate = ({
                         big
                     />
 
-                    <div style={{ marginTop: "4px", fontSize: "10px" ,fontWeight:"600"}}>
+                    <div style={{ marginTop: "4px", fontSize: "10px", fontWeight: "600" }}>
                         Pay: {paymentMethod}
                     </div>
                 </>
             )}
-            <div style={{ textAlign: "center", marginBottom: "4px" ,fontWeight:"600"}}>
+            <div style={{ textAlign: "center", marginBottom: "4px", fontWeight: "600" }}>
                 {isBill && <div>Thank You 🙏</div>}
             </div>
         </div>
@@ -182,7 +199,7 @@ const Row = ({ label, value, bold, big }) => (
                 width: "110px",
                 fontWeight: bold ? "bold" : "normal",
                 fontSize: big ? "12px" : "10px",
-                fontWeight:"600"
+                fontWeight: "600"
             }}
         >
             {label}

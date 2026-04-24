@@ -317,8 +317,10 @@ const CartSummary = (props) => {
       customer_name: customerInfo.name,
       customer_phone: customerInfo.phone,
       customer_address: isDelivery ? customerInfo.address : null,
+      order_type_display: apiOrderType,
       order_type: apiOrderType,
       table_id: isDineIn ? selectedTableId : null,
+      tableNumber: isDineIn ? selectedTableId : null,
       table_number: isDineIn ? tableNumber : null,
       order_total: cartSummary?.total_amount || Math.round(finalAmount),
       order_status: "confirmed",
@@ -340,6 +342,7 @@ const CartSummary = (props) => {
 
     try {
       const result = await dispatch(checkoutOrder(orderData)).unwrap();
+
       // if (shouldPrint) {
       //   await new Promise(resolve => setTimeout(resolve, 100));
 
@@ -360,6 +363,7 @@ const CartSummary = (props) => {
         tax_breakdown: cartData?.tax_breakdown || [],
         tableNumber,
         orderType,
+        daily_number: result.daily_number,
         paymentMethod,
         time: new Date(),
         customerName: customerInfo.name,

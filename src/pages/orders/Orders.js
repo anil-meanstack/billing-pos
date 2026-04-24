@@ -175,8 +175,7 @@ const Orders = () => {
         }
         return filtered;
     }, [todayOrders, selectedCategory, searchTerm]);
-
-
+ 
     const getFormattedDate = () => {
         return currentTime.toLocaleDateString('en-US', {
             weekday: 'long',
@@ -365,6 +364,7 @@ const Orders = () => {
                 )}
 
                 {filteredOrders.map((order) => (
+                   
                     <div key={order.id} className={`order-cards order-type-${order.order_type || 'dine_in'}`}>
                         <div className="orders-cards">
                             <div className="order-left">

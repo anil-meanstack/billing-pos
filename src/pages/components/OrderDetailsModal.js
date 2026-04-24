@@ -49,15 +49,35 @@ const OrderDetailsModal = ({
                             <div className="text-center mb-2">
                                 <h5 className="fw-bold mb-0">{restaurant}</h5>
                                 <p className="receipt-address"> {address} </p>
-                            </div> <div className="divider" />
+                            </div>
+                            <div className="divider" />
+                            <div className="receipt-row">
+                                <span>Name </span>
+                                <span>{lastOrder?.customer_name_display ?? lastOrder?.customerName}</span>
+                            </div>
+                            <div className="receipt-row">
+                                <span>Mobile No.  </span>
+                                <span>{lastOrder?.customer_phone ?? lastOrder?.customerPhone}</span>
+                            </div>
+                            <div className="divider" />
                             <div className="receipt-row">
                                 <span>Order No - </span>
                                 <span>#{lastOrder?.daily_number}</span>
                             </div>
                             <div className="receipt-row">
-                                <span>Table</span>
-                                <span>{lastOrder?.tableNumber ?? lastOrder?.table_number ?? "-"}</span>
+                                <span>Order Type</span>
+                                <span>
+                                    {lastOrder?.order_type_display ?? lastOrder?.orderType}
+                                </span>
                             </div>
+                            {lastOrder.order_type && lastOrder.orderType !== "takeaway" && lastOrder.order_type && lastOrder.orderType !== "delivery" && (
+                                <div className="receipt-row">
+                                    <span>Table</span>
+                                    <span>
+                                        {lastOrder?.tableNumber ?? lastOrder?.table_number ?? "-"}
+                                    </span>
+                                </div>
+                            )}
 
                             <div className="receipt-row">
                                 <span>Date & Time</span>
@@ -159,16 +179,7 @@ const OrderDetailsModal = ({
                 </div>
             </div>
 
-
-            <div
-                style={{
-                    position: "fixed",
-                    top: 0,
-                    left: 0,
-                    opacity: 0,
-                    pointerEvents: "none"
-                }}
-            >
+            <div style={{ position: "fixed", top: 0, left: 0, opacity: 0, pointerEvents: "none" }}  >
                 <div ref={billRef}>
                     <PrintTemplate
                         type="bill"
@@ -181,11 +192,12 @@ const OrderDetailsModal = ({
                         paymentMethod={lastOrder.paymentMethod ?? lastOrder.payment_method_display}
                         restaurant={restaurant}
                         gst_number={gst_number}
-                        customerName={lastOrder?.customerName}
-                        customerPhone={lastOrder?.customerPhone}
+                        customerName={lastOrder?.customer_name_display}
+                        customerPhone={lastOrder?.customer_phone}
+                        customerAddress={lastOrder?.customer_address}
                         orderNotes={lastOrder?.order_notes}
                         discountAmount={lastOrder?.discount_amount}
-                        address={address}
+                        restaurantAddress={address}
                         orderNumber={lastOrder?.daily_number}
                     />
                 </div>

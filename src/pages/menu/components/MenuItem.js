@@ -5,7 +5,7 @@ const MenuItem = ({ item, onAddToCart, onItemClick }) => {
 
   const getItemCount = () => {
     return cartItems
-      ?.filter(cartItem => cartItem.menu_item_id === item.id)
+      ?.filter(cartItem => cartItem.id === item.id)
       ?.reduce((total, curr) => total + curr.quantity, 0);
   };
   const itemCount = getItemCount() || 0;
@@ -84,9 +84,6 @@ const MenuItem = ({ item, onAddToCart, onItemClick }) => {
           </div>
         </div>
 
-        {/* {!item.is_available && (
-          <div className="unavailableBadge">Unavailable</div>
-        )} */}
       </div>
 
 
