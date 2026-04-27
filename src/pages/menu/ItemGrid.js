@@ -39,6 +39,8 @@ const ItemGrid = () => {
     dispatch(loadTablesFromApi())
   }, [dispatch]);
 
+  
+
   useEffect(() => {
     if (activeTab === "combo" && selectedCategory !== "all") {
       setActiveTab("menu");

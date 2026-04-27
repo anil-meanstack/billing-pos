@@ -135,7 +135,7 @@ const CartSummary = (props) => {
           const activeDiscounts = (Array.isArray(data) ? data : data.results || []).filter(
             (d) => d.status === "active"
           );
-          setDiscounts(activeDiscounts);;
+          setDiscounts(activeDiscounts);
         }
       } catch (error) {
         if (isMounted) {
@@ -233,18 +233,21 @@ const CartSummary = (props) => {
   }, [orderType, dispatch]);
 
   useEffect(() => {
-    if (cartSummary?.discount_amount > 0 && discounts.length > 0) {
-      const found = discounts.find(
-        d => d.code === selectedDiscount?.code
+    if (!cartSummary || discounts.length === 0) {
+      setSelectedDiscount(null);
+      return;
+    }
+
+    if (cartSummary.discount_code) {
+      const matched = discounts.find(
+        d => d.code === cartSummary.discount_code
       );
 
-      if (!found) {
-        setSelectedDiscount(discounts[0]);
-      }
+      setSelectedDiscount(matched || null);
     } else {
       setSelectedDiscount(null);
     }
-  }, [cartSummary?.discount_amount, discounts]);
+  }, [cartSummary, discounts]);
 
   const validateCheckout = useCallback(() => {
     if (items.length === 0) {
@@ -275,25 +278,25 @@ const CartSummary = (props) => {
     return true;
   }, [items.length, validateCustomerInfo, isDineIn, tableNumber, selectedTableId, tables, showError]);
 
+
   const handleOrderTypeChange = useCallback((type) => {
-    if (orderType === type) {
+
+    if (
+      type === CONSTANTS.ORDER_TYPES.DINE_IN &&
+      !selectedTableId
+    ) {
+      showError("Please select a table first");
       return;
     }
-
     dispatch(setOrderType(type));
 
-    const payload = {
-      order_type: type,
-    };
+    if (type === CONSTANTS.ORDER_TYPES.DINE_IN) return;
 
-    if (type === CONSTANTS.ORDER_TYPES.DINE_IN) {
-      payload.table_id = selectedTableId;
-    }
+    dispatch(updateTable({
+      order_type: type
+    }));
 
-    dispatch(updateTable(payload));
-
-  }, [dispatch, selectedTableId, orderType]);
-
+  }, [dispatch, selectedTableId, showError]);
 
   const handleCheckout = useCallback(async (shouldPrint = false) => {
 
@@ -440,9 +443,12 @@ const CartSummary = (props) => {
 
   useEffect(() => {
     const removeDiscountIfCartEmpty = async () => {
-      if (items.length === 0 && selectedDiscount) {
+      if (items.length === 0 && selectedDiscount?.code) {
         try {
-          await dispatch(removeDiscount());
+          await dispatch(removeDiscount({
+            order_type: orderType,
+            table_id: selectedTableId
+          }));
           setSelectedDiscount(null);
 
           showSuccess("Discount removed (empty cart)");
@@ -460,24 +466,45 @@ const CartSummary = (props) => {
       showError("Add items to cart before applying discount");
       return;
     }
+
     try {
-      const isSame = selectedDiscount?.code === coupon.code;
+      const isSame =
+        selectedDiscount?.code === coupon.code ||
+        cartSummary?.discount_code === coupon.code;
 
       if (isSame) {
-        await dispatch(removeDiscount());
-        setSelectedDiscount(null);
-        showSuccess("Discount removed");
-      } else {
-        await dispatch(applyDiscount(coupon.code));
-        setSelectedDiscount(coupon);
+        await dispatch(removeDiscount({
+          order_type: orderType,
+          table_id: selectedTableId || null
+        })).unwrap();
 
-        showSuccess(`Discount ${coupon.code} applied`);
+        setSelectedDiscount(null); // immediate UI update
+        showSuccess("Discount removed");
+        return;
       }
 
+      const payload = {
+        order_type: orderType,
+        discount_code: coupon.code
+      };
+
+      if (orderType === "dine_in" && selectedTableId) {
+        payload.table_id = selectedTableId;
+      }
+
+      await dispatch(applyDiscount(payload)).unwrap();
+
+      setSelectedDiscount(coupon);
+      showSuccess(`Discount ${coupon.code} applied`);
 
     } catch (error) {
       console.error(error);
-      showError("Failed to update discount");
+
+      showError(
+        error?.message ||
+        error?.response?.data?.message ||
+        "Discount not valid at this time"
+      );
     }
   };
 
@@ -585,7 +612,7 @@ const CartSummary = (props) => {
           }
           {discountAmount > 0 && (
             <div className="totalRow text-success">
-              <span className="d-flex gap-2 align-items-center">Discount {selectedDiscount ? `(${selectedDiscount.code})` : ''}</span>
+              <span className="d-flex gap-2 align-items-center">Discount {cartSummary?.discount_code ? `(${cartSummary.discount_code})` : ''}</span>
               <span>-{formatPrice(discountAmount)}</span>
             </div>
           )}

@@ -30,10 +30,11 @@ const OrderDetailsModal = ({
             restaurant: auth?.currentRestaurant?.name || "No Restaurant Selected",
             address: auth?.currentRestaurant?.address || "",
             gst_number: auth?.currentRestaurant?.gst_number || "",
+            fssai_number:auth?.currentRestaurant?.fssai_number || ""
         };
     };
 
-    const { restaurant, address, gst_number } = restaurantName();
+    const { restaurant, address, gst_number ,fssai_number} = restaurantName();
 
     const getOrderDateTime = (order) => {
         return order?.created_at || order?.time || null;
@@ -192,8 +193,9 @@ const OrderDetailsModal = ({
                         paymentMethod={lastOrder.paymentMethod ?? lastOrder.payment_method_display}
                         restaurant={restaurant}
                         gst_number={gst_number}
-                        customerName={lastOrder?.customer_name_display}
-                        customerPhone={lastOrder?.customer_phone}
+                        fssai_number={fssai_number}
+                        customerName={lastOrder?.customer_name_display ?? lastOrder?.customerName }
+                        customerPhone={lastOrder?.customer_phone ?? lastOrder?.customerPhone }
                         customerAddress={lastOrder?.customer_address}
                         orderNotes={lastOrder?.order_notes}
                         discountAmount={lastOrder?.discount_amount}

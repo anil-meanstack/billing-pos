@@ -562,8 +562,8 @@
   font-size: 12px;
   display: flex;
   flex-direction: column;
-  /* gap: 6px; */
   border-left: 4px solid;
+  cursor: pointer;
 }
 
 /* COLORS */

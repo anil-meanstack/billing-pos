@@ -16,6 +16,7 @@ const CustomerModal = ({
   });
 
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
 
   useEffect(() => {
     setForm({
@@ -25,49 +26,88 @@ const CustomerModal = ({
     });
   }, [customerInfo]);
 
+
   const handleChange = (e) => {
     const { name, value } = e.target;
 
-    if (name === "phone" && !/^\d*$/.test(value)) return;
+    if (name === "phone") {
+      if (!/^\d*$/.test(value)) return;
+
+      if (value.length > 10) return;
+    }
 
     setForm({
       ...form,
       [name]: value,
     });
 
-    setErrors({
-      ...errors,
+    setErrors((prev) => ({
+      ...prev,
       [name]: "",
-    });
+    }));
   };
 
-  const validate = () => {
-    let newErrors = {};
+  const handleBlur = (e) => {
+    const { name, value } = e.target;
 
-    if (!form.phone) {
-      newErrors.phone = "Phone number is required";
-    } else if (!/^\d{10}$/.test(form.phone)) {
-      newErrors.phone = "Phone must be exactly 10 digits";
+    setTouched((prev) => ({
+      ...prev,
+      [name]: true,
+    }));
+
+    validateField(name, value);
+  };
+  const validateField = (name, value) => {
+    let error = "";
+
+    if (name === "phone") {
+      if (!value) error = "Phone number is required";
+      else if (!/^\d{10}$/.test(value)) {
+        error = "Phone must be exactly 10 digits";
+      }
     }
 
-    if (!form.name.trim()) {
-      newErrors.name = "Customer name is required";
+    if (name === "name") {
+      if (!value.trim()) error = "Customer name is required";
     }
 
-    if (orderType === "delivery" && !form.address.trim()) {
-      newErrors.address = "Address is required for delivery";
+    if (name === "address" && orderType === "delivery") {
+      if (!value.trim()) error = "Address is required for delivery";
     }
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    setErrors((prev) => ({
+      ...prev,
+      [name]: error,
+    }));
+
+    return error === "";
   };
 
+  // const handleSave = () => {
+  //   if (!validateField()) return;
+
+  //   dispatch(setCustomerInfo(form));
+  //   onClose();
+  // };
   const handleSave = () => {
-    if (!validate()) return;
+  let isValid = true;
 
-    dispatch(setCustomerInfo(form));
-    onClose();
-  };
+  Object.keys(form).forEach((key) => {
+    const valid = validateField(key, form[key]);
+    if (!valid) isValid = false;
+  });
+
+  setTouched({
+    phone: true,
+    name: true,
+    address: true,
+  });
+
+  if (!isValid) return;
+
+  dispatch(setCustomerInfo(form));
+  onClose();
+};
 
   return (
     <div className="customer-modal-overlay">
@@ -82,41 +122,52 @@ const CustomerModal = ({
         <div className="customer-modal-body">
 
           <div className="input-group">
-            <label>Phone Number</label>
+            <label htmlFor="phone">Phone Number</label>
             <input
               type="text"
               name="phone"
+              id="phone"
               placeholder="Enter phone number"
               value={form.phone}
               onChange={handleChange}
+              onBlur={handleBlur}
               maxLength="10"
+              autoComplete="tel"
             />
-            {errors.phone && <span className="error text-danger">{errors.phone}</span>}
+            {touched.phone && errors.phone && (
+              <span className="error text-danger">{errors.phone}</span>
+            )}
           </div>
 
           <div className="input-group">
-            <label>Customer Name</label>
+            <label htmlFor="name">Customer Name</label>
             <input
               type="text"
               name="name"
+              id="name"
               placeholder="Enter customer name"
               value={form.name}
               onChange={handleChange}
+              onBlur={handleBlur}
+              autoComplete="name"
             />
-            {errors.name && <span className="error text-danger">{errors.name}</span>}
+            {touched.name && errors.name && <span className="error text-danger">{errors.name}</span>}
           </div>
 
           {orderType === "delivery" && (
             <div className="input-group">
-              <label>Address</label>
+              <label htmlFor="address">Address</label>
               <textarea
                 name="address"
+                id="address"
                 placeholder="Enter address"
                 value={form.address}
                 onChange={handleChange}
+                onBlur={handleBlur}
                 rows="3"
+                autoComplete="street-address"
               />
-              {errors.address && (
+              {touched.address && errors.address && (
                 <span className="error text-danger">{errors.address}</span>
               )}
             </div>

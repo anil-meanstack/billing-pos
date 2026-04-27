@@ -1,16 +1,22 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { addToCartItem, updateCartItemApi, removeCartItemApi, clearCartApi, tableSelectable, addComboApi, getCartApi } from "./cartApi";
 import { applyDiscountApi, deleteDiscount } from "../discount/discountApi";
+import {loadTablesFromApi } from  "../table/tableSlice"
+
 
 export const placeOrder = createAsyncThunk(
   "cart/placeOrder",
-  async (orderData, { rejectWithValue }) => {
+  async (orderData, thunkAPI) => {
     try {
-      return await addToCartItem(orderData);
+      const result = await addToCartItem(orderData);
+
+      thunkAPI.dispatch(loadTablesFromApi()); 
+
+      return result;
     } catch (error) {
-      return rejectWithValue(error.message);
+      return thunkAPI.rejectWithValue(error.message);
     }
-  },
+  }
 );
 
 export const updateTable = createAsyncThunk(
@@ -37,28 +43,41 @@ export const updateCartItem = createAsyncThunk(
     }
   },
 );
+export const fetchCart = createAsyncThunk(
+  "cart/fetchCart",
+  async (res, { rejectWithValue }) => {
+    try {
+      return await getCartApi(res);
+    } catch (err) {
+      return rejectWithValue(err.message);
+    }
+  }
+);
 
 export const removeCartItem = createAsyncThunk(
   "cart/removeItem",
   async ({ itemId, res }, thunkAPI) => {
     try {
       await removeCartItemApi(itemId, res);
+
       const updatedCart = await getCartApi(res);
+
+      thunkAPI.dispatch(loadTablesFromApi()); 
+
       return updatedCart;
-      // return itemId;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
     }
-  },
+  }
 );
 
 export const applyDiscount = createAsyncThunk(
   "cart/applyDiscount",
-  async (discountCode, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      await applyDiscountApi(discountCode);
+      await applyDiscountApi(payload);
 
-      const updatedCart = await getCartApi();
+      const updatedCart = await getCartApi(payload);
 
       return updatedCart;
 
@@ -69,11 +88,11 @@ export const applyDiscount = createAsyncThunk(
 );
 export const removeDiscount = createAsyncThunk(
   "cart/removeDiscount",
-  async (_, { rejectWithValue }) => {
+  async (payload, { rejectWithValue }) => {
     try {
-      await deleteDiscount();
+       await deleteDiscount(payload);
 
-      const updatedCart = await getCartApi();
+      const updatedCart = await getCartApi(payload);
 
       return updatedCart;
     } catch (err) {
@@ -81,25 +100,32 @@ export const removeDiscount = createAsyncThunk(
     }
   }
 );
+
 export const clearCartServer = createAsyncThunk(
   "cart/clearServer",
-  async (_, { rejectWithValue }) => {
+  async (_, thunkAPI) => {
     try {
       await clearCartApi();
+
+      thunkAPI.dispatch(loadTablesFromApi()); // ✅
+
       return true;
     } catch (err) {
-      return rejectWithValue(err.message);
+      return thunkAPI.rejectWithValue(err.message);
     }
-  },
+  }
 );
-
 export const addCombo = createAsyncThunk(
   "cart/addCombo",
-  async (payload, { rejectWithValue }) => {
+  async (payload, thunkAPI) => {
     try {
-      return await addComboApi(payload);
+      const result = await addComboApi(payload);
+
+      thunkAPI.dispatch(loadTablesFromApi()); 
+
+      return result;
     } catch (err) {
-      return rejectWithValue(err.message);
+      return thunkAPI.rejectWithValue(err.message);
     }
   }
 );
@@ -149,7 +175,7 @@ const updateCartState = (state, cart, summary = null) => {
 
 const initialState = {
   items: [],
-  orderType: "dine-in",
+  orderType: "dine_in",
   tableNumber: "",
   cartId: null,
   cartData: null,
@@ -160,7 +186,7 @@ const initialState = {
     deliveryCharge: 0,
     total_amount: 0,
     itemCount: 0,
-    orderType: "dine-in",
+    orderType: "dine_in",
     tableNumber: "",
   },
   customerInfo: {
@@ -248,6 +274,7 @@ const cartSlice = createSlice({
     setOrderNotes: (state, action) => {
       state.orderNotes = action.payload;
     },
+    
 
     loadOrderToCart: (state, action) => {
       const order = action.payload;
@@ -278,6 +305,10 @@ const cartSlice = createSlice({
         updateCartState(state, action.payload?.cart);
       })
 
+      .addCase(fetchCart.fulfilled, (state, action) => {
+        updateCartState(state, action.payload?.cart);
+      })
+
       .addCase(placeOrder.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Order failed";
@@ -286,7 +317,7 @@ const cartSlice = createSlice({
       .addCase(updateTable.fulfilled, (state, action) => {
         const res = action.payload;
 
-        updateCartState(state, action.payload?.cart);
+        updateCartState(state, res?.cart);
       })
 
       .addCase(updateCartItem.pending, (state) => {

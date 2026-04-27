@@ -42,26 +42,6 @@ const findCategory = (categories, itemCategory) => {
 };
 
 
-const formatAddonCategories = (addonCategories) => {
-  return addonCategories?.map(cat => ({
-    id: cat.id,
-    name: cat.name,
-    is_required: cat.is_required,
-    min_selections: cat.min_selections,
-    max_selections: cat.max_selections,
-    addons: cat.addons?.map(addon => ({
-      id: addon.id,
-      name: addon.name,
-      name_display: `${addon.name} (+₹${addon.price})`,
-      price: parseFloat(addon.price) || 0,
-      description: addon.description || '',
-      is_available: true,
-      category_id: cat.id,
-      category_name: cat.name,
-    })) || []
-  })) || [];
-};
-
 const getCategorySlug = (categoryObj, itemCategory) => {
   if (categoryObj?.slug) return categoryObj.slug;
   if (categoryObj?.id) return categoryObj.id.toString();

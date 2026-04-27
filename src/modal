@@ -1,65 +1,23 @@
-import React, { useState, useEffect, useMemo, useRef, useCallback } from "react";
-import { useDispatch } from "react-redux";
-import { placeOrder, loadCart } from "../../../../features/cart/cartSlice";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { placeOrder } from "../../../../features/cart/cartSlice";
 import "./Modal.css";
 import Alert from "../../../../components/Alert/Alert";
 
+const Modal = ({ show, onClose, item }) => {
 
-const CATEGORY_TYPES = {
-  SIZE: "size",
-  BASE: "base",
-  TOPPINGS: "toppings",
-  SIMPLE_VARIANT: "simple_variant",
-};
-
-const DEFAULT_SIZE_NAME = "regular";
-
-// Helper Functions
-const createSizeCategory = (variantGroup) => ({
-  id: "size",
-  label: `Select ${variantGroup.group_name}`,
-  type: CATEGORY_TYPES.SIZE,
-  variantData: variantGroup,
-});
-
-const createBaseCategory = (category) => ({
-  id: category.id,
-  label: `${category.name} Base`,
-  type: CATEGORY_TYPES.BASE,
-  categoryData: category,
-  sizeName: category.name.toLowerCase(),
-});
-
-const createToppingsCategory = (category) => {
-  let sizeName = category.name;
-
-  if (category.name.toLowerCase().includes('topping')) {
-    sizeName = category.name.replace(/Topping[s]?\s*/i, '').trim();
-  }
-
-  return {
-    id: category.id,
-    label: category.name,
-    type: CATEGORY_TYPES.TOPPINGS,
-    categoryData: category,
-    sizeName: sizeName.toLowerCase(),
-  };
-};
-
-const createSimpleVariantCategory = (variantGroup) => ({
-  id: "variant",
-  label: variantGroup.group_name,
-  type: CATEGORY_TYPES.SIMPLE_VARIANT,
-  variantData: variantGroup,
-});
-
-const Modal = ({ show, onClose, item, onAddToCart }) => {
   const dispatch = useDispatch();
-  const [selected, setSelected] = useState({});
-  const [activeNav, setActiveNav] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const safeItem = item ?? {};
+  const { orderType, tableId } = useSelector((state) => state.cart);
+
+  const [selected, setSelected] = useState({
+    variants: {},
+    addons: {},
+  });
+
+  const [activeIndex, setActiveIndex] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const categoryRefs = useRef({});
 
   const [showAlert, setShowAlert] = useState({
     show: false,
@@ -71,689 +29,310 @@ const Modal = ({ show, onClose, item, onAddToCart }) => {
     setShowAlert({
       show: true,
       message,
-      type: "danger",
+      type: "success",
     });
   }, []);
 
-  const variantGroups = useMemo(() => {
-    return item?.variants || [];
-  }, [item]);
+  /* ---------------- DATA ---------------- */
 
-  // Get addon categories from item
-  const itemAddons = useMemo(() => {
-    return item?.addon_categories || [];
-  }, [item]);
+  const variantGroups = useMemo(
+    () => (safeItem?.variants ? [...safeItem.variants] : []),
+    [safeItem.variants]
+  );
 
-  // Check if item has addons
-  const hasAddons = useMemo(() => {
-    return itemAddons.length > 0;
-  }, [itemAddons]);
+  const addonCategories = useMemo(
+    () => safeItem?.addon_categories || [],
+    [safeItem.addon_categories]
+  );
 
-  // Check if item has size variants
-  const hasSizeVariants = useMemo(() => {
-    if (variantGroups.length === 0) return false;
-
-    const sizeKeywords = ['regular', 'medium', 'large', 'small', 'half', 'full'];
-
-    return variantGroups.some(group =>
-      group.variants?.some(variant =>
-        sizeKeywords.includes(variant.name?.toLowerCase())
-      )
-    );
-  }, [variantGroups]);
-
-  // Separate base categories and toppings categories
-  const { baseCategories, toppingsCategories } = useMemo(() => {
-    const bases = [];
-    const toppings = [];
-
-    itemAddons.forEach(cat => {
-      // Check if this is a toppings category (contains "topping" in name)
-      if (cat.name.toLowerCase().includes('topping')) {
-        toppings.push(createToppingsCategory(cat));
-      } else {
-        // Regular base categories
-        bases.push(createBaseCategory(cat));
-      }
-    });
-
-    return { baseCategories: bases, toppingsCategories: toppings };
-  }, [itemAddons]);
-
-  // Find size variant group
-  const sizeVariantGroup = useMemo(() => {
-    if (variantGroups.length === 0) return null;
-
-    const sizeKeywords = ['regular', 'medium', 'large', 'small', 'half', 'full'];
-
-    return variantGroups.find(group =>
-      group.variants?.some(variant =>
-        sizeKeywords.includes(variant.name?.toLowerCase())
-      )
-    ) || variantGroups[0];
-  }, [variantGroups]);
-
-  // Get size options from variants
-  const sizeOptions = useMemo(() => {
-    if (sizeVariantGroup?.variants) {
-      return sizeVariantGroup.variants;
-    }
-    return [];
-  }, [sizeVariantGroup]);
-
-  // Find default size option
-  const defaultSizeOption = useMemo(() => {
-    if (sizeOptions.length === 0) return null;
-
-    const regular = sizeOptions.find(
-      (option) => option.name && option.name.toLowerCase() === DEFAULT_SIZE_NAME
-    );
-
-    const defaultOption = sizeOptions.find(option => option.is_default === true);
-
-    return regular || defaultOption || sizeOptions[0];
-  }, [sizeOptions]);
-
-  // Get current categories based on selected size
-  const currentBaseCategory = useMemo(() => {
-    if (!hasSizeVariants || !hasAddons || !selected.size) return null;
-
-    const selectedSizeName = selected.size.name.toLowerCase();
-    return baseCategories.find(cat => cat.sizeName === selectedSizeName);
-  }, [selected.size, baseCategories, hasSizeVariants, hasAddons]);
-
-  const currentToppingsCategory = useMemo(() => {
-    if (!hasSizeVariants || !hasAddons || !selected.size) return null;
-
-    const selectedSizeName = selected.size.name.toLowerCase();
-    return toppingsCategories.find(cat => cat.sizeName === selectedSizeName);
-  }, [selected.size, toppingsCategories, hasSizeVariants, hasAddons]);
-
-  // Create categories to display
-  const categoriesToDisplay = useMemo(() => {
-    const categories = [];
-
-    if (hasSizeVariants) {
-      if (sizeVariantGroup) {
-        categories.push(createSizeCategory(sizeVariantGroup));
-      }
-
-      if (selected.size && currentBaseCategory) {
-        categories.push(currentBaseCategory);
-      }
-      if (selected.size && currentToppingsCategory) {
-        categories.push(currentToppingsCategory);
-      }
-    } else if (variantGroups.length > 0) {
-      categories.push(createSimpleVariantCategory(variantGroups[0]));
-    }
-
-    return categories;
-  }, [sizeVariantGroup, currentBaseCategory, currentToppingsCategory, hasSizeVariants, variantGroups, selected.size]);
-
+  /* ---------------- RESET ---------------- */
 
   useEffect(() => {
     if (!show) return;
 
-    setQuantity(1);
+    const defaults = {};
 
-    let initialSelections = {};
+    variantGroups.forEach((group) => {
+      if (group.variants?.length) {
+        const def =
+          group.variants.find((v) => v.is_default) ||
+          group.variants[0];
 
-    if (hasSizeVariants && defaultSizeOption) {
-      const selectedSizeName = defaultSizeOption.name.toLowerCase();
-
-      const defaultBase = baseCategories.find(cat => cat.sizeName === selectedSizeName);
-      const defaultToppings = toppingsCategories.find(cat => cat.sizeName === selectedSizeName);
-
-      initialSelections = {
-        size: {
-          name: defaultSizeOption.name,
-          id: defaultSizeOption.id,
-        }
-      };
-
-      if (defaultBase) initialSelections[defaultBase.id] = [];
-      if (defaultToppings) initialSelections[defaultToppings.id] = [];
-    } else if (variantGroups.length > 0 && variantGroups[0].variants?.length > 0) {
-      const firstVariant = variantGroups[0].variants.find(v => v.is_default === true) || variantGroups[0].variants[0];
-      if (firstVariant) {
-        initialSelections = {
-          variant: {
-            name: firstVariant.name,
-            id: firstVariant.id,
-          }
-        };
+        defaults[group.group_id] = def;
       }
-    }
-
-    setSelected(initialSelections);
-
-    // Set initial active nav after a short delay
-    setTimeout(() => {
-      // Find first category for nav
-      let firstCategoryId = null;
-
-      if (hasSizeVariants) {
-        firstCategoryId = "size";
-      } else if (variantGroups.length > 0) {
-        firstCategoryId = "variant";
-      }
-
-      if (firstCategoryId) setActiveNav(firstCategoryId);
-    }, 50);
-  }, [show, defaultSizeOption, baseCategories, toppingsCategories, variantGroups, hasSizeVariants]);
-
-  // Update active nav when categories change
-  useEffect(() => {
-    if (categoriesToDisplay.length > 0 && !activeNav) {
-      setActiveNav(categoriesToDisplay[0].id);
-    }
-  }, [categoriesToDisplay, activeNav]);
-
-  const getCategoryOptions = (category) => {
-    if (!category) return [];
-
-    switch (category.type) {
-      case CATEGORY_TYPES.SIZE:
-        return sizeOptions;
-      case CATEGORY_TYPES.SIMPLE_VARIANT:
-        return variantGroups[0]?.variants || [];
-      case CATEGORY_TYPES.BASE:
-      case CATEGORY_TYPES.TOPPINGS:
-        return category.categoryData?.addons || [];
-      default:
-        return [];
-    }
-  };
-
-  // Selection Handlers - FIXED: Properly handle size change
-  const handleSelect = (value, category) => {
-    if (category.type === CATEGORY_TYPES.SIZE) {
-      // When size changes, we need to update the size and initialize selections for the new size's categories
-      const selectedSizeName = value.name.toLowerCase();
-
-      // Find the corresponding base and toppings categories for the new size
-      const newBaseCategory = baseCategories.find(cat => cat.sizeName === selectedSizeName);
-      const newToppingsCategory = toppingsCategories.find(cat => cat.sizeName === selectedSizeName);
-
-      // Update state with new size and initialize empty arrays for the new categories
-      setSelected(prev => {
-        const newSelections = {
-          size: value
-        };
-
-        // Add empty arrays for the new categories
-        if (newBaseCategory) {
-          newSelections[newBaseCategory.id] = [];
-        }
-
-        if (newToppingsCategory) {
-          newSelections[newToppingsCategory.id] = [];
-        }
-
-        return newSelections;
-      });
-
-      setTimeout(() => {
-        const nextBaseCategory = baseCategories.find(
-          cat => cat.sizeName === selectedSizeName
-        );
-
-        if (nextBaseCategory) {
-          scrollToCategory(nextBaseCategory.id);
-        }
-      }, 0);
-    }
-    else if (category.type === CATEGORY_TYPES.SIMPLE_VARIANT) {
-      setSelected(prev => ({ ...prev, variant: value }));
-      setTimeout(() => {
-        const currentIndex = categoriesToDisplay.findIndex(cat => cat.id === activeNav);
-        if (currentIndex < categoriesToDisplay.length - 1) {
-          scrollToCategory(categoriesToDisplay[currentIndex + 1].id);
-        }
-      }, 200);
-    }
-    else if (
-      category.type === CATEGORY_TYPES.BASE ||
-      category.type === CATEGORY_TYPES.TOPPINGS
-    ) {
-      handleAddonSelect(value, category);
-
-      // Move to next only if single selection allowed
-      const maxSelections = category.categoryData?.max_selections;
-      const currentSelections = (selected[category.id] || []).length;
-
-      if (maxSelections === 1 || (maxSelections && currentSelections + 1 >= maxSelections)) {
-        setTimeout(() => {
-          const currentIndex = categoriesToDisplay.findIndex(cat => cat.id === activeNav);
-          if (currentIndex < categoriesToDisplay.length - 1) {
-            scrollToCategory(categoriesToDisplay[currentIndex + 1].id);
-          }
-        }, 200);
-      }
-    }
-  };
-
-  const handleAddonSelect = (value, category) => {
-    const addonId = value?.id;
-    if (!addonId) return;
-
-    setSelected((prev) => {
-      const currentSelections = prev[category.id] || [];
-      const maxSelections = category.categoryData?.max_selections;
-
-      if (currentSelections.includes(addonId)) {
-        return {
-          ...prev,
-          [category.id]: currentSelections.filter((v) => v !== addonId),
-        };
-      }
-
-      if (maxSelections && currentSelections.length >= maxSelections) {
-
-        showError(`You can only select up to ${maxSelections} items`);
-        return prev;
-      }
-
-      return {
-        ...prev,
-        [category.id]: [...currentSelections, addonId],
-      };
     });
+
+    setSelected({ variants: defaults, addons: {} });
+    setActiveIndex(0);
+    setQuantity(1);
+  }, [show, variantGroups]);
+
+  /* ---------------- MAIN VARIANT ---------------- */
+
+  const mainVariant = useMemo(() => {
+    const first = variantGroups[0];
+    if (!first) return null;
+
+    return selected.variants?.[first.group_id];
+  }, [selected.variants, variantGroups]);
+
+  /* ---------------- ADDON STEPS ---------------- */
+
+  const addonSteps = useMemo(() => {
+    if (!safeItem.has_addons) return [];
+
+    if (!safeItem.has_variants) {
+      return addonCategories.map((cat) => ({
+        ...cat,
+        type: "addon",
+      }));
+    }
+
+    if (!mainVariant) return [];
+
+    const normalize = (str) =>
+      str?.toLowerCase().replace(/\s+/g, "").trim();
+
+    const match = addonCategories.find(
+      (c) => normalize(c.name) === normalize(mainVariant.name)
+    );
+
+    return match ? [{ ...match, type: "addon" }] : [];
+  }, [mainVariant, addonCategories, safeItem]);
+
+  /* ---------------- STEPS ---------------- */
+
+  const steps = useMemo(() => {
+    if (!safeItem.has_variants) return addonSteps;
+
+    return [
+      ...variantGroups.map((g) => ({
+        ...g,
+        type: "variant",
+      })),
+      ...addonSteps,
+    ];
+  }, [variantGroups, addonSteps, safeItem.has_variants]);
+
+  /* ---------------- SAFE DERIVED VALUES ---------------- */
+
+  const safeIndex = Math.min(
+    Math.max(activeIndex, 0),
+    Math.max(steps.length - 1, 0)
+  );
+
+  const activeStep = steps[safeIndex];
+  const nextStep = steps[safeIndex + 1] || null;
+
+  const maxSelections = activeStep?.max_selections || 1;
+
+  const currentCount = useMemo(() => {
+    if (!activeStep) return 0;
+
+    if (activeStep.type === "addon") {
+      return (selected.addons?.[activeStep.id] || []).length;
+    }
+
+    if (activeStep.type === "variant") {
+      return selected.variants?.[activeStep.group_id] ? 1 : 0;
+    }
+
+    return 0;
+  }, [activeStep, selected]);
+
+  /* ---------------- IMPORTANT SAFE GUARD (AFTER HOOKS) ---------------- */
+
+  if (!show || !safeItem?.id || !steps.length || !activeStep) return null;
+
+  /* ---------------- SELECT HANDLER ---------------- */
+
+  const handleSelect = (step, option) => {
+    if (step.type === "variant") {
+      setSelected((prev) => ({
+        ...prev,
+        variants: {
+          ...prev.variants,
+          [step.group_id]: option,
+        },
+        addons: {},
+      }));
+
+      setTimeout(() => {
+        setActiveIndex((p) => (p < steps.length - 1 ? p + 1 : p));
+      }, 120);
+    }
+
+    if (step.type === "addon") {
+      const current = selected.addons[step.id] || [];
+      const max = step.max_selections;
+      const min = step.min_selections || 0;
+
+      let updated;
+
+      if (current.includes(Number(option.id))) {
+        updated = current.filter((id) => id !== Number(option.id));
+      } else {
+        if (max && current.length >= max) {
+          showError(`You can select only ${max} items`);
+          return;
+        }
+        updated = [...current, Number(option.id)];
+      }
+
+      setSelected((prev) => ({
+        ...prev,
+        addons: {
+          ...prev.addons,
+          [step.id]: updated,
+        },
+      }));
+
+      const shouldMove =
+        (max && updated.length >= max) ||
+        (!max && updated.length >= min && min > 0);
+
+      if (shouldMove) {
+        setTimeout(() => {
+          setActiveIndex((p) => (p < steps.length - 1 ? p + 1 : p));
+        }, 120);
+      }
+    }
   };
 
-  const calculateSizePrice = useCallback((selectedSize) => {
-    if (sizeVariantGroup?.variants) {
-      const sizeVariantOption = sizeVariantGroup.variants.find(
-        (a) => a.id === selectedSize.id,
-      );
-      return parseFloat(
-        sizeVariantOption?.final_price ||
-        sizeVariantOption?.price_modifier ||
-        0,
-      );
-    }
-    return 0;
-  }, [sizeVariantGroup]);
-
-  const calculateSimpleVariantPrice = useCallback((selectedVariant) => {
-    if (variantGroups[0]?.variants) {
-      const variantOption = variantGroups[0].variants.find(
-        (a) => a.id === selectedVariant.id,
-      );
-      return parseFloat(
-        variantOption?.final_price ||
-        variantOption?.price_modifier ||
-        0,
-      );
-    }
-    return 0;
-  }, [variantGroups]);
-  const calculateAddonsPrice = (category, selectedAddonIds) => {
-    if (!selectedAddonIds || !Array.isArray(selectedAddonIds)) return 0;
-
-    return selectedAddonIds.reduce((sum, id) => {
-      const addon = category.categoryData?.addons?.find((a) => a.id === id);
-      return sum + parseFloat(addon?.price || 0);
-    }, 0);
-  };
+  /* ---------------- TOTAL PRICE ---------------- */
 
   const totalPrice = useMemo(() => {
     let total = 0;
 
-    if (hasSizeVariants) {
-      if (selected.size) {
-        total += calculateSizePrice(selected.size);
-      }
-
-      if (currentBaseCategory) {
-        const selectedBaseIds = selected[currentBaseCategory.id] || [];
-        total += calculateAddonsPrice(currentBaseCategory, selectedBaseIds);
-      }
-
-      if (currentToppingsCategory) {
-        const selectedToppingIds = selected[currentToppingsCategory.id] || [];
-        total += calculateAddonsPrice(currentToppingsCategory, selectedToppingIds);
-      }
-    } else if (selected.variant) {
-      total += calculateSimpleVariantPrice(selected.variant);
+    if (safeItem.has_variants) {
+      Object.values(selected.variants).forEach((v) => {
+        total += Number(v.price_modifier || 0);
+      });
+    } else {
+      total += Number(safeItem.base_price || 0);
     }
 
-    return total * quantity;
-  }, [selected, currentBaseCategory, currentToppingsCategory, hasSizeVariants, quantity, calculateSizePrice, calculateSimpleVariantPrice]);
+    Object.entries(selected.addons).forEach(([catId, ids]) => {
+      const cat = addonCategories.find(
+        (c) => String(c.id) === String(catId)
+      );
 
-  const prepareApiPayload = () => {
+      const unique = [...new Set(ids)];
+
+      unique.forEach((id) => {
+        const addon = cat?.addons.find(
+          (a) => String(a.id) === String(id)
+        );
+
+        if (addon) total += Number(addon.price || 0);
+      });
+    });
+
+    return total * quantity;
+  }, [selected, quantity, safeItem, addonCategories]);
+
+  /* ---------------- PAYLOAD ---------------- */
+
+  const preparePayload = () => {
+    const first = variantGroups[0];
+
     let payload = {
-      menu_item_id: item.id,
-      quantity: quantity,
+      menu_item_id: safeItem.id,
+      quantity,
+      variant_id: null,
+      addon_ids: Object.values(selected.addons).flat(),
+      order_type: orderType || "dine_in",
     };
 
-    if (hasSizeVariants) {
-      if (!selected.size) {
-        throw new Error("Please select a size first");
-      }
-      payload.variant_id = selected.size.id;
+    if (safeItem.has_variants && first) {
+      payload.variant_id =
+        selected.variants[first.group_id]?.id || null;
+    }
 
-      const selectedAddons = [];
-
-      if (currentBaseCategory) {
-        const selectedBaseIds = selected[currentBaseCategory.id] || [];
-        if (selectedBaseIds.length > 0) {
-          selectedAddons.push(...selectedBaseIds);
-        }
-      }
-
-      if (currentToppingsCategory) {
-        const selectedToppingIds = selected[currentToppingsCategory.id] || [];
-        if (selectedToppingIds.length > 0) {
-          selectedAddons.push(...selectedToppingIds);
-        }
-      }
-
-      if (selectedAddons.length > 0) {
-        payload.addon_ids = selectedAddons;
-      }
-    } else if (selected.variant) {
-      payload.variant_id = selected.variant.id;
+    if (payload.order_type === "dine_in" && tableId) {
+      payload.table_id = Number(tableId);
     }
 
     return payload;
   };
 
   const handleAddToCart = async () => {
-    if (hasSizeVariants && !selected.size) {
-      alert("Please select a size first!");
-      scrollToCategory("size");
-      return;
-    }
-
-    if (!hasSizeVariants && !selected.variant && variantGroups.length > 0) {
-      alert("Please select an option first!");
-      return;
-    }
-
-    setIsSubmitting(true);
-
     try {
-      const apiPayload = prepareApiPayload();
-      const result = await dispatch(placeOrder(apiPayload)).unwrap();
-
-      if (result) {
-        dispatch(loadCart());
-        // onAddToCart(localCartItem, selected.size?.name || selected.variant?.name);
-        onClose();
-      }
-    } catch (error) {
-      console.error("Add to cart error:", error);
-      alert(`Failed to add item: ${error.message || "Please try again"}`);
-    } finally {
-      setIsSubmitting(false);
+      await dispatch(placeOrder(preparePayload())).unwrap();
+      onClose();
+    } catch {
+      alert("Error");
     }
   };
 
-  // UI Helpers
-  const formatPrice = (price) => `₹${parseFloat(price || 0).toFixed(2)}`;
-
-  const isOptionSelected = (category, option) => {
-    const selectedValue = selected[category.id];
-    if (!selectedValue) return false;
-
-    if (category.type === CATEGORY_TYPES.SIZE || category.type === CATEGORY_TYPES.SIMPLE_VARIANT) {
-      return selectedValue.id === option.id;
-    } else {
-      return (selectedValue || []).includes(option.id);
-    }
-  };
-
-  const scrollToCategory = (categoryId) => {
-    setActiveNav(categoryId);
-    setTimeout(() => {
-      const element = categoryRefs.current[categoryId];
-      if (element) {
-        element.scrollIntoView({ behavior: "smooth", block: "start" });
-      }
-    }, 50);
-  };
-
-  const handleNextCategory = () => {
-    const currentIndex = categoriesToDisplay.findIndex(
-      (cat) => cat.id === activeNav
-    );
-
-    if (currentIndex < categoriesToDisplay.length - 1) {
-      scrollToCategory(categoriesToDisplay[currentIndex + 1].id);
-    }
-  };
-
-  const isAddToCartEnabled = () => {
-    if (hasSizeVariants) {
-      return selected.size && !isSubmitting;
-    } else if (variantGroups.length > 0) {
-      return selected.variant && !isSubmitting;
-    }
-    return !isSubmitting;
-  };
-
-  const getAddToCartButtonText = () => {
-    if (isSubmitting) return "Adding to Cart...";
-
-    if (hasSizeVariants) {
-      return selected.size
-        ? `Add ${quantity > 1 ? `${quantity} ` : ''}to Cart • ${formatPrice(totalPrice)}`
-        : "Select Size First";
-    } else if (variantGroups.length > 0) {
-      return selected.variant
-        ? `Add ${quantity > 1 ? `${quantity} ` : ''}to Cart • ${formatPrice(totalPrice)}`
-        : "Select Option First";
-    } else {
-      return `Add ${quantity > 1 ? `${quantity} ` : ''}to Cart • ${formatPrice(totalPrice)}`;
-    }
-  };
-
-  const renderCategoryNavigation = () => {
-    if (categoriesToDisplay.length === 0) return null;
-
-    return (
-      <div className="modal-nav">
-        <div className="modal-nav-container">
-          {categoriesToDisplay.map((category) => (
-            <button
-              key={category.id}
-              className={`modal-nav-item ${activeNav === category.id ? "active" : ""}`}
-              onClick={() => scrollToCategory(category.id)}
-            >
-              {category.label}
-            </button>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-  const renderOptionCard = (category, option) => {
-    const isSelected = isOptionSelected(category, option);
-    const price = parseFloat(option.price_modifier || option.price || 0);
-    const isAvailable = option.is_available !== false;
-    const isSizeOrVariant = category.type === CATEGORY_TYPES.SIZE || category.type === CATEGORY_TYPES.SIMPLE_VARIANT;
-
-    const displayPrice = price > 0 ? formatPrice(price) : "Free";
-
-    return (
-      <div
-        className={`modal-option ${!isAvailable ? 'disabled' : ''}`}
-        key={option.id || option.name}
-        onClick={() => {
-          if (!isAvailable || isSubmitting) return;
-
-          let value;
-          if (isSizeOrVariant) {
-            value = {
-              name: option.name,
-              id: option.id,
-            };
-          } else {
-            value = {
-              id: option.id,
-            };
-          }
-
-          handleSelect(value, category);
-        }}
-      >
-        <div className="modal-option-content">
-          <div className="modal-option-info">
-            <div className="modal-option-name">{option.name}</div>
-            <div className={`modal-option-price ${price > 0 ? 'paid' : 'free'}`}>
-              {displayPrice}
-            </div>
-          </div>
-          <div className="modal-option-check">
-            <div className={`modal-checkbox ${isSelected ? 'selected' : ''}`}>
-              {isSelected && "✓"}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  const renderQuantitySelector = () => {
-    return (
-      <div className="modal-quantity">
-        <span className="modal-quantity-label">Quantity</span>
-        <div className="modal-quantity-controls">
-          <button
-            className="modal-quantity-btn"
-            onClick={() => setQuantity(Math.max(1, quantity - 1))}
-            disabled={quantity <= 1 || isSubmitting}
-          >
-            −
-          </button>
-          <span className="modal-quantity-value">{quantity}</span>
-          <button
-            className="modal-quantity-btn"
-            onClick={() => setQuantity(quantity + 1)}
-            disabled={isSubmitting}
-          >
-            +
-          </button>
-        </div>
-      </div>
-    );
-  };
-
-  const renderCategorySection = (category) => {
-    const options = getCategoryOptions(category);
-    const maxSelections = category.categoryData?.max_selections;
-    const currentIndex = categoriesToDisplay.findIndex(cat => cat.id === category.id);
-    const nextCategory = currentIndex < categoriesToDisplay.length - 1 ? categoriesToDisplay[currentIndex + 1] : null;
-
-    return (
-      <div
-        key={category.id}
-        className="modal-category"
-        ref={(el) => {
-          if (el) {
-            categoryRefs.current[category.id] = el;
-          }
-        }}
-      >
-        <div className="modal-category-header">
-          <h3 className="modal-category-title">{category.label}</h3>
-          {maxSelections > 0 && (
-            <span className="modal-category-limit">
-              Select up to {maxSelections} • {(selected[category.id] || []).length}/{maxSelections}
-            </span>
-          )}
-        </div>
-
-        <div className="modal-options-list">
-          {options.length > 0 ? (
-            options.map((option) => renderOptionCard(category, option))
-          ) : (
-            <div className="modal-empty">No options available</div>
-          )}
-        </div>
-
-        {/* Show next button at bottom of category if not last */}
-        {category.id === activeNav && nextCategory && (
-          <div className="modal-category-footer">
-            <div
-              className="modal-category-next"
-              onClick={handleNextCategory}
-            >
-              <span>Next: {nextCategory.label} →</span>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  if (!show || !item) {
-    return null;
-  }
+  /* ---------------- UI ---------------- */
 
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-container" onClick={(e) => e.stopPropagation()}>
+
         <div className="modal-header">
-          <div className="p-3">
-            <span className="modal-category-badge">{item.category_name || "STARTERS"}</span>
-            <h2 className="modal-title">{item.name}</h2>
-            <p className="modal-description">{item.description || "Customize your order"}</p>
-            {item.popular && <span className="modal-popular">⭐ POPULAR</span>}
+          <div>
+            <span>{safeItem.category_name}</span>
+            <h2>{safeItem.name}</h2>
+            <p>{safeItem.description}</p>
           </div>
-          <button className="modal-close" onClick={onClose}>×</button>
+
+          <img src={safeItem.image} alt="" />
+          <button onClick={onClose}>×</button>
         </div>
 
         <div className="modal-body">
-          {renderCategoryNavigation()}
+          <h3>{activeStep.group_name || activeStep.name}</h3>
 
-          <div className="modal-categories">
-            {categoriesToDisplay.length === 0 ? (
-              <div className="modal-empty-state">
-                No customization options available
-              </div>
-            ) : (
-              (() => {
-                const activeCategory = categoriesToDisplay.find(
-                  (cat) => cat.id === activeNav
-                );
+          <div>
+            {(activeStep.variants || activeStep.addons).map((opt) => {
+              const isSelected =
+                activeStep.type === "variant"
+                  ? selected.variants[activeStep.group_id]?.id === opt.id
+                  : (selected.addons[activeStep.id] || []).includes(
+                      Number(opt.id)
+                    );
 
-                return activeCategory
-                  ? renderCategorySection(activeCategory)
-                  : null;
-              })()
-            )}
+              return (
+                <div
+                  key={opt.id}
+                  onClick={() => handleSelect(activeStep, opt)}
+                >
+                  {opt.name} - ₹{opt.price}
+                  {isSelected && " ✔"}
+                </div>
+              );
+            })}
           </div>
-        </div>
 
-        {renderQuantitySelector()}
+          {activeIndex < steps.length - 1 && (
+            <button
+              onClick={() =>
+                setActiveIndex((p) => (p < steps.length - 1 ? p + 1 : p))
+              }
+            >
+              Next → {nextStep?.group_name || nextStep?.name}
+            </button>
+          )}
+        </div>
 
         <div className="modal-footer">
-          <button
-            className="modal-button modal-button-secondary"
-            onClick={onClose}
-            disabled={isSubmitting}
-          >
-            Cancel
-          </button>
-          <button
-            className="modal-button modal-button-primary"
-            onClick={handleAddToCart}
-            disabled={!isAddToCartEnabled()}
-          >
-            {getAddToCartButtonText()}
+          <button onClick={onClose}>Cancel</button>
+          <button onClick={handleAddToCart}>
+            Add to Cart • ₹{totalPrice.toFixed(2)}
           </button>
         </div>
+
+        <Alert
+          show={showAlert.show}
+          message={showAlert.message}
+          type={showAlert.type}
+          onClose={() =>
+            setShowAlert((p) => ({ ...p, show: false }))
+          }
+        />
       </div>
-      <Alert
-        show={showAlert.show}
-        message={showAlert.message}
-        type={showAlert.type}
-        onClose={() => setShowAlert({ ...showAlert, show: false })}
-      />
     </div>
   );
 };

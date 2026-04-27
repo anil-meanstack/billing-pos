@@ -1,14 +1,16 @@
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
+import React, { useState, } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCart } from "../../../../features/cart/cartSlice"
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
-const AddItemModal = ({ show, onClose, onSave }) => {
+const AddItemModal = ({ show, onClose }) => {
   const [itemName, setItemName] = useState("");
   const [price, setPrice] = useState("");
   const [special_instructions, setNote] = useState("");
   const [quantity, setQuantity] = useState(1);
   const dispatch = useDispatch();
+  const { orderType, tableId } = useSelector((state) => state.cart);
 
 
   if (!show) return null;
@@ -47,7 +49,11 @@ const AddItemModal = ({ show, onClose, onSave }) => {
         price: Number(price),
         quantity: quantity,
         special_instructions: special_instructions,
+        order_type: orderType,
       };
+      if (orderType === "dine_in" && tableId) {
+        payload.table_id = tableId;
+      }
 
       const res = await fetch(
         `${API_BASE_URL}/owner/cart/custom/addd/${restaurantId}/`,
@@ -66,6 +72,10 @@ const AddItemModal = ({ show, onClose, onSave }) => {
       if (!res.ok) {
         throw new Error(data?.message || "Failed to add item");
       }
+      await dispatch(fetchCart({
+        order_type: orderType,
+        ...(orderType === "dine_in" && tableId ? { table_id: tableId } : {})
+      }));
 
       setItemName("");
       setPrice("");
@@ -95,8 +105,10 @@ const AddItemModal = ({ show, onClose, onSave }) => {
 
           {/* Item Name */}
           <div style={inputGroup}>
-            <label style={labelStyle}>Item Name</label>
+            <label htmlFor="itemName" style={labelStyle}>Item Name</label>
             <input
+              id="itemName"
+              name="itemName"
               type="text"
               placeholder="Item Name"
               value={itemName}
@@ -107,8 +119,10 @@ const AddItemModal = ({ show, onClose, onSave }) => {
 
           {/* Price */}
           <div style={inputGroup}>
-            <label style={labelStyle}>Price (₹)</label>
+            <label htmlFor="price" style={labelStyle}>Price (₹)</label>
             <input
+              id="price"
+              name="price"
               type="number"
               placeholder="e.g. 250"
               value={price}
@@ -117,8 +131,10 @@ const AddItemModal = ({ show, onClose, onSave }) => {
             />
           </div>
           <div style={inputGroup}>
-            <label style={labelStyle}>Note / Description (optional)</label>
+            <label htmlFor="special_instructions" style={labelStyle}>Note / Description (optional)</label>
             <input
+              id="special_instructions"
+              name="special_instructions"
               type="text"
               placeholder="Special Instructions"
               value={special_instructions}

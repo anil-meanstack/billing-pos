@@ -46,10 +46,13 @@ const SearchBar = ({ setActiveTab, activeTab }) => {
 
       <input
         type="text"
+        id="search"
+        name="search"
         placeholder="Search menu items..."
         value={searchTerm}
         onChange={(e) => dispatch(setSearchTerm(e.target.value))}
         className="searchInput"
+        autoComplete="off"
       />
 
       <button style={styeBtn} onClick={() => setShowFilter(!showFilter)}>
@@ -66,7 +69,7 @@ const SearchBar = ({ setActiveTab, activeTab }) => {
         </svg>
         Open Item
       </button>
-     
+
       <button
         style={{
           ...styeBtn,
@@ -83,7 +86,7 @@ const SearchBar = ({ setActiveTab, activeTab }) => {
           }
         }}
       >
-         <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.6">
           <circle cx="8" cy="8" r="5.5"></circle>
           <path d="M8 5.5v5M5.5 8h5"></path>
         </svg>

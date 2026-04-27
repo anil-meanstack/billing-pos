@@ -6,7 +6,7 @@ import Alert from "../../../../components/Alert/Alert";
 
 const Modal = ({ show, onClose, item }) => {
   const dispatch = useDispatch();
-
+ const safeItem = item ?? {};
   const variantGroups = useMemo(() => item?.variants || [], [item?.variants]);
   const addonCategories = useMemo(() => item?.addon_categories || [], [item?.addon_categories]);
   const { orderType, tableId } = useSelector((state) => state.cart);
@@ -58,65 +58,67 @@ const Modal = ({ show, onClose, item }) => {
   }, [show, variantGroups]);
 
   const mainVariant = useMemo(() => {
-    const first = variantGroups[0];
-    if (!first) return null;
+  const firstGroup = variantGroups?.[0];
 
-    return selected.variants[first.group_id];
-  }, [selected, variantGroups]);
+  if (!firstGroup?.group_id) return null;
 
+  return selected.variants?.[firstGroup.group_id] || null;
+}, [selected.variants, variantGroups]);
 
+ const addonSteps = useMemo(() => {
+  if (!safeItem?.has_addons) return [];
 
-  const addonSteps = useMemo(() => {
-    // ✅ if no variants → show all addons directly
-    if (!item.has_variants) {
-      return addonCategories.map((cat) => ({
-        ...cat,
-        type: "addon",
-      }));
-    }
+  if (!safeItem?.has_variants) {
+    return addonCategories.map((cat) => ({
+      ...cat,
+      type: "addon",
+    }));
+  }
 
-    // ✅ if variants → filter by variant
-    if (!mainVariant) return [];
+  if (!mainVariant) return [];
 
-    const normalize = (str) => str?.toLowerCase().replace(/\s+/g, "").trim();
-    const selectedVariantName = normalize(mainVariant.name);
+  const normalize = (str) =>
+    str?.toLowerCase().replace(/\s+/g, "").trim();
 
-    // Find matching addon category
-    let matchingCategory = addonCategories.find((cat) =>
-      normalize(cat.name) === selectedVariantName
-    );
+  const selectedVariantName = normalize(mainVariant.name);
 
-    if (!matchingCategory && addonCategories.length > 0) {
-      // Option 1: Show all addons as fallback
-      return addonCategories.map((cat) => ({
-        ...cat,
-        type: "addon",
-      }));
+  const matchingCategory = addonCategories.find(
+    (cat) => normalize(cat.name) === selectedVariantName
+  );
 
+  if (!matchingCategory) return []; // ✅ IMPORTANT FIX
 
-    }
-
-    return matchingCategory ? [{
+  return [
+    {
       ...matchingCategory,
       type: "addon",
-    }] : [];
-  }, [mainVariant, addonCategories, item.has_variants]);
+    },
+  ];
+}, [mainVariant, addonCategories, safeItem]);
 
   const steps = useMemo(() => {
-    if (!item.has_variants) {
-      return addonSteps; // directly addons
-    }
-    return [
-      ...variantGroups.map((g) => ({
-        ...g,
-        type: "variant",
-      })),
-      ...addonSteps,
-    ];
-  }, [variantGroups, addonSteps, item.has_variants]);
+  if (!safeItem.has_variants) return addonSteps;
 
-  const nextStep = steps[activeIndex + 1];
-  const activeStep = steps[activeIndex];
+  const allSteps = [
+    ...variantGroups.map((g) => ({
+      ...g,
+      type: "variant",
+    })),
+    ...addonSteps,
+  ];
+
+  return allSteps;
+}, [variantGroups, addonSteps, safeItem.has_variants]);
+
+  const safeSteps = steps || [];
+
+const safeIndex =
+  safeSteps.length > 0
+    ? Math.min(activeIndex, safeSteps.length - 1)
+    : 0;
+
+const activeStep = safeSteps[safeIndex];
+const nextStep = safeSteps[safeIndex + 1] || null;
 
   const handleSelect = (step, option) => {
     if (step.type === "variant") {
@@ -242,13 +244,13 @@ const Modal = ({ show, onClose, item }) => {
     }
   };
 
-  if (!show || !item) return null;
+if (!show || !item || !safeSteps.length) return null;
 
   const maxSelections =
     activeStep?.type === "addon"
       ? activeStep.max_selections
       : activeStep?.max_selections || 1;
-
+ 
   const currentCount =
     activeStep?.type === "addon"
       ? (selected.addons[activeStep.id] || []).length

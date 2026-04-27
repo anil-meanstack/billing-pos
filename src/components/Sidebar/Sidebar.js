@@ -2,7 +2,7 @@ import React, { useState, useMemo } from "react";
 import "./Sidebar.css";
 import { NavLink } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { setTableNumber, setTableId, updateTable } from "../../features/cart/cartSlice";
+import { setTableNumber, setTableId, updateTable,setOrderType } from "../../features/cart/cartSlice";
 import { setStaff } from "../../features/staff/staffSlice";
 import Alert from "../Alert/Alert";
 
@@ -52,50 +52,7 @@ const Sidebar = () => {
 
   const totalKitchenOrder = (newCount || 0) + (preparingCount || 0) + (readyCount || 0);
 
-  // const handleTableClick = (table) => {
-
-  //   if (table.status?.toLowerCase() === "reserved") {
-  //     setShowAlert({
-  //       show: true,
-  //       message: `Table ${table.tableNumber} is reserved and cannot be selected`,
-  //       type: "warning",
-  //     });
-  //     return;
-  //   }
-
-  //   const unavailableStatuses = [ "reserved", "booked", "maintenance"];
-  //   if (unavailableStatuses.includes(table.status?.toLowerCase())) {
-  //     setShowAlert({
-  //       show: true,
-  //       message: `Table ${table.tableNumber} is ${table.status} and cannot be selected`,
-  //       type: "danger",
-  //     });
-  //     return;
-  //   }
-
-  //   setSelectedTableId(table.id);
-
-  //   dispatch(setTableNumber(table.tableNumber));
-  //   dispatch(setTableId(table.id));
-  //   if (orderType === "dine_in") {
-  //     dispatch(updateTable({
-  //       table_id: table.id,
-  //       order_type: "dine_in",
-  //     }));
-  //   }
-
-  //   localStorage.setItem('selectedTable', JSON.stringify({
-  //     number: table.tableNumber,
-  //     id: table.id
-  //   }));
-
-  //   setShowAlert({
-  //     show: true,
-  //     message: `Table ${table.tableNumber} selected successfully`,
-  //     type: "success",
-  //   });
-  // };
-
+  
   const handleTableClick = (table) => {
 
     const unavailableStatuses = ["reserved", "booked", "maintenance"];
@@ -115,6 +72,8 @@ const Sidebar = () => {
 
     dispatch(setTableNumber(table.tableNumber));
     dispatch(setTableId(table.id));
+
+    dispatch(setOrderType("dine_in"));
 
     if (orderType === "dine_in") {
       dispatch(updateTable({

@@ -15,11 +15,13 @@ const PrintTemplate = ({
     customerAddress,
     discountAmount,
     gst_number,
+    fssai_number,
     restaurantAddress,
     customerName,
     customerPhone,
     orderNumber
 }) => {
+
     const isBill = type === "bill";
 
     return (
@@ -46,9 +48,15 @@ const PrintTemplate = ({
                 </div>
             </div>
             {isBill && gst_number && (
-                <div style={{ fontWeight: "bold", fontSize: "12px" }}>
-                    GST No: {gst_number}
-                </div>
+                <>
+                    <div style={{ fontWeight: "bold", fontSize: "12px" }}>
+                        GST No: {gst_number}
+                    </div>
+                    <div style={{ fontWeight: "bold", fontSize: "12px" }}>
+                        FSSAI NO: {fssai_number}
+                    </div>
+
+                </>
             )}
 
             {isBill && (
@@ -78,7 +86,6 @@ const PrintTemplate = ({
             {/* ITEMS */}
             {items.map((item, i) => (
                 <div key={i} style={{ marginBottom: "2px" }}>
-                    {/* ITEM ROW */}
                     <div
                         style={{
                             display: "flex",
@@ -197,7 +204,6 @@ const Row = ({ label, value, bold, big }) => (
         <span
             style={{
                 width: "110px",
-                fontWeight: bold ? "bold" : "normal",
                 fontSize: big ? "12px" : "10px",
                 fontWeight: "600"
             }}

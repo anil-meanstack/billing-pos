@@ -1,9 +1,6 @@
-import {getCartApi} from "../cart/cartApi"
-
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
- 
 
 const getAuthData = () => {
     const data = localStorage.getItem("user");
@@ -39,7 +36,6 @@ export const getDiscounts = async () => {
     if (!restaurantId) {
         throw new Error("Restaurant ID not found");
     }
-
     const res = await fetch(
         `${API_BASE_URL}/discounts/?restaurant_id=${restaurantId}&status=active`,
         {
@@ -58,7 +54,7 @@ export const getDiscounts = async () => {
     return res.json();
 };
 
-export const applyDiscountApi = async (discountCode) => {
+export const applyDiscountApi = async (res) => {
     const restaurantSlug = getRestaurantSlug();
     const token = getToken();
 
@@ -79,9 +75,7 @@ export const applyDiscountApi = async (discountCode) => {
                 Authorization: `Bearer ${token}`,
             },
 
-            body: JSON.stringify({
-                discount_code: discountCode,
-            }),
+            body: JSON.stringify(res),
         }
     );
 
@@ -121,31 +115,31 @@ export const updateDiscount = async (id, data) => {
     return res.json();
 };
 
-export const deleteDiscount = async () => {
-  const restaurantSlug = getRestaurantSlug();
-  const token = getToken();
-  if (!restaurantSlug) {
-    throw new Error("Restaurant not found");
-  }
+export const deleteDiscount = async (payload = {}) => {
+    const restaurantSlug = getRestaurantSlug();
+    const token = getToken();
 
-  const res = await fetch(
-    `${API_BASE_URL}/public/cart-discount/remove/`,
-    {
-      method: "POST",
-      headers: {
+    if (!restaurantSlug) {
+        throw new Error("Restaurant not found");
+    }
+
+    const res = await fetch(
+        `${API_BASE_URL}/public/cart-discount/remove/?restaurant_slug=${restaurantSlug}`,
+        {
+            method: "POST",
+            headers: {
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${token}`,
             },
-            body: JSON.stringify({
-                restaurant_slug: restaurantSlug,
-            }),
+            body: JSON.stringify(payload), 
+        }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+        throw new Error(data?.message || "Failed to remove discount");
     }
-  );
 
-  if (!res.ok) {
-    const error = await res.json().catch(() => ({}));
-    throw new Error(error.message || "Failed to remove discount");
-  }
-
-  return res.json();
+    return data;
 };
