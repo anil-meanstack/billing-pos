@@ -1,18 +1,19 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import CustomerModal from "./CustomerModal";
-import Alert from "../Alert/Alert";
+import CustomerModal from "./components/CustomerModal";
+import Alert from "../../components/Alert/Alert";
 import { getDiscounts } from "../../features/discount/discountApi";
 import "./CartSummary.css";
 import { clearCartServer, setOrderType, setCustomerInfo, selectCartTotal, selectItemCount, updateTable, applyDiscount, removeDiscount } from "../../features/cart/cartSlice";
 import { setTableStatus } from "../../features/table/tableSlice";
 import { checkoutOrder } from "../../features/orders/ordersSlice";
-import CartItem from "./CartItem";
-import Coupons from "./Coupons"
-import PrintTemplate from "../PrintTemplate";
-import OrderDetailsModal from "../../pages/components/OrderDetailsModal";
-import CancelModal from "../../pages/menu/components/Modal/CancelModal";
+import CartItem from "./components/CartItem";
+import Coupons from "./components/Coupons"
+import PrintTemplate from "../../components/PrintTemplate";
+import OrderDetailsModal from "../components/OrderDetailsModal";
+import CancelModal from "../menu/components/Modal/CancelModal";
+import PaymentModal from "./components/PaymentModal";
 
 // Constants
 const CONSTANTS = {
@@ -21,7 +22,6 @@ const CONSTANTS = {
     CASH: 'cash',
     SCANNER: 'upi',
     CARD: 'card',
-
   },
   ORDER_TYPES: {
     DINE_IN: 'dine_in',
@@ -33,7 +33,7 @@ const CONSTANTS = {
 const CartSummary = (props) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { tableId, tableNumber: propTableNumber } = props;
+  const { tableId } = props;
 
   const [placingOrder, setPlacingOrder] = useState(false);
   const [showCustomerModal, setShowCustomerModal] = useState(false);
@@ -71,7 +71,9 @@ const CartSummary = (props) => {
   const isDineIn = orderType === CONSTANTS.ORDER_TYPES.DINE_IN;
   const isDelivery = orderType === CONSTANTS.ORDER_TYPES.DELIVERY;
   const isCartEmpty = items.length === 0;
-  const tax_breakdown = cartData?.tax_breakdown || [];
+  const tax_breakdown = useMemo(() => cartData?.tax_breakdown || [],
+    [cartData?.tax_breakdown]
+  )
 
   const subtotal = useMemo(() => {
     if (items.length === 0) return 0;
@@ -110,7 +112,7 @@ const CartSummary = (props) => {
     if (items.length === 0) return 0;
     return subtotal + taxAmount - discountAmount + deliveryChargeFromSummary + containerCharge
   },
-    [subtotal, discountAmount, deliveryChargeFromSummary, containerCharge, items.length]
+    [subtotal, taxAmount, discountAmount, deliveryChargeFromSummary, containerCharge, items.length]
   );
 
   const itemCount = useMemo(() =>
@@ -123,7 +125,6 @@ const CartSummary = (props) => {
     return paid - total_amount;
   }, [cash, total_amount]);
 
-  // Load discounts on mount
   useEffect(() => {
     let isMounted = true;
 
@@ -271,8 +272,6 @@ const CartSummary = (props) => {
         showError("Selected table not found");
         return false;
       }
-
-      const status = selectedTable.status?.toLowerCase();
     }
 
     return true;
@@ -392,7 +391,10 @@ const CartSummary = (props) => {
           }),
         );
       }
-      await dispatch(clearCartServer());
+      await dispatch(clearCartServer({
+        order_type: orderType,
+        table_id: selectedTableId || null
+      }));
       setSelectedDiscount(null);
       setDeliveryCharge(0);
       setContainerCharge(0);
@@ -407,7 +409,7 @@ const CartSummary = (props) => {
   },
     [validateCheckout, total_amount, getAuth, orderType, customerInfo, isDelivery,
       isDineIn, tableNumber, paymentMethod, cartId, selectedDiscount, items,
-      dispatch, tableId, navigate, showError, showSuccess, orderNote]);
+      dispatch, tableId, navigate, showError, showSuccess, orderNote, selectedTableId, subtotal, discountAmount, cartSummary?.total_amount, tax_breakdown]);
 
 
   const printContent = (ref) => {
@@ -459,7 +461,7 @@ const CartSummary = (props) => {
     };
 
     removeDiscountIfCartEmpty();
-  }, [items.length, selectedDiscount, dispatch, showSuccess]);
+  }, [items.length, selectedDiscount, dispatch, showSuccess, orderType, selectedTableId]);
 
   const handleCouponClick = async (coupon) => {
     if (isCartEmpty) {
@@ -509,16 +511,25 @@ const CartSummary = (props) => {
   };
 
   const handleCancel = useCallback(async () => {
+
+    const payload = {
+      order_type: orderType || "dine_in",
+    };
+
+    if (orderType === "dine_in" && tableId) {
+      payload.table_id = tableId;
+    }
+
     if (items.length > 0) {
       setShowCancelConfirm(true);
       return;
     }
 
-    await dispatch(clearCartServer());
+    await dispatch(clearCartServer(payload));
     setDeliveryCharge(0);
     setContainerCharge(0);
     setSelectedDiscount(null);
-  }, [items.length, dispatch]);
+  }, [items.length, dispatch, orderType, tableId]);
 
   const kotPrint = async () => {
     if (items.length === 0) {
@@ -563,7 +574,7 @@ const CartSummary = (props) => {
             style={{ cursor: "pointer", fontSize: "20px" }}
             onClick={() => setShowCustomerModal(true)}
           ></i>
-          <a className="oclr" onClick={handleCancel}>Clear all</a>
+          <button className="oclr" onClick={handleCancel}>Clear all</button >
         </div>
         <div className="px-2">
           <div className="orderTypeSwitch mb-1 ">
@@ -583,7 +594,6 @@ const CartSummary = (props) => {
         <div className={`cartContainer p-2 ${items.length === 0 ? "empty" : ""}`}>
           {items.length === 0 ? (
             <div className="text-center py-3">
-              {/* <img src="./images/table_image.jpg" alt="Empty cart" width="200" /> */}
               <span style={{ fontSize: "50px", opacity: ".3", marginBottom: "6px" }}>🛒</span>
               <h6 style={{ fontSize: "13px", color: "#68665c", fontWeight: "500" }}>No items yet</h6>
               <h6 style={{ fontSize: "13px", color: "#68665c", fontWeight: "500" }}>Tap any dish to add it here</h6>
@@ -635,7 +645,7 @@ const CartSummary = (props) => {
             <strong>TOTAL</strong>
             <strong style={{ color: "#e05c20" }}>{formatPrice(total_amount)}</strong>
           </div>
-
+          {loadingDiscounts && <span>Loading discounts...</span>}
           <Coupons discounts={discounts} selected={selectedDiscount} onSelect={handleCouponClick} onSaveNote={setOrderNote} disabled={isCartEmpty} />
 
           <div className="paymentMethodBox">
@@ -687,123 +697,22 @@ const CartSummary = (props) => {
           <CancelModal show={showCancelConfirm}
             onClose={() => setShowCancelConfirm(false)}
             onConfirm={async () => {
-              await dispatch(clearCartServer());
+              const payload = {
+                order_type: orderType || "dine_in",
+              };
+              if (orderType === "dine_in" && selectedTableId) {
+                payload.table_id = selectedTableId;
+              }
+
+              await dispatch(clearCartServer(payload));
               setShowCancelConfirm(false);
             }}
             message="All items will be removed from cart."
           />
         )}
 
-        {showPaymentModal && (
-          <>
-            <div className="modal-backdrop fade show"></div>
-
-            <div
-              className="modal d-block"
-              tabIndex="-1"
-              style={{ backgroundColor: "rgba(0,0,0,0.4)" }}
-            >
-              <div className="modal-dialog modal-dialog-centered">
-                <div className="modal-content rounded-4  ">
-
-                  <div className="d-flex justify-content-between border-bottom align-items-center p-3">
-                    <h5 className="fw-semibold">Confirm Payment</h5>
-                    <button
-                      className="btn-close"
-                      onClick={() => setShowPaymentModal(false)}
-                    ></button>
-                  </div>
-
-                  <div className=" text-muted small p-3">
-                    <div className="d-flex justify-content-between">
-                      <span>Subtotal</span>
-                      <span>₹{subtotal.toFixed(2)}</span>
-                    </div>
-                    {tax_breakdown.map((tax, index) => (
-                      <div className="d-flex justify-content-between" key={index}>
-                        <span>{tax.name}</span>
-                        <span>{formatPrice(Number(tax.amount))}</span>
-                      </div>
-                    ))}
-
-                    <hr />
-                    <div className="d-flex justify-content-between fw-semibold mb-2">
-                      <span>Total</span>
-                      <span style={{ color: "#f26522" }}>
-                        ₹{total_amount.toFixed(2)}
-                      </span>
-                    </div>
-
-                    <div className="d-flex justify-content-between text-muted small mb-3">
-                      <span>Payment</span>
-                      <span>
-                        {paymentMethod === CONSTANTS.PAYMENT_METHODS.SCANNER
-                          ? "UPI"
-                          : paymentMethod === CONSTANTS.PAYMENT_METHODS.CARD
-                            ? "Card"
-                            : "Cash"}
-                      </span>
-                    </div>
-
-                    {paymentMethod === CONSTANTS.PAYMENT_METHODS.CASH && (
-                      <div className="d-flex align-items-center justify-content-between gap-2 mb-4">
-                        <input
-                          type="number"
-                          className="form-control"
-                          placeholder="Enter amount"
-                          value={cash}
-                          onChange={(e) => setCash(e.target.value)}
-                          style={{
-                            borderRadius: "12px",
-                            border: "1px solid #f26522",
-                            width: "70%"
-                          }}
-                        />
-
-                        <div
-                          className="px-3 py-2"
-                          style={{
-                            backgroundColor: "#dfe8d6",
-                            borderRadius: "10px",
-                            minWidth: "100px",
-                          }}
-                        >
-                          <small>
-                            Change: ₹{change > 0 ? change.toFixed(0) : 0}
-                          </small>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="d-flex justify-content-end gap-2 p-3">
-                    <button
-                      className="btn btn-light px-4"
-                      onClick={() => setShowPaymentModal(false)}
-                      style={{ borderRadius: "10px" }}
-                    >
-                      Cancel
-                    </button>
-
-                    <button
-                      className="btn text-white px-4"
-                      onClick={() => {
-                        setShowPaymentModal(false);
-                        handleCheckout(true);
-                      }}
-                      style={{
-                        backgroundColor: "#e05c20",
-                        borderRadius: "10px",
-                      }}
-                    >
-                      Confirm & Print KOT
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
+        <PaymentModal show={showPaymentModal} onClose={() => setShowPaymentModal(false)} subtotal={subtotal} tax_breakdown={tax_breakdown} total_amount={total_amount}
+          paymentMethod={paymentMethod} cash={cash} setCash={setCash} change={change} handleCheckout={handleCheckout} CONSTANTS={CONSTANTS} formatPrice={formatPrice} />
 
         <div style={{ position: "fixed", top: 0, left: 0, opacity: 0, pointerEvents: "none" }} >
           <div ref={kotRef}>

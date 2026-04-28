@@ -6,10 +6,11 @@ import Alert from "../../../../components/Alert/Alert";
 
 const Modal = ({ show, onClose, item }) => {
   const dispatch = useDispatch();
- const safeItem = item ?? {};
+  const safeItem = useMemo(() => item ?? {}, [item]);
   const variantGroups = useMemo(() => item?.variants || [], [item?.variants]);
   const addonCategories = useMemo(() => item?.addon_categories || [], [item?.addon_categories]);
   const { orderType, tableId } = useSelector((state) => state.cart);
+  const [specialInstructions, setSpecialInstructions] = useState("");
 
   const [selected, setSelected] = useState({
     variants: {},
@@ -58,67 +59,67 @@ const Modal = ({ show, onClose, item }) => {
   }, [show, variantGroups]);
 
   const mainVariant = useMemo(() => {
-  const firstGroup = variantGroups?.[0];
+    const firstGroup = variantGroups?.[0];
 
-  if (!firstGroup?.group_id) return null;
+    if (!firstGroup?.group_id) return null;
 
-  return selected.variants?.[firstGroup.group_id] || null;
-}, [selected.variants, variantGroups]);
+    return selected.variants?.[firstGroup.group_id] || null;
+  }, [selected.variants, variantGroups]);
 
- const addonSteps = useMemo(() => {
-  if (!safeItem?.has_addons) return [];
+  const addonSteps = useMemo(() => {
+    if (!safeItem?.has_addons) return [];
 
-  if (!safeItem?.has_variants) {
-    return addonCategories.map((cat) => ({
-      ...cat,
-      type: "addon",
-    }));
-  }
+    if (!safeItem?.has_variants) {
+      return addonCategories.map((cat) => ({
+        ...cat,
+        type: "addon",
+      }));
+    }
 
-  if (!mainVariant) return [];
+    if (!mainVariant) return [];
 
-  const normalize = (str) =>
-    str?.toLowerCase().replace(/\s+/g, "").trim();
+    const normalize = (str) =>
+      str?.toLowerCase().replace(/\s+/g, "").trim();
 
-  const selectedVariantName = normalize(mainVariant.name);
+    const selectedVariantName = normalize(mainVariant.name);
 
-  const matchingCategory = addonCategories.find(
-    (cat) => normalize(cat.name) === selectedVariantName
-  );
+    const matchingCategory = addonCategories.find(
+      (cat) => normalize(cat.name) === selectedVariantName
+    );
 
-  if (!matchingCategory) return []; // ✅ IMPORTANT FIX
+    if (!matchingCategory) return [];
 
-  return [
-    {
-      ...matchingCategory,
-      type: "addon",
-    },
-  ];
-}, [mainVariant, addonCategories, safeItem]);
+    return [
+      {
+        ...matchingCategory,
+        type: "addon",
+      },
+    ];
+  }, [mainVariant, addonCategories, safeItem]);
 
   const steps = useMemo(() => {
-  if (!safeItem.has_variants) return addonSteps;
+    if (!safeItem.has_variants) return addonSteps;
 
-  const allSteps = [
-    ...variantGroups.map((g) => ({
-      ...g,
-      type: "variant",
-    })),
-    ...addonSteps,
-  ];
+    const allSteps = [
+      ...variantGroups.map((g) => ({
+        ...g,
+        type: "variant",
+      })),
+      ...addonSteps,
+    ];
 
-  return allSteps;
-}, [variantGroups, addonSteps, safeItem.has_variants]);
+    return allSteps;
+  }, [variantGroups, addonSteps, safeItem.has_variants]);
 
   const safeSteps = steps || [];
 
-const safeIndex =
-  safeSteps.length > 0
-    ? Math.min(activeIndex, safeSteps.length - 1)
-    : 0;
+  const safeIndex =
+    safeSteps.length > 0
+      ? Math.min(activeIndex, safeSteps.length - 1)
+      : 0;
 
-const activeStep = safeSteps[safeIndex];
-const nextStep = safeSteps[safeIndex + 1] || null;
+  const activeStep = safeSteps[safeIndex];
+  const nextStep = safeSteps[safeIndex + 1] || null;
 
   const handleSelect = (step, option) => {
     if (step.type === "variant") {
@@ -222,6 +223,7 @@ const nextStep = safeSteps[safeIndex + 1] || null;
       variant_id: null,
       addon_ids: Object.values(selected.addons).flat(),
       order_type: orderType || "dine_in",
+      special_instructions: specialInstructions
     };
 
     if (item.has_variants && first) {
@@ -244,13 +246,13 @@ const nextStep = safeSteps[safeIndex + 1] || null;
     }
   };
 
-if (!show || !item || !safeSteps.length) return null;
+  if (!show || !item || !safeSteps.length) return null;
 
   const maxSelections =
     activeStep?.type === "addon"
       ? activeStep.max_selections
       : activeStep?.max_selections || 1;
- 
+
   const currentCount =
     activeStep?.type === "addon"
       ? (selected.addons[activeStep.id] || []).length
@@ -348,6 +350,24 @@ if (!show || !item || !safeSteps.length) return null;
               )}
             </div>
           )}
+        </div>
+
+        <div className="mb-3 px-3">
+          <label className="form-label text-muted " style={{ fontSize: "11px" }}>
+            Special instructions for kitchen
+          </label>
+          <textarea
+            className="form-control"
+            rows="3"
+            placeholder="e.g. Less spicy, no onions, extra sauce..."
+            value={specialInstructions}
+            onChange={(e) => setSpecialInstructions(e.target.value)}
+            style={{
+              borderRadius: "12px",
+              backgroundColor: "#f8f9fa",
+              fontSize: "12px"
+            }}
+          ></textarea>
         </div>
 
         {/* QUANTITY */}

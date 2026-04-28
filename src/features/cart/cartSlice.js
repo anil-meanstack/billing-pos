@@ -103,9 +103,9 @@ export const removeDiscount = createAsyncThunk(
 
 export const clearCartServer = createAsyncThunk(
   "cart/clearServer",
-  async (_, thunkAPI) => {
+  async (payload, thunkAPI) => {
     try {
-      await clearCartApi();
+      await clearCartApi(payload);
 
       thunkAPI.dispatch(loadTablesFromApi()); // ✅
 

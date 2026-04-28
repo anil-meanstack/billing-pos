@@ -7,7 +7,6 @@ const Navbar = (props) => {
   const location = useLocation();
   const navigate = useNavigate();
   const [time, setTime] = useState("");
-  const [showLogin, setShowLogin] = useState(false);
   const [userName, setUserName] = useState(null);
   const tableNumber = useSelector((state) => state.cart.tableNumber);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
@@ -140,7 +139,7 @@ const Navbar = (props) => {
         ) : (
           <button
             className="btn login-btn fw-bold px-4"
-            onClick={() => setShowLogin(true)}
+            onClick={() => navigate("/login")}
           >
             <i className="bi bi-person-circle me-1"></i>
             LOGIN

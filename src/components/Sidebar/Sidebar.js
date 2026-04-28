@@ -2,8 +2,7 @@ import React, { useState, useMemo } from "react";
 import "./Sidebar.css";
 import { NavLink } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { setTableNumber, setTableId, updateTable,setOrderType } from "../../features/cart/cartSlice";
-import { setStaff } from "../../features/staff/staffSlice";
+import { setTableNumber, setTableId, updateTable, setOrderType } from "../../features/cart/cartSlice";
 import Alert from "../Alert/Alert";
 
 
@@ -15,7 +14,7 @@ const Sidebar = () => {
   const { newCount = 0, preparingCount = 0, readyCount = 0 } = useSelector(
     (state) => state.kitchen
   );
-  // const staffList = useSelector((state) => state.staff.list);
+
   const dispatch = useDispatch();
   const [showAlert, setShowAlert] = useState({
     show: false,
@@ -28,7 +27,6 @@ const Sidebar = () => {
 
     const today = new Date();
 
-    // Start of today (00:00:00)
     const startOfDay = new Date(
       today.getFullYear(),
       today.getMonth(),
@@ -36,7 +34,6 @@ const Sidebar = () => {
       0, 0, 0, 0
     );
 
-    // End of today (23:59:59)
     const endOfDay = new Date(
       today.getFullYear(),
       today.getMonth(),
@@ -52,7 +49,7 @@ const Sidebar = () => {
 
   const totalKitchenOrder = (newCount || 0) + (preparingCount || 0) + (readyCount || 0);
 
-  
+
   const handleTableClick = (table) => {
 
     const unavailableStatuses = ["reserved", "booked", "maintenance"];
@@ -87,7 +84,6 @@ const Sidebar = () => {
       id: table.id
     }));
 
-    // ✅ SINGLE ALERT (fix)
     setShowAlert({
       show: true,
       message: isOccupied
@@ -176,10 +172,7 @@ const Sidebar = () => {
         <NavLink to="/staff" className={({ isActive }) => isActive ? "item active" : "item"}>
           <i className="bi bi-person"></i>
           <span>Manage Staff</span>
-          {/* <span className="badge orange">{staffList.length}</span> */}
         </NavLink>
-
-
       </div>
 
       <Alert

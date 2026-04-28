@@ -1,12 +1,8 @@
-import React from "react";
 import { useDispatch, useSelector } from "react-redux";
-import {
-  removeCartItem,
-  updateCartItem,
-} from "../../features/cart/cartSlice";
+import { removeCartItem, updateCartItem, } from "../../../features/cart/cartSlice";
 
 const CartItem = ({ item }) => {
-  
+
   const dispatch = useDispatch();
   const { orderType, tableId } = useSelector((state) => state.cart);
 
@@ -17,19 +13,18 @@ const CartItem = ({ item }) => {
     return `₹${numPrice.toFixed(2)}`;
   };
 
-const getBasePrice = () => {
-  if (item?.sizePrice && item.sizePrice > 0) {
-    return Number(item.sizePrice);
-  }
+  const getBasePrice = () => {
+    if (item?.sizePrice && item.sizePrice > 0) {
+      return Number(item.sizePrice);
+    }
 
-  if (item?.base_price && item.base_price > 0) {
-    return Number(item.base_price);
-  }
+    if (item?.base_price && item.base_price > 0) {
+      return Number(item.base_price);
+    }
 
-  return Number(item?.selectedPrice || 0);
-};
+    return Number(item?.selectedPrice || 0);
+  };
 
-  
 
   const basePrice = getBasePrice();
   const itemQuantity = item?.quantity || 1;
@@ -42,12 +37,12 @@ const getBasePrice = () => {
     }
 
     const payload = {
-      quantity: newQuantity,                  
+      quantity: newQuantity,
       order_type: orderType || "dine_in",
     };
 
     if (orderType === "dine_in" && tableId) {
-      payload.table_id = String(tableId);    
+      payload.table_id = String(tableId);
     }
 
     if (cartItemId && navigator.onLine) {
@@ -94,7 +89,7 @@ const getBasePrice = () => {
           <button className="quantityButton" onClick={() => handleQuantityChange(itemQuantity + 1)}>+</button>
         </div>
         <div className="cartItemSubtotal">
-          {formatPrice(item.selectedPrice )}
+          {formatPrice(item.selectedPrice)}
         </div>
       </div>
 
@@ -107,6 +102,13 @@ const getBasePrice = () => {
               <span> {formatPrice(addon.price)}</span>
             </div>
           ))}
+        </div>
+      )}
+      {item.instructions && (
+        <div className="cartItemAddons mt-2">
+          <div className="addon-detail">
+            <span>{item.instructions}</span>
+          </div>
         </div>
       )}
     </div>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { setCustomerInfo } from "../../features/cart/cartSlice";
+import { setCustomerInfo } from "../../../features/cart/cartSlice";
 import "./CustomerModal.css";
 
 const CustomerModal = ({
@@ -83,31 +83,25 @@ const CustomerModal = ({
     return error === "";
   };
 
-  // const handleSave = () => {
-  //   if (!validateField()) return;
-
-  //   dispatch(setCustomerInfo(form));
-  //   onClose();
-  // };
   const handleSave = () => {
-  let isValid = true;
+    let isValid = true;
 
-  Object.keys(form).forEach((key) => {
-    const valid = validateField(key, form[key]);
-    if (!valid) isValid = false;
-  });
+    Object.keys(form).forEach((key) => {
+      const valid = validateField(key, form[key]);
+      if (!valid) isValid = false;
+    });
 
-  setTouched({
-    phone: true,
-    name: true,
-    address: true,
-  });
+    setTouched({
+      phone: true,
+      name: true,
+      address: true,
+    });
 
-  if (!isValid) return;
+    if (!isValid) return;
 
-  dispatch(setCustomerInfo(form));
-  onClose();
-};
+    dispatch(setCustomerInfo(form));
+    onClose();
+  };
 
   return (
     <div className="customer-modal-overlay">

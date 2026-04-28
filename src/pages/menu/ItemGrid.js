@@ -11,7 +11,7 @@ import MenuItem from "./components/MenuItem";
 import Modal from "./components/Modal/Modal";
 import LoadingSpinner from "../../components/UI/LoadingSpinner";
 import ErrorMessage from "../../components/UI/ErrorMessage";
-import CartSummary from "../../components/Cart/CartSummary";
+import CartSummary from "../Cart/CartSummary";
 import "../../style/MenuPage.css";
 
 const ItemGrid = () => {

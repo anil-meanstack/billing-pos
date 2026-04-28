@@ -1,4 +1,3 @@
-import React from "react";
 import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
@@ -14,7 +13,7 @@ const root = ReactDOM.createRoot(document.getElementById("root"));
 
 root.render(
   <Provider store={store}>
-    <HashRouter  future={{ v7_relativeSplatPath: true }}>
+    <HashRouter  future={{ v7_relativeSplatPath: true, v7_startTransition: true }}>
       <App />
     </HashRouter>
   </Provider>
@@ -23,10 +22,10 @@ root.render(
 reportWebVitals();
 
 // ✅ FIXED service worker
-if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./service-worker.js')
-      .then(reg => console.log('SW registered:', reg))
-      .catch(err => console.log('SW registration failed:', err));
-  });
-}
+// if ('serviceWorker' in navigator && window.location.protocol !== 'file:') {
+//   window.addEventListener('load', () => {
+//     navigator.serviceWorker.register('./service-worker.js')
+//       .then(reg => console.log('SW registered:', reg))
+//       .catch(err => console.log('SW registration failed:', err));
+//   });
+// }

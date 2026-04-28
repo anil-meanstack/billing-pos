@@ -74,7 +74,8 @@ const PrintTemplate = ({
                     Mobile No : {customerAddress}
                 </div>
             )}
-
+            <div style={{ borderTop: "1px dashed #000", margin: "2px 0" }} />
+            
             <div style={{ fontSize: "10px", fontWeight: "600" }}>
                 <div>Order No : #{orderNumber}</div>
                 <div>Tbl: {tableNumber || "-"} , <span>Type: {orderType}</span></div>
@@ -118,10 +119,15 @@ const PrintTemplate = ({
 
                     {/* ADDONS */}
                     {item.addons?.length > 0 && (
-                        <div style={{ fontSize: "8px", marginLeft: "4px", lineHeight: "1.1", fontWeight: "bold" }}>
+                        <div style={{ fontSize: "9px", marginLeft: "4px", lineHeight: "1.1", fontWeight: "bold" }}>
                             {item.addons.map((addon, idx) => (
                                 <div key={idx}>+ {addon.name}</div>
                             ))}
+                        </div>
+                    )}
+                    {item.instructions && (
+                        <div style={{ fontSize: "9px", marginLeft: "4px", lineHeight: "1.1", fontWeight: "bold" }}>
+                            <div>+ {item.instructions}</div>
                         </div>
                     )}
                 </div>

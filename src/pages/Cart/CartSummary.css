@@ -591,6 +591,7 @@
 }
 
 .oclr {
+  background: none;
   font-size: 11px;
   color: #a09d95;
   cursor: pointer;

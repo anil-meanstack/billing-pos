@@ -20,14 +20,12 @@
 .sidebar {
   width: 230px;
   background: #FFF;
-  /* border-right: 1px solid #e5e7eb; */
   display: flex;
   flex-direction: column;
   padding: 16px;
   overflow-y: scroll;
 }
 
-/* SECTION */
 .section {
   margin-bottom: 8px;
 }
@@ -40,7 +38,6 @@
   margin-bottom: 2px;
 }
 
-/* MENU ITEM */
 .item {
   display: flex;
   align-items: center;
@@ -61,14 +58,12 @@
   background: #efede7;
 }
 
-/* ACTIVE */
 .item.active {
   background: #faeae2;
   color: #b84416 !important;
   font-weight: 500;
 }
 
-/* BADGES */
 .badge {
   margin-left: auto;
   font-size: 11px;
@@ -89,7 +84,6 @@
   background: #3b82f6;
 }
 
-/* TABLE GRID */
 .table-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -98,23 +92,13 @@
 
 .table-card:hover {
   transform: translateY(-4px);
-  /* border-color: var(--primary-orange); */
-  /* box-shadow: var(--shadow-hover); */
 }
-
-/* Status Border */
-/* .table-card.available {
-  border-top: 4px solid var(--primary-green);
-} */
 
 .table-card.occupied {
   background: #efede7 !important;
   border: 1px solid rgb(0 0 0 / 13%);
 }
 
-/* .table-card.billing {
-  border-top: 4px solid var(--danger);
-} */
 .table-card {
   background: #ffffff;
   border-radius: 12px;
@@ -130,19 +114,16 @@
   transform: translateY(-2px);
 }
 
-/* ACTIVE TABLE */
 .table-card.active {
  background: #e05c20 ;  
   color: #fff;
 }
 
-/* SPECIAL TABLE (T07 style) */
 .table-card.highlight {
   background: #fcd9b6;
   border: 1px solid #f59e0b;
 }
 
-/* TEXT */
 .table-id {
   font-weight: 600;
 }
@@ -156,7 +137,6 @@
   color: #fff;
 }
 
-/* BOTTOM */
 .bottom {
   border-top: 1px solid #e5e7eb;
   padding-top: 10px;

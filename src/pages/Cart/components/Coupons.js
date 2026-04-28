@@ -1,6 +1,4 @@
 import React, { useState } from "react";
-import "./CartSummary.css";
-
 
 const Coupons = (props) => {
   const [showModal, setShowModal] = useState(false);

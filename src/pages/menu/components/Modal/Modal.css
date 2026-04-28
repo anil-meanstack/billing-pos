@@ -275,7 +275,7 @@
 }
 
 .modal-category {
-  padding: 10px 20px;
+  padding: 6px 20px;
   /* border-bottom: 8px solid #f8f9fa; */
   scroll-margin-top: 70px;
 }
@@ -284,7 +284,7 @@
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 16px;
+  margin-bottom: 6px;
   flex-wrap: wrap;
   gap: 8px;
 }
@@ -308,7 +308,6 @@
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 9px;
-  margin-bottom: 18px;
 }
 
 /* Option Card */
@@ -316,7 +315,7 @@
   background: white;
   border: 1px solid #e9ecef;
   border-radius: 20px;
-  padding: 14px 16px;
+  padding: 10px 16px;
   cursor: pointer;
   transition: all 0.2s;
 }
@@ -470,8 +469,7 @@
 .modal-category-footer {
   display: flex;
   justify-content: flex-end;
-  /* ✅ push to right */
-  margin-top: 10px;
+  margin-top: 4px;
 }
 
 /* Button */

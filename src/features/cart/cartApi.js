@@ -184,7 +184,7 @@ export const tableSelectable = async (res) => {
   return await response.json();
 };
 
-export const clearCartApi = async () => {
+export const clearCartApi = async (res) => {
   const slug = getRestaurantSlug();
   const token = getToken();
   const userType = getUserType();
@@ -198,6 +198,7 @@ export const clearCartApi = async () => {
         Authorization: `Bearer ${token}`,
         "X-CSRFToken": getCsrfToken(),
       },
+      body: JSON.stringify(res),
     },
   );
 
