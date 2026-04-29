@@ -74,11 +74,11 @@ const PrintTemplate = ({
                     Mobile No : {customerAddress}
                 </div>
             )}
-            <div style={{ borderTop: "1px dashed #000", margin: "2px 0" }} />
-            
+
             <div style={{ fontSize: "10px", fontWeight: "600" }}>
                 <div>Order No : #{orderNumber}</div>
                 <div>Tbl: {tableNumber || "-"} , <span>Type: {orderType}</span></div>
+                <div style={{ borderTop: "1px dashed #000", margin: "2px 0" }} />
                 <div>{new Date().toLocaleString()}</div>
             </div>
 

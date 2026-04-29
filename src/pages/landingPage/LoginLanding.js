@@ -9,9 +9,6 @@ const LoginLanding = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
-  /* ============================
-     LOCAL STATE
-  ============================ */
   const [mode, setMode] = useState(null);
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
@@ -24,7 +21,6 @@ const LoginLanding = () => {
   const handleStaffLogin = (e) => {
     e.preventDefault();
 
-    // Clear old errors
     dispatch(reset());
 
     if (!userId || !password) {
@@ -114,9 +110,7 @@ const LoginLanding = () => {
             </div>
           </div>
         ) : (
-          /* LOGIN FORM */
           <form className="login-landing-form" onSubmit={handleStaffLogin}>
-            {/* BACK BUTTON */}
             <button
               type="button"
               className="login-landing-back"
@@ -135,7 +129,6 @@ const LoginLanding = () => {
               Staff Authentication
             </h2>
 
-            {/* ERROR MESSAGE */}
             {isError && (
               <div className="login-landing-error">
                 <i className="bi bi-exclamation-triangle-fill"></i>
@@ -143,7 +136,6 @@ const LoginLanding = () => {
               </div>
             )}
 
-            {/* USERNAME */}
             <div className="form-group">
               <label className="form-label">
                 <i className="bi bi-person-badge"></i> User ID / Email
@@ -161,7 +153,6 @@ const LoginLanding = () => {
               </div>
             </div>
 
-            {/* PASSWORD */}
             <div className="form-group">
               <label className="form-label">
                 <i className="bi bi-key"></i> Password
@@ -189,7 +180,6 @@ const LoginLanding = () => {
               </div>
             </div>
 
-            {/* SUBMIT */}
             <button
               type="submit"
               className="login-landing-submit"

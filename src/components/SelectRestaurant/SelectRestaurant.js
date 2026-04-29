@@ -1,13 +1,11 @@
 import React, { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { setCurrentRestaurant } from "../../features/auth/authSlice";
-// import "./SelectRestaurantModal.css";
 
 const SelectRestaurantModal = ({ show, onClose, onSelectDone }) => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
 
-  // Close on escape key
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape' && show) {
@@ -34,13 +32,10 @@ const SelectRestaurantModal = ({ show, onClose, onSelectDone }) => {
 
   return (
     <>
-      {/* BACKDROP */}
       <div className="custom-backdrop" onClick={handleBackdropClick}></div>
 
-      {/* MODAL */}
       <div className="custom-modal">
         <div className="custom-modal-content">
-          {/* HEADER */}
           <div className="custom-header">
             <div className="header-icon">
               <i className="bi bi-shop"></i>
@@ -52,7 +47,6 @@ const SelectRestaurantModal = ({ show, onClose, onSelectDone }) => {
             </button>
           </div>
 
-          {/* BODY */}
           <div className="custom-body">
             <div className="restaurant-list">
               {user?.accessibleRestaurants?.map((res, index) => (
@@ -82,7 +76,6 @@ const SelectRestaurantModal = ({ show, onClose, onSelectDone }) => {
             )}
           </div>
 
-          {/* FOOTER */}
           <div className="custom-footer">
             <button className="footer-cancel" onClick={onClose}>
               Cancel

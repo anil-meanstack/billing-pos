@@ -1,13 +1,10 @@
-import { useEffect, useState,useDispatch  } from "react";
+import { useEffect, useState  } from "react";
 import "./ManageStaff.css";
-// import { setStaff } from "../../features/staff/staffSlice";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
 const ManageStaff = () => {
     const [staffData, setStaffData] = useState([]);
-    // const dispatch = useDispatch();
-
     const getAuthData = () => {
         const userData = localStorage.getItem("user");
         if (!userData) return null;
@@ -29,7 +26,6 @@ const ManageStaff = () => {
         return auth?.currentRestaurant?.id || auth?.restaurant?.id || null;
     };
 
-    // ✅ Keep structure SAME as your UI
     const formatStaffData = (users) => {
         return users.map((user) => ({
             id: user.id,
@@ -63,7 +59,6 @@ const ManageStaff = () => {
                 if (data.success) {
                     const formatted = formatStaffData(data.users);
                     setStaffData(formatted);
-                    // dispatch(setStaff(formatted));
                 }
             })
             .catch((err) => console.error(err));
@@ -72,12 +67,10 @@ const ManageStaff = () => {
     return (
         <div className="manage-staff">
 
-            {/* HEADER */}
             <div className="header">
                 <h2 className="page-title">Manage Staff</h2>
             </div>
 
-            {/* SUMMARY */}
             <div className="summary">
                 <div className="card">
                     <h4 className="sv">{staffData.length}</h4>
@@ -102,7 +95,6 @@ const ManageStaff = () => {
                 </div>
             </div>
 
-            {/* STAFF GRID */}
             <div className="staff-grid mt-3">
                 {staffData.map((staff) => (
                     <div className="scard2" key={staff.id}>
@@ -142,7 +134,6 @@ const ManageStaff = () => {
                             </div>
                         </div>
 
-                        {/* PROGRESS (same as your design) */}
                         <div className="progress-box mb-3">
                             <div className="progress-top">
                                 <span>Shift progress</span>

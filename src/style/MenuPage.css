@@ -22,9 +22,6 @@
   border-radius: 10px;
 }
 
-
-
-
 .simple-modal .modal-body {
   padding: 14px;
   background: white;
@@ -38,8 +35,6 @@
   border-top: 1px solid #eee;
   background: white;
 }
-
-
 
 .customer-icon-btn,
 .table-toggle-btn {
@@ -63,7 +58,6 @@
   transform: translateY(-2px);
   box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
 }
-
 
 .paymentOptions {
   display: flex;
@@ -365,13 +359,11 @@ textarea {
 .mainContent {
   display: flex;
   margin: 0 auto;
-  /* padding: 20px; */
   gap: 20px;
   min-height: 90vh;
   max-height: 90vh;
 }
 
-/* Menu Section */
 .menuSection {
   flex: 4 1;
   border-radius: 16px;
@@ -476,7 +468,6 @@ textarea {
   border-radius: 50%;
   border: none;
   background: #fff;
-  /* box-shadow: 0 2px 8px rgba(0,0,0,0.15); */
   cursor: pointer;
   /* z-index: 2; */
 }
@@ -497,7 +488,6 @@ textarea {
   padding: 12px 10px 70px;
 }
 
-/* Menu Item Card */
 .menuItemCard {
   background: #ffffff;
   border-radius: 16px;
@@ -705,19 +695,6 @@ textarea {
   cursor: not-allowed;
 }
 
-.unavailableBadge {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background-color: #ffebee;
-  color: #d97706;
-  padding: 4px 10px;
-  border-radius: 4px;
-  font-size: 11px;
-  font-weight: 600;
-}
-
-/* Order Section */
 .orderSection {
   flex: 1.2;
   min-width: 350px;
@@ -725,25 +702,6 @@ textarea {
 
 .container-fluid.m-sec {
   padding-right: 0px;
-}
-
-
-
-.clearCartButton {
-  background-color: #ffebee;
-  color: #d97706;
-  padding: 6px 16px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 13px;
-  transition: all 0.3s ease;
-}
-
-.clearCartButton:hover {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);
 }
 
 .orderTypeBadge {
@@ -864,10 +822,6 @@ textarea {
   color: #64748b;
 }
 
-
-
-
-
 .cartItemName {
   font-size: 12px;
   font-weight: 500;
@@ -932,14 +886,6 @@ textarea {
   width: 150px;
   flex: 2;
 }
-
-/* .bi-person::before {
-  content: "\f4e1";
-  background: linear-gradient(135deg, #1e293b, #0f172a);
-  padding: 4px;
-  border-radius: 50%;
-  color: #f59e0b;
-} */
 
 .checkoutButtonDisabled {
   background-color: #cccccc;
@@ -1180,7 +1126,6 @@ textarea {
 .shine-effect:hover::after {
   left: 120%;
 }
-
 
 @media (min-width: 700px) and (max-width: 1350px) {
   .menuGrid {

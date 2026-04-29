@@ -4,19 +4,16 @@ import { Routes, Route, useLocation } from "react-router-dom";
 import Navbar from "./components/Navbar/Navbar";
 import Sidebar from "./components/Sidebar/Sidebar";
 import OrderDisplay from "./pages/orderDisplay/OrderDisplay";
-// import OrderHistory from "./pages/orderHistory/OrderHistory";
 import LoginLanding from "./pages/landingPage/LoginLanding";
 import ProtectedRoute from "./routes/ProtectedRoute";
 import KitchenQueue from "./pages/kitchenQueue/KitchenQueue"
 import Orders from "./pages/orders/Orders";
-import Reservations from "./pages/reservations/Reservations"
 import ManageStaff from "./pages/manageStaff/ManageStaff";
 
 function App() {
   const location = useLocation();
   const hideSidebar = location.pathname === "/";
 
- 
 
   const getAuthData = () => {
     const data = localStorage.getItem("user");
@@ -89,24 +86,7 @@ function App() {
                     </ProtectedRoute>
                   }
                 />
-
-                {/* <Route
-                  path="/order-history"
-                  element={
-                    <ProtectedRoute>
-                      <OrderHistory />
-                    </ProtectedRoute>
-                  }
-                /> */}
-
-                <Route
-                  path="/reservations"
-                  element={
-                    <ProtectedRoute>
-                      <Reservations />
-                    </ProtectedRoute>
-                  }
-                />
+               
                 <Route
                   path="/staff"
                   element={

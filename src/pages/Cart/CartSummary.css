@@ -642,37 +642,11 @@
   cursor: pointer;
 }
 
-/* @media print {
-  body * {
-    visibility: hidden;
-  }
-
-  #print-area, #print-area * {
-    visibility: visible;
-  }
-
-  #print-area {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 280px;
-    background: #fff;
-  }
-
-  button {
-    display: none !important;
-  }
-} */
-
 @media print {
   body {
     margin: 0;
     padding: 0;
     height: auto !important;
-    /* display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh; */
   }
   * {
     line-height: 1.2 !important;
@@ -814,9 +788,6 @@
   background: #e05c20;
 }
 
-/* .checkoutButtonsContainer {
-  width: 100%;
-} */
  .checkoutButtonsContainer {
   width: 100%;
   display: flex;
