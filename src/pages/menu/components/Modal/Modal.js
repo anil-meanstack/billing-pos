@@ -354,7 +354,7 @@ const Modal = ({ show, onClose, item }) => {
 
         <div className="mb-3 px-3">
           <label className="form-label text-muted " style={{ fontSize: "11px" }}>
-            Special instructions for kitchen
+          Special Instructions (optional)
           </label>
           <textarea
             className="form-control"

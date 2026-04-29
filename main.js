@@ -1,7 +1,6 @@
 const { app, BrowserWindow, ipcMain, Menu } = require("electron");
 const path = require("path");
 
-
 let win;
 
 function createWindow() {
@@ -120,5 +119,3 @@ ipcMain.handle("print-kot", async (_, content) => {
 ipcMain.handle("print-bill", async (_, content) => {
   return await printContent(content);
 });
-
-

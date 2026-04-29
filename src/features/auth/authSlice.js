@@ -11,9 +11,6 @@ const initialState = {
   message: "",
 };
 
-/* ======================
-   LOGIN
-====================== */
 export const login = createAsyncThunk(
   "auth/login",
   async (loginData, thunkAPI) => {
@@ -38,9 +35,6 @@ export const login = createAsyncThunk(
   }
 );
 
-/* ======================
-   SLICE
-====================== */
 const authSlice = createSlice({
   name: "auth",
   initialState,
@@ -49,8 +43,6 @@ const authSlice = createSlice({
     logout: (state) => {
       state.user = null;
       localStorage.removeItem("user");
-      // localStorage.removeItem("accessToken");
-      // localStorage.removeItem("refreshToken");
     },
 
     reset: (state) => {
