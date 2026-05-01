@@ -1,0 +1,193 @@
+.order-ui-card {
+  width: 352px;
+  min-height: 100vh;
+  border-radius: 0;
+  padding: 12px;
+  border: none;
+  background: #fff;
+}
+
+.order-ui-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.order-ui-header h5 {
+  font-weight: 700;
+  margin: 0;
+}
+
+.order-ui-header button {
+  border: 0;
+  background: transparent;
+  color: #9a9a9a;
+  font-size: 12px;
+}
+
+.order-ui-tabs {
+  display: flex;
+  background: #f4f1ed;
+  padding: 4px;
+  border-radius: 12px;
+  margin: 12px 0 18px;
+}
+
+.order-ui-tabs button {
+  flex: 1;
+  border: 0;
+  background: transparent;
+  padding: 9px 6px;
+  border-radius: 10px;
+  font-size: 12px;
+}
+
+.order-ui-tabs button.active {
+  background: #ef5423;
+  color: #fff;
+  font-weight: 600;
+}
+
+.order-ui-items {
+  max-height: 420px;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.order-ui-item {
+  display: flex;
+  align-items: center;
+  background: #f4f1ed;
+  padding: 12px 8px;
+  border-radius: 12px;
+  margin-bottom: 6px;
+}
+
+.remove-item {
+  border: 0;
+  background: transparent;
+  font-size: 20px;
+  font-weight: 700;
+}
+
+.item-detail {
+  flex: 1;
+  margin-left: 6px;
+}
+
+.item-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: #001b44;
+}
+
+.item-sub {
+  font-size: 12px;
+  color: #526b88;
+}
+
+.qty-control {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.qty-control button {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 0;
+  background: #fff;
+}
+
+.qty-control span {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.item-total {
+  width: 68px;
+  text-align: right;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.order-ui-summary {
+  margin-top: 10px;
+}
+
+.order-ui-summary div {
+  display: flex;
+  justify-content: space-between;
+  margin: 5px 0;
+  font-size: 12px;
+  color: #526b88;
+}
+
+.order-ui-summary .total {
+  border-top: 1px solid #eee;
+  padding-top: 8px;
+  font-size: 15px;
+  color: #000;
+  font-weight: 800;
+}
+
+.order-ui-summary .total b {
+  color: #ef5423;
+}
+
+.coupon-label {
+  font-size: 11px;
+  color: #9a9ab0;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+.note-btn {
+  width: 100%;
+  border: 1px dashed #cfd8e3;
+  background: #fff;
+  border-radius: 10px;
+  padding: 9px;
+  color: #526b88;
+  font-size: 12px;
+  margin: 8px 0;
+}
+
+.payment-ui {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.payment-ui button {
+  height: 56px;
+  border-radius: 10px;
+  border: 0;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.08);
+  font-size: 12px;
+  text-transform: capitalize;
+}
+
+.payment-ui button.active {
+  border: 1px solid #ef5423;
+  background: #fff4ef;
+  color: #ef5423;
+}
+
+.payment-ui i {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.kot-print-btn {
+  width: 100%;
+  margin-top: 10px;
+  border: 0;
+  border-radius: 14px;
+  background: #ef5423;
+  color: #fff;
+  padding: 13px;
+  font-weight: 800;
+}

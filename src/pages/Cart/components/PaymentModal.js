@@ -35,7 +35,7 @@ const PaymentModal = ({
             </div>
 
             {/* Body */}
-            <div className="text-muted small p-3">
+            <div className="text-muted small ">
               <div className="d-flex justify-content-between">
                 <span>Subtotal</span>
                 <span>₹{subtotal.toFixed(2)}</span>
@@ -101,7 +101,7 @@ const PaymentModal = ({
             </div>
 
             {/* Footer */}
-            <div className="d-flex justify-content-end gap-2 p-3">
+            <div className="d-flex justify-content-between ">
               <button
                 className="btn btn-light px-4"
                 onClick={onClose}
@@ -119,6 +119,7 @@ const PaymentModal = ({
                 style={{
                   backgroundColor: "#e05c20",
                   borderRadius: "10px",
+                  fontSize:"14px"
                 }}
               >
                 Confirm & Print KOT

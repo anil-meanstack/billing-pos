@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import CustomerModal from "./components/CustomerModal";
 import Alert from "../../components/Alert/Alert";
 import { getDiscounts } from "../../features/discount/discountApi";
-import { clearCartServer, setOrderType, setCustomerInfo, selectCartTotal, selectItemCount, updateTable, applyDiscount, removeDiscount } from "../../features/cart/cartSlice";
+import { clearCartServer, setOrderType, setCustomerInfo, selectCartTotal, selectItemCount, updateTable, applyDiscount, removeDiscount, setTableId, setTableNumber } from "../../features/cart/cartSlice";
 import { setTableStatus } from "../../features/table/tableSlice";
 import { checkoutOrder } from "../../features/orders/ordersSlice";
 import CartItem from "./components/CartItem";
@@ -16,7 +16,6 @@ import PaymentModal from "./components/PaymentModal";
 import { sendKotAndKeepOrderOpenApi } from "../../features/kitchen/kitchenApi";
 import "./CartSummary.css";
 
-// Constants
 const CONSTANTS = {
   PHONE_REGEX: /^\d{10}$/,
   PAYMENT_METHODS: {
@@ -54,7 +53,6 @@ const CartSummary = (props) => {
   const [lastOrder, setLastOrder] = useState(null);
   const tables = useSelector((state) => state.tables.list);
 
-
   const [showAlert, setShowAlert] = useState({
     show: false,
     message: "",
@@ -84,7 +82,6 @@ const CartSummary = (props) => {
       : total;
   }, [cartSummary, total, items.length]);
 
-
   const taxAmount = useMemo(() => {
     if (items.length === 0) return 0;
 
@@ -92,7 +89,6 @@ const CartSummary = (props) => {
       return total + Number(tax.amount || 0);
     }, 0);
   }, [tax_breakdown, items.length]);
-
 
   useEffect(() => {
     if (!orderType) {
@@ -159,6 +155,7 @@ const CartSummary = (props) => {
       isMounted = false;
     };
   }, []);
+
   const getAuth = useCallback(() => {
     try {
       return JSON.parse(localStorage.getItem("user") || "{}");
@@ -279,43 +276,28 @@ const CartSummary = (props) => {
   }, [items.length, validateCustomerInfo, isDineIn, tableNumber, selectedTableId, tables, showError]);
 
 
-  // const handleOrderTypeChange = useCallback((type) => {
-
-  //   if (
-  //     type === CONSTANTS.ORDER_TYPES.DINE_IN &&
-  //     !selectedTableId
-  //   ) {
-  //     showError("Please select a table first");
-  //     return;
-  //   }
-  //   dispatch(setOrderType(type));
-
-  //   if (type === CONSTANTS.ORDER_TYPES.DINE_IN) return;
-
-  //   dispatch(updateTable({
-  //     order_type: type
-  //   }));
-
-  // }, [dispatch, selectedTableId, showError]);
-
   const handleOrderTypeChange = useCallback((type) => {
-    if (type === CONSTANTS.ORDER_TYPES.DINE_IN && !selectedTableId) {
-      setShowAlert({
-        show: true,
-        message: "Please select a table first",
-        type: "danger",
-      });
+    if (type === CONSTANTS.ORDER_TYPES.DINE_IN) {
+      if (!selectedTableId) {
+        showError("Please select a table first");
+        return;
+      }
+
+      dispatch(setOrderType(type));
       return;
     }
 
     dispatch(setOrderType(type));
+    dispatch(setTableId(null));
+    dispatch(setTableNumber(null));
 
-    if (type !== CONSTANTS.ORDER_TYPES.DINE_IN) {
-      dispatch(updateTable({
-        order_type: type,
-      }));
-    }
-  }, [dispatch, selectedTableId]);
+    localStorage.removeItem("selectedTable");
+
+    dispatch(updateTable({
+      order_type: type,
+      table_id: null,
+    }));
+  }, [dispatch, selectedTableId, showError]);
 
   const handleCheckout = useCallback(async (shouldPrint = false) => {
 
@@ -365,17 +347,17 @@ const CartSummary = (props) => {
     try {
       const result = await dispatch(checkoutOrder(orderData)).unwrap();
 
-      // if (shouldPrint) {
-      //   await new Promise(resolve => setTimeout(resolve, 100));
+      if (shouldPrint) {
+        await new Promise(resolve => setTimeout(resolve, 100));
 
-      //   if (window.electronAPI) {
-      //     const content = kotRef.current.innerHTML;
-      //     window.electronAPI.printKot(content);
-      //   } else {
-      //     printContent(kotRef);
+        if (window.electronAPI) {
+          const content = kotRef.current.innerHTML;
+          window.electronAPI.printKot(content);
+        } else {
+          printContent(kotRef);
 
-      //   }
-      // }
+        }
+      }
 
       setLastOrder({
         items,
@@ -411,10 +393,15 @@ const CartSummary = (props) => {
           }),
         );
       }
+      // await dispatch(clearCartServer({
+      //   order_type: orderType,
+      //   table_id: selectedTableId || null
+      // }));
       await dispatch(clearCartServer({
         order_type: orderType,
-        table_id: selectedTableId || null
+        table_id: isDineIn ? selectedTableId : null
       }));
+
       setSelectedDiscount(null);
       setDeliveryCharge(0);
       setContainerCharge(0);
@@ -551,38 +538,6 @@ const CartSummary = (props) => {
     setSelectedDiscount(null);
   }, [items.length, dispatch, orderType, tableId]);
 
-  // const kotPrint = async () => {
-  //   if (items.length === 0) {
-  //     showError("Cart is empty!");
-  //     return;
-  //   }
-
-  //   if (!validateCheckout()) return;
-
-  //   try {
-  //     await new Promise(resolve => setTimeout(resolve, 100));
-
-  //     if (window.electronAPI) {
-  //       const content = kotRef.current.innerHTML;
-  //       window.electronAPI.printKot(content);
-  //     } else {
-  //       printContent(kotRef);
-  //     }
-  //     if (isDineIn && selectedTableId) {
-  //       dispatch(
-  //         setTableStatus({
-  //           id: selectedTableId,
-  //           status: "occupied",
-  //         }),
-  //       );
-  //     }
-  //     showSuccess("KOT Printed ✅");
-
-  //   } catch (error) {
-  //     console.error(error);
-  //     showError("Failed to print KOT");
-  //   }
-  // };
   const kotPrint = async () => {
     if (items.length === 0) {
       showError("Cart is empty!");
@@ -735,9 +690,12 @@ const CartSummary = (props) => {
           </div>
 
           <div className="checkoutButtonsContainer">
-            <button className="place-order-btn text-center d-block" onClick={kotPrint}>🧾 KOT & Print </button>
-            {orderType != "dine_in" && (
-              <button
+            {orderType === "dine_in" && (
+              <button className="place-order-btn text-center d-block" onClick={kotPrint}>🧾 KOT & Print </button>
+            )}
+
+              {orderType !== "dine_in" && (
+                <button
                 className="place-order-btn"
                 onClick={() => setShowPaymentModal(true)}
                 disabled={placingOrder || orderLoading || isCartEmpty}
@@ -750,7 +708,8 @@ const CartSummary = (props) => {
                   </>
                 )}
               </button>
-            )}
+              )}
+       
 
           </div>
 

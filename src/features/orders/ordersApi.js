@@ -1,9 +1,5 @@
 import getCsrfToken from "../../utils/csrf";
 
-// const API_BASE_URL =
-//   process.env.NODE_ENV === "production"
-//     ? process.env.REACT_APP_API_BASE_URL
-//     : "/api";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
@@ -66,7 +62,7 @@ export const ordersApi = {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`, // ✅ Added
+          Authorization: `Bearer ${token}`,
           "X-CSRFToken": getCsrfToken(),
         },
         body: JSON.stringify(payload),
@@ -81,7 +77,6 @@ export const ordersApi = {
 
     return data;
   },
-
 
 
   fetchOrders: async () => {
@@ -198,3 +193,33 @@ export const viewOrder = {
     return data;
   },
 };
+
+
+export const removeItemApiDineIn = async (itemId, res) => {
+  const slug = getRestaurantSlug();
+  const token = getToken();
+
+  const response = await fetch(
+    `${API_BASE_URL}/owner/cart/${slug}/order-items/${itemId}/`,
+    {
+      method: "DELETE",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(res)
+    },
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+    try {
+      const data = JSON.parse(text);
+      throw new Error(data?.message || "Remove failed");
+    } catch {
+      throw new Error(`Server error: ${response.status}`);
+    }
+  }
+
+  return {};
+}

@@ -1,12 +1,13 @@
 import React, { useRef, useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
 import PrintTemplate from "../../components/PrintTemplate";
-import { settledOrderApi } from "../../features/orders/ordersApi";
+import { settledOrderApi, removeItemApiDineIn } from "../../features/orders/ordersApi";
+import { loadTableOrders } from "../../features/cart/cartSlice";
 import { setTableStatus } from "../../features/table/tableSlice";
 import { getDiscounts, dineApplyDiscountApi } from "../../features/discount/discountApi";
 import Alert from "../../components/Alert/Alert";
-import { applyDiscount, removeDiscount } from "../../features/cart/cartSlice";
 import Coupons from "../Cart/components/Coupons";
+import "./OrderDetails.css"
 
 
 const OrderDetails = ({
@@ -88,7 +89,7 @@ const OrderDetails = ({
                 });
 
                 setSelectedDiscount(null);
-
+                await dispatch(loadTableOrders(lastOrder.table)).unwrap();
                 setShowAlert({
                     show: true,
                     message: "Discount removed",
@@ -106,6 +107,7 @@ const OrderDetails = ({
             });
 
             setSelectedDiscount(coupon);
+            await dispatch(loadTableOrders(lastOrder.table)).unwrap();
 
             setShowAlert({
                 show: true,
@@ -158,6 +160,16 @@ const OrderDetails = ({
 
     const getOrderDateTime = (order) => {
         return order?.created_at || order?.time || null;
+    };
+
+    const handleRemoveItem = async (itemId) => {
+        try {
+            await removeItemApiDineIn(itemId);
+             await dispatch(loadTableOrders(lastOrder.table)).unwrap();
+            
+        } catch (error) {
+            console.log("Error removing item");
+        }
     };
 
     if (!lastOrder || !lastOrder.items) return null;
@@ -217,7 +229,38 @@ const OrderDetails = ({
                             </div>
                             <div className="divider" />
 
-                            {lastOrder.items.map((item, i) => (<div key={i} className="receipt-item">
+                            <div className="order-ui-items">
+                                {lastOrder.items.map((item, i) => {
+                                    const price =
+                                        parseFloat(item.unit_price ?? item.selectedPrice ?? item.price ?? 0) || 0;
+
+                                    return (
+                                        <div className="order-ui-item" key={i}>
+                                            <button className="remove-item" onClick={() => handleRemoveItem(item.id)}>×</button>
+
+                                            <div className="item-detail">
+                                                <div className="item-title">{item.name}</div>
+                                                <div className="item-sub">
+                                                    {item.sizeName?.trim() && `(${item.sizeName})`} ₹{price.toFixed(2)}
+                                                </div>
+                                            </div>
+
+                                            {/* <div className="qty-control"> */}
+                                            {/* <button>-</button> */}
+                                            <div>× {item.quantity}</div>
+                                            {/* <button>+</button> */}
+                                            {/* </div> */}
+
+                                            <div className="item-total">
+                                                ₹{(item.finalPrice).toFixed(2)}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+
+
+                            {/* {lastOrder.items.map((item, i) => (<div key={i} className="receipt-item">
                                 <div className="receipt-row">
                                     <span className="item-name"> {item.name}{" "} {item.sizeName?.trim() && `(${item.sizeName})`} × {item.quantity}
                                     </span> <span className="item-price"> ₹{(parseFloat(item.finalPrice ?? item.selectedPrice ?? item.price ?? 0) || 0).toFixed(2)} </span>
@@ -232,7 +275,7 @@ const OrderDetails = ({
                                     </div>
                                 )}
                             </div>))
-                            }
+                            } */}
                             {(lastOrder?.order_notes || lastOrder?.orderNote) && (
                                 <>
                                     <div className="divider" />
@@ -275,7 +318,6 @@ const OrderDetails = ({
                                 <span>Payment</span>
                                 <span>{lastOrder.paymentMethod ?? lastOrder.payment_method_display ?? "-"}</span>
                             </div>
-                            <p className="text-center thank-you"> Thank you 🙏 </p>
                         </div>
 
                         <div className="my-2">
@@ -299,7 +341,7 @@ const OrderDetails = ({
                         </div>
                         <Coupons discounts={discounts} selected={selectedDiscount} onSelect={handleCouponClick} />
 
-                        <div className="paymentOptions">
+                        <div className="paymentOptions my-2">
                             {["cash", "upi", "card"].map((method) => (
                                 <button
                                     key={method}

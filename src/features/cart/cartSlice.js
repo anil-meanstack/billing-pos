@@ -5,7 +5,6 @@ import { loadTablesFromApi } from "../table/tableSlice";
 import { fetchTableOrdersApi } from "../table/tableOrderApi"
 
 
-
 export const placeOrder = createAsyncThunk(
   "cart/placeOrder",
   async (orderData, thunkAPI) => {
@@ -122,7 +121,7 @@ export const clearCartServer = createAsyncThunk(
     try {
       await clearCartApi(payload);
 
-      thunkAPI.dispatch(loadTablesFromApi()); // ✅
+      thunkAPI.dispatch(loadTablesFromApi());
 
       return true;
     } catch (err) {
@@ -420,15 +419,65 @@ const cartSlice = createSlice({
         state.tableOrders = orders;
         state.tableOrdersLoading = false;
 
-        state.activeTableOrder =
-          orders.find(
-            (order) =>
-              order.status === "confirmed" &&
-              order.payment_status === "pending"
-          ) || null;
+        state.activeTableOrder = orders.find(
+          (order) =>
+            !["cancelled", "completed"].includes(order.status?.toLowerCase()) && order.payment_status === "pending"
+        ) || null;
       })
+      // .addCase(loadTableOrders.fulfilled, (state, action) => {
+      //   const orders = Array.isArray(action.payload)
+      //     ? action.payload
+      //     : action.payload?.results || [];
+
+      //   state.tableOrders = orders;
+      //   state.tableOrdersLoading = false;
+      //   const activeOrder = orders.filter(
+      //     (order) =>
+      //       !["cancelled", "completed"].includes(order.status?.toLowerCase()) &&
+      //       order.payment_status === "pending"
+      //   )
+      //     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0] || null;
+
+      //   state.activeTableOrder = activeOrder;
+
+      //   if (activeOrder) {
+      //     state.items = (activeOrder.items || []).map((item) => ({
+        //  updateCartState(state, item.cart);
+      //       id: item.menu_item_id || item.id,
+      //       cartItemId: item.id,
+      //       name: item.name || "",
+      //       quantity: Number(item.quantity) || 1,
+      //       base_price: Number(item.unit_price) || 0,
+      //       selectedPrice: Number(item.finalPrice || item.unit_price) || 0,
+      //       sizeName: item.variants?.[0]?.name || "",
+      //       variant_id: item.variants?.[0]?.id || "",
+      //       addons: item.addons || [],
+      //       instructions: item.special_instructions || "",
+      //       isCombo: item.is_combo || false,
+      //       comboDetails: item.combo_details || null,
+      //     }));
+
+      //     state.cartSummary = {
+      //       subtotal: Number(activeOrder.subtotal || 0),
+      //       taxAmount: Number(activeOrder.tax_amount || 0),
+      //       discountAmount: Number(activeOrder.discount_amount || 0),
+      //       deliveryCharge: Number(activeOrder.delivery_charge || 0),
+      //       total_amount: Number(activeOrder.total_amount || 0),
+      //       itemCount: Number(activeOrder.item_count || activeOrder.items?.length || 0),
+      //       orderType: activeOrder.order_type || "dine_in",
+      //       tableNumber: activeOrder.table_number || "",
+      //     };
+
+      //     state.orderType = activeOrder.order_type || "dine_in";
+      //     state.tableNumber = activeOrder.table_number || "";
+      //     state.tableId = activeOrder.table || null;
+        // }
+  //     })
   },
+
 });
+
+
 
 export const {
   addToCart,

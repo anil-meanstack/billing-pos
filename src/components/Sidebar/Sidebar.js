@@ -10,14 +10,14 @@ import OrderDetails from "../../pages/components/OrderDetails";
 const Sidebar = () => {
   const tables = useSelector((state) => state.tables.list);
   const { orders } = useSelector((state) => state.orders);
-  const [selectedTableId, setSelectedTableId] = useState(null);
+  // const [selectedTableId, setSelectedTableId] = useState(null);
+  // setSelectedTableId(table.id);
   const orderType = useSelector((state) => state.cart.orderType);
+  const reduxSelectedTableId = useSelector((state) => state.cart.tableId);
   const { newCount = 0, preparingCount = 0, readyCount = 0 } = useSelector(
     (state) => state.kitchen
   );
-  const { tableOrders, activeTableOrder, tableOrdersLoading } = useSelector(
-    (state) => state.cart
-  );
+  const { activeTableOrder } = useSelector((state) => state.cart);
 
   const [showOrderModal, setShowOrderModal] = useState(false);
 
@@ -89,7 +89,7 @@ const Sidebar = () => {
 
     const isOccupied = table.status?.toLowerCase() === "occupied";
 
-    setSelectedTableId(table.id);
+    // setSelectedTableId(table.id);
 
     dispatch(setTableNumber(table.tableNumber));
     dispatch(setTableId(table.id));
@@ -166,7 +166,7 @@ const Sidebar = () => {
               <div
                 key={i}
                 className={`table-card 
-                  ${selectedTableId === t.id ? "active" : ""}
+                  ${reduxSelectedTableId  === t.id ? "active" : ""}
                   ${t.highlight ? "highlight" : ""}
                   ${getStatusClass(t.status)}
                   ${!isSelectable ? "disabled" : ""}
