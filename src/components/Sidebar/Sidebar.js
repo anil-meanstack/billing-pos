@@ -1,9 +1,10 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useRef } from "react";
 import "./Sidebar.css";
 import { NavLink } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { setTableNumber, setTableId, updateTable, setOrderType } from "../../features/cart/cartSlice";
+import { setTableNumber, setTableId, updateTable, setOrderType, fetchActiveOrder, loadTableOrders } from "../../features/cart/cartSlice";
 import Alert from "../Alert/Alert";
+import OrderDetails from "../../pages/components/OrderDetails";
 
 
 const Sidebar = () => {
@@ -14,6 +15,25 @@ const Sidebar = () => {
   const { newCount = 0, preparingCount = 0, readyCount = 0 } = useSelector(
     (state) => state.kitchen
   );
+  const { tableOrders, activeTableOrder, tableOrdersLoading } = useSelector(
+    (state) => state.cart
+  );
+
+  const [showOrderModal, setShowOrderModal] = useState(false);
+
+  const billRef = useRef();
+
+  const printContent = (ref) => {
+    if (!ref?.current) return;
+    const win = window.open("", "", "width=400");
+    win.document.write(`<html><body>${ref.current.innerHTML}</body></html>`);
+    win.document.close();
+    win.onload = () => {
+      win.print();
+      win.close();
+    };
+  };
+
 
   const dispatch = useDispatch();
   const [showAlert, setShowAlert] = useState({
@@ -49,6 +69,10 @@ const Sidebar = () => {
 
   const totalKitchenOrder = (newCount || 0) + (preparingCount || 0) + (readyCount || 0);
 
+  const getTableOrder = async (tableId) => {
+    await dispatch(loadTableOrders(tableId)).unwrap();
+    setShowOrderModal(true);
+  };
 
   const handleTableClick = (table) => {
 
@@ -77,6 +101,7 @@ const Sidebar = () => {
         table_id: table.id,
         order_type: "dine_in",
       }));
+      dispatch(fetchActiveOrder(table.id))
     }
 
     localStorage.setItem('selectedTable', JSON.stringify({
@@ -159,9 +184,15 @@ const Sidebar = () => {
                   {t.status || "Available"}
                 </div>
                 {isOccupied && (
-                  <div className="occupancy-indicator">
-                    <span className="occupancy-dot"></span>
-                  </div>
+                  <>
+                    <div className="occupancy-indicator">
+                      <span className="occupancy-dot"></span>
+                    </div>
+                    <i className="bi bi-eye-fill view" onClick={(e) => {
+                      e.stopPropagation();
+                      getTableOrder(t.id);
+                    }}></i>
+                  </>
                 )}
               </div>
             );
@@ -181,6 +212,29 @@ const Sidebar = () => {
         type={showAlert.type}
         onClose={() => setShowAlert({ ...showAlert, show: false })}
       />
+      {showOrderModal && activeTableOrder && (
+        <OrderDetails
+          lastOrder={{
+            ...activeTableOrder,
+            tableNumber: activeTableOrder.table_number,
+            orderType: activeTableOrder.order_type,
+            paymentMethod: activeTableOrder.payment_method,
+            customerName: activeTableOrder.customer_name,
+            customerPhone: activeTableOrder.customer_phone,
+            subtotal: Number(activeTableOrder.subtotal || 0),
+            total_amount: Number(activeTableOrder.total_amount || 0),
+            discount_amount: Number(activeTableOrder.discount_amount || 0),
+            tax_breakdown: activeTableOrder.tax_breakdown || [],
+            items: activeTableOrder.items || [],
+            orderNotes: activeTableOrder.order_notes,
+            daily_number: activeTableOrder.daily_number,
+            time: activeTableOrder.created_at,
+          }}
+          setShowReceiptModal={setShowOrderModal}
+          printContent={printContent}
+          billRef={billRef}
+        />
+      )}
     </div>
   );
 };

@@ -4,7 +4,6 @@ import { useNavigate } from "react-router-dom";
 import CustomerModal from "./components/CustomerModal";
 import Alert from "../../components/Alert/Alert";
 import { getDiscounts } from "../../features/discount/discountApi";
-import "./CartSummary.css";
 import { clearCartServer, setOrderType, setCustomerInfo, selectCartTotal, selectItemCount, updateTable, applyDiscount, removeDiscount } from "../../features/cart/cartSlice";
 import { setTableStatus } from "../../features/table/tableSlice";
 import { checkoutOrder } from "../../features/orders/ordersSlice";
@@ -14,6 +13,8 @@ import PrintTemplate from "../../components/PrintTemplate";
 import OrderDetailsModal from "../components/OrderDetailsModal";
 import CancelModal from "../menu/components/Modal/CancelModal";
 import PaymentModal from "./components/PaymentModal";
+import { sendKotAndKeepOrderOpenApi } from "../../features/kitchen/kitchenApi";
+import "./CartSummary.css";
 
 // Constants
 const CONSTANTS = {
@@ -278,24 +279,43 @@ const CartSummary = (props) => {
   }, [items.length, validateCustomerInfo, isDineIn, tableNumber, selectedTableId, tables, showError]);
 
 
-  const handleOrderTypeChange = useCallback((type) => {
+  // const handleOrderTypeChange = useCallback((type) => {
 
-    if (
-      type === CONSTANTS.ORDER_TYPES.DINE_IN &&
-      !selectedTableId
-    ) {
-      showError("Please select a table first");
+  //   if (
+  //     type === CONSTANTS.ORDER_TYPES.DINE_IN &&
+  //     !selectedTableId
+  //   ) {
+  //     showError("Please select a table first");
+  //     return;
+  //   }
+  //   dispatch(setOrderType(type));
+
+  //   if (type === CONSTANTS.ORDER_TYPES.DINE_IN) return;
+
+  //   dispatch(updateTable({
+  //     order_type: type
+  //   }));
+
+  // }, [dispatch, selectedTableId, showError]);
+
+  const handleOrderTypeChange = useCallback((type) => {
+    if (type === CONSTANTS.ORDER_TYPES.DINE_IN && !selectedTableId) {
+      setShowAlert({
+        show: true,
+        message: "Please select a table first",
+        type: "danger",
+      });
       return;
     }
+
     dispatch(setOrderType(type));
 
-    if (type === CONSTANTS.ORDER_TYPES.DINE_IN) return;
-
-    dispatch(updateTable({
-      order_type: type
-    }));
-
-  }, [dispatch, selectedTableId, showError]);
+    if (type !== CONSTANTS.ORDER_TYPES.DINE_IN) {
+      dispatch(updateTable({
+        order_type: type,
+      }));
+    }
+  }, [dispatch, selectedTableId]);
 
   const handleCheckout = useCallback(async (shouldPrint = false) => {
 
@@ -531,6 +551,38 @@ const CartSummary = (props) => {
     setSelectedDiscount(null);
   }, [items.length, dispatch, orderType, tableId]);
 
+  // const kotPrint = async () => {
+  //   if (items.length === 0) {
+  //     showError("Cart is empty!");
+  //     return;
+  //   }
+
+  //   if (!validateCheckout()) return;
+
+  //   try {
+  //     await new Promise(resolve => setTimeout(resolve, 100));
+
+  //     if (window.electronAPI) {
+  //       const content = kotRef.current.innerHTML;
+  //       window.electronAPI.printKot(content);
+  //     } else {
+  //       printContent(kotRef);
+  //     }
+  //     if (isDineIn && selectedTableId) {
+  //       dispatch(
+  //         setTableStatus({
+  //           id: selectedTableId,
+  //           status: "occupied",
+  //         }),
+  //       );
+  //     }
+  //     showSuccess("KOT Printed ✅");
+
+  //   } catch (error) {
+  //     console.error(error);
+  //     showError("Failed to print KOT");
+  //   }
+  // };
   const kotPrint = async () => {
     if (items.length === 0) {
       showError("Cart is empty!");
@@ -540,7 +592,7 @@ const CartSummary = (props) => {
     if (!validateCheckout()) return;
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise((resolve) => setTimeout(resolve, 100));
 
       if (window.electronAPI) {
         const content = kotRef.current.innerHTML;
@@ -548,16 +600,32 @@ const CartSummary = (props) => {
       } else {
         printContent(kotRef);
       }
+
       if (isDineIn && selectedTableId) {
         dispatch(
           setTableStatus({
             id: selectedTableId,
             status: "occupied",
-          }),
+          })
         );
-      }
-      showSuccess("KOT Printed ✅");
 
+        const data = await sendKotAndKeepOrderOpenApi({
+          customer_name: customerInfo.name,
+          customer_phone: customerInfo.phone,
+          customer_address: isDelivery ? customerInfo.address : null,
+          action: "send_kot",
+          cart_id: cartId,
+          table_id: selectedTableId,
+        });
+      }
+      await dispatch(
+        clearCartServer({
+          order_type: orderType,
+          table_id: selectedTableId || null,
+        })
+      );
+      navigate("/order")
+      showSuccess("KOT Printed ✅");
     } catch (error) {
       console.error(error);
       showError("Failed to print KOT");
@@ -667,21 +735,23 @@ const CartSummary = (props) => {
           </div>
 
           <div className="checkoutButtonsContainer">
-            <button className="place-order-btn" onClick={kotPrint}>🧾 KOT & Print </button>
-            <button
-              className="place-order-btn"
-              onClick={() => setShowPaymentModal(true)}
-              disabled={placingOrder || orderLoading || isCartEmpty}
-            >
-              {placingOrder || orderLoading ? (
-                <span className="spinner-border spinner-border-sm"></span>
-              ) : (
-                <>
-                  <span className="btn-texts">Place Order</span>
-                  {/* <span className="btn-amount">{formatPrice(total_amount)}</span> */}
-                </>
-              )}
-            </button>
+            <button className="place-order-btn text-center d-block" onClick={kotPrint}>🧾 KOT & Print </button>
+            {orderType != "dine_in" && (
+              <button
+                className="place-order-btn"
+                onClick={() => setShowPaymentModal(true)}
+                disabled={placingOrder || orderLoading || isCartEmpty}
+              >
+                {placingOrder || orderLoading ? (
+                  <span className="spinner-border spinner-border-sm"></span>
+                ) : (
+                  <>
+                    <span className="btn-texts">Place Order</span>
+                  </>
+                )}
+              </button>
+            )}
+
           </div>
 
         </div>

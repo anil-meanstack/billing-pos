@@ -110,10 +110,10 @@ const KitchenQueue = () => {
                         <div className="loading">Loading...</div>
                     ) : (
                         <>
-                            {detail.order?.items?.map((item, i) => (
+                            {detail?.items?.map((item, i) => (
                                 <div className="item-card" key={i}>
                                     <div>
-                                        <div className="item-title">{item.name}</div>
+                                        <div className="item-title">{item.item_name}</div>
 
                                         {/* ✅ VARIANTS */}
                                         {item.variants && item.variants.length > 0 && (

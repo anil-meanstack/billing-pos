@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { fetchTablesApi } from "./tableApi";
-import { fetchTableOrdersApi } from "./tableOrderApi";
 
 export const loadTablesFromApi = createAsyncThunk(
   "tables/loadFromApi",
@@ -9,12 +8,6 @@ export const loadTablesFromApi = createAsyncThunk(
   }
 );
 
-export const loadTableOrders = createAsyncThunk(
-  "tables/loadOrders",
-  async (tableId) => {
-    return await fetchTableOrdersApi(tableId);
-  }
-);
 
 const tableSlice = createSlice({
   name: "tables",

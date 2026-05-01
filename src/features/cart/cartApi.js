@@ -28,7 +28,17 @@ const getUserType = () => {
   const authData = getAuthData();
   return authData?.user?.user_type;
 };
+const getRestaurantId = () => {
+  const auth = getAuthData();
 
+  if (!auth) return null;
+
+  return (
+    auth?.currentRestaurant?.id ||
+    auth?.restaurant?.id ||
+    null
+  );
+};
 
 export const addToCartItem = async (orderData) => {
   const slug = getRestaurantSlug();
@@ -184,6 +194,27 @@ export const tableSelectable = async (res) => {
   return await response.json();
 };
 
+export const activeOrderApi = async (table_id) => {
+  const token = getToken();
+  const restaurantId = getRestaurantId();
+
+  const response = await fetch(
+    `${API_BASE_URL}/tables/${table_id}/active-order/?restaurant_id=${restaurantId}`,
+    {
+      method: "GET",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error("Fetch active order failed");
+  }
+
+  return await response.json();
+};
+
 export const clearCartApi = async (res) => {
   const slug = getRestaurantSlug();
   const token = getToken();
@@ -211,7 +242,6 @@ export const clearCartApi = async (res) => {
       throw new Error(`Server error: ${response.status}`);
     }
   }
-
 
   return { success: true };
 };

@@ -1,5 +1,5 @@
 :root {
-  --primary-orange: #FC8019;
+  --primary-orange: #e05c20;
   --primary-green: #09AA29;
   --light-bg: #FFF2E8;
   --dark-bg: #171826;
@@ -8,7 +8,7 @@
   --white: #FFFFFF;
 
   --success: #09AA29;
-  --warning: #FC8019;
+  --warning: #e05c20;
   --danger: #dc3545;
 
   --border-radius: 12px;
@@ -87,54 +87,109 @@
 .table-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 4px;
-}
-
-.table-card:hover {
-  transform: translateY(-4px);
-}
-
-.table-card.occupied {
-  background: #efede7 !important;
-  border: 1px solid rgb(0 0 0 / 13%);
+  gap:16px 8px;
 }
 
 .table-card {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: var(--shadow-sm);
-  padding: 12px;
-  text-align: center;
+  position: relative;
+  min-height: 76px;
+  background: #fff;
+  border: 1px solid #eee5dd;
+  border-radius: 14px;
+  padding: 12px 10px;
+  text-align: left;
   cursor: pointer;
-  transition: 0.2s;
+  transition: var(--transition);
+  box-shadow: 0 3px 10px rgba(23, 24, 38, 0.06);
 }
-
 
 .table-card:hover {
   transform: translateY(-2px);
+  border-color: rgba(252, 128, 25, 0.35);
+  box-shadow: var(--shadow-hover);
 }
 
 .table-card.active {
- background: #e05c20 ;  
+  background: #e05c20 !important;
   color: #fff;
+  border-color: #e05c20;
 }
 
-.table-card.highlight {
-  background: #fcd9b6;
-  border: 1px solid #f59e0b;
+.table-card.occupied {
+  background: #c3bbb4 !important;
+  border-color: #c3bbb4;
+}
+
+i.bi.bi-eye-fill.view {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  color: #ffffff;
+  bottom: -28px;
+  border: 1px solid #d7370e;
+  padding: 0px 6px;
+  background: #e05c20;
+  border-radius: 6px;
+}
+
+.table-card.disabled {
+  background: #f3f4f6;
+  color: #999;
 }
 
 .table-id {
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
 }
 
 .table-status {
-  font-size: 11px;
-  color: #555;
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 20px;
+  text-transform: capitalize;
+  background: #e9fbea;
+  color: var(--success);
+  margin-bottom: 10px;
+}
+
+.table-status.reserved,
+.table-status.booked {
+  background: #e8f1ff;
+  color: #2563eb;
+}
+
+.table-status.maintenance {
+  background: #ffe4e4;
+  color: var(--danger);
 }
 
 .table-card.active .table-status {
+  background: rgba(255, 255, 255, 0.25);
   color: #fff;
+}
+
+.occupancy-indicator {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.occupancy-dot {
+  display: block;
+  width: 9px;
+  height: 9px;
+  background:#fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 4px rgba(224, 92, 32);
+}
+
+.table-card.active .occupancy-dot {
+  background: #fff;
+  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.25);
 }
 
 .bottom {
@@ -150,4 +205,27 @@
   .item {
     font-size: 12px;
   }
+}
+
+
+
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.modal-content {
+  background: #fff;
+  color: #000;
+  width: 420px;
+  max-height: 80vh;
+  overflow-y: auto;
+  border-radius: 12px;
+  padding: 20px;
 }

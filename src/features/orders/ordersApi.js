@@ -32,11 +32,12 @@ const getRestaurantId = () => {
 
 const getToken = () => {
   const auth = getAuthData();
-  return auth?.accessToken || null; 
+  return auth?.accessToken || null;
 };
 
 
 export const ordersApi = {
+
   checkoutOrder: async (checkoutData) => {
     const restaurantId = getRestaurantId();
     const token = getToken();
@@ -82,6 +83,7 @@ export const ordersApi = {
   },
 
 
+
   fetchOrders: async () => {
     const localOrders = localStorage.getItem("restaurantOrders");
 
@@ -103,6 +105,36 @@ export const ordersApi = {
 
     return { orderId, status };
   },
+};
+
+export const settledOrderApi = async (payload) => {
+  const token = getToken();
+  const restaurant_slug = getRestaurantSlug();
+
+  const response = await fetch(
+    `${API_BASE_URL}/owner/restaurants/${restaurant_slug}/orders/dine-in/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+
+    try {
+      const data = JSON.parse(text);
+      throw new Error(data?.message || "Send KOT failed");
+    } catch {
+      throw new Error(`Server error: ${response.status}`);
+    }
+  }
+
+  return await response.json();
 };
 
 export const getAllOrderHistory = {

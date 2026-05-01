@@ -87,6 +87,39 @@ export const applyDiscountApi = async (res) => {
     return data;
 };
 
+export const dineApplyDiscountApi = async (res) => {
+    const restaurantSlug = getRestaurantSlug();
+    const token = getToken();
+
+    if (!restaurantSlug) {
+        throw new Error("Restaurant not found");
+    }
+
+    if (!token) {
+        throw new Error("Session expired. Please login again.");
+    }
+
+    const response = await fetch(
+        `${API_BASE_URL}/owner/restaurants/${restaurantSlug}/orders/dine-in/`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+            },
+
+            body: JSON.stringify(res),
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data?.message || "Failed to apply discount");
+    }
+    return data;
+};
+
 export const createDiscount = async (data) => {
     const res = await fetch(`${API_BASE_URL}/discounts/`, {
         method: "POST",

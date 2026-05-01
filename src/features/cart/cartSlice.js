@@ -1,7 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { addToCartItem, updateCartItemApi, removeCartItemApi, clearCartApi, tableSelectable, addComboApi, getCartApi } from "./cartApi";
+import { addToCartItem, updateCartItemApi, removeCartItemApi, clearCartApi, tableSelectable, addComboApi, getCartApi, activeOrderApi } from "./cartApi";
 import { applyDiscountApi, deleteDiscount } from "../discount/discountApi";
-import {loadTablesFromApi } from  "../table/tableSlice"
+import { loadTablesFromApi } from "../table/tableSlice";
+import { fetchTableOrdersApi } from "../table/tableOrderApi"
+
 
 
 export const placeOrder = createAsyncThunk(
@@ -10,12 +12,18 @@ export const placeOrder = createAsyncThunk(
     try {
       const result = await addToCartItem(orderData);
 
-      thunkAPI.dispatch(loadTablesFromApi()); 
+      thunkAPI.dispatch(loadTablesFromApi());
 
       return result;
     } catch (error) {
       return thunkAPI.rejectWithValue(error.message);
     }
+  }
+);
+export const loadTableOrders = createAsyncThunk(
+  "tables/loadOrders",
+  async (tableId) => {
+    return await fetchTableOrdersApi(tableId);
   }
 );
 
@@ -27,6 +35,13 @@ export const updateTable = createAsyncThunk(
     } catch (err) {
       return rejectWithValue(err.message);
     }
+  }
+);
+
+export const fetchActiveOrder = createAsyncThunk(
+  "cart/fetchActiveOrder",
+  async (table_id) => {
+    return await activeOrderApi(table_id);
   }
 );
 
@@ -62,7 +77,7 @@ export const removeCartItem = createAsyncThunk(
 
       const updatedCart = await getCartApi(res);
 
-      thunkAPI.dispatch(loadTablesFromApi()); 
+      thunkAPI.dispatch(loadTablesFromApi());
 
       return updatedCart;
     } catch (error) {
@@ -90,7 +105,7 @@ export const removeDiscount = createAsyncThunk(
   "cart/removeDiscount",
   async (payload, { rejectWithValue }) => {
     try {
-       await deleteDiscount(payload);
+      await deleteDiscount(payload);
 
       const updatedCart = await getCartApi(payload);
 
@@ -121,7 +136,7 @@ export const addCombo = createAsyncThunk(
     try {
       const result = await addComboApi(payload);
 
-      thunkAPI.dispatch(loadTablesFromApi()); 
+      thunkAPI.dispatch(loadTablesFromApi());
 
       return result;
     } catch (err) {
@@ -198,6 +213,9 @@ const initialState = {
 
   loading: false,
   error: null,
+  tableOrders: [],
+  activeTableOrder: null,
+  tableOrdersLoading: false,
 };
 
 const cartSlice = createSlice({
@@ -274,7 +292,7 @@ const cartSlice = createSlice({
     setOrderNotes: (state, action) => {
       state.orderNotes = action.payload;
     },
-    
+
 
     loadOrderToCart: (state, action) => {
       const order = action.payload;
@@ -393,6 +411,21 @@ const cartSlice = createSlice({
       .addCase(addCombo.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload || "Add combo failed";
+      })
+      .addCase(loadTableOrders.fulfilled, (state, action) => {
+        const orders = Array.isArray(action.payload)
+          ? action.payload
+          : action.payload?.results || [];
+
+        state.tableOrders = orders;
+        state.tableOrdersLoading = false;
+
+        state.activeTableOrder =
+          orders.find(
+            (order) =>
+              order.status === "confirmed" &&
+              order.payment_status === "pending"
+          ) || null;
       })
   },
 });

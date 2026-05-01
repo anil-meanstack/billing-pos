@@ -1,8 +1,3 @@
-// const API_BASE_URL =
-//   process.env.NODE_ENV === "production"
-//     ? process.env.REACT_APP_API_BASE_URL
-//     : "/api";
-
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
 
@@ -26,6 +21,43 @@ const getRestaurantId = () => {
   return auth?.currentRestaurant?.id || auth?.restaurant?.id || null;
 };
 
+const getRestaurantSlug = () => {
+  const auth = getAuthData();
+  return auth?.currentRestaurant?.slug || auth?.restaurant?.slug || null;
+};
+
+
+export const sendKotAndKeepOrderOpenApi = async (payload) => {
+  const token = getToken();
+  const restaurant_slug=getRestaurantSlug();
+
+  const response = await fetch(
+    `${API_BASE_URL}/owner/restaurants/${restaurant_slug}/orders/dine-in/`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    }
+  );
+
+  if (!response.ok) {
+    const text = await response.text();
+
+    try {
+      const data = JSON.parse(text);
+      throw new Error(data?.message || "Send KOT failed");
+    } catch {
+      throw new Error(`Server error: ${response.status}`);
+    }
+  }
+
+  return await response.json();
+};
+
+
 export const getKitchenTickets = async (status) => {
   const token = getToken();
   const restaurantId = getRestaurantId();
@@ -41,7 +73,6 @@ export const getKitchenTickets = async (status) => {
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-        // "x-restaurant-id": restaurantId,
       },
     }
   );
@@ -62,13 +93,12 @@ export const getKitchenTicketById = async (id) => {
   }
 
   const res = await fetch(
-    `${API_BASE_URL}/kitchen-tickets/${id}/?restaurant_id=${restaurantId}`,
+    `${API_BASE_URL}/kitchen-tickets/${id}/items/?restaurant_id=${restaurantId}`,
     {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
-        // "X-Restaurant-ID": restaurantId,
       },
     }
   );
