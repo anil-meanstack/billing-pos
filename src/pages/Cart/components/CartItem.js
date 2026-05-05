@@ -1,10 +1,10 @@
 import { useDispatch, useSelector } from "react-redux";
-import { removeCartItem, updateCartItem, } from "../../../features/cart/cartSlice";
+import { removeCartItem, updateCartItem, loadTableOrders, dineRemoveCartItem } from "../../../features/cart/cartSlice";
 
 const CartItem = ({ item }) => {
 
   const dispatch = useDispatch();
-  const { orderType, tableId } = useSelector((state) => state.cart);
+  const { orderType, tableId, activeTableOrder } = useSelector((state) => state.cart);
 
   const formatPrice = (price) => {
     if (price === undefined || price === null) return "₹0";
@@ -30,6 +30,11 @@ const CartItem = ({ item }) => {
   const itemQuantity = item?.quantity || 1;
   const cartItemId = item?.cartItemId;
 
+  const isRunningOrderItem =
+    orderType === "dine_in" &&
+    activeTableOrder &&
+    activeTableOrder.items?.some((orderItem) => orderItem.id === cartItemId);
+
   const handleQuantityChange = (newQuantity) => {
     if (newQuantity < 1) {
       handleRemove();
@@ -53,7 +58,23 @@ const CartItem = ({ item }) => {
     }
   };
 
-  const handleRemove = () => {
+  // const handleRemove = (itemID) => {
+  //   const payload = {
+  //     order_type: orderType || "dine_in",
+  //   };
+
+  //   if (orderType === "dine_in" && tableId) {
+  //     payload.table_id = tableId;
+  //   }
+  //   if (cartItemId && navigator.onLine) {
+  //     dispatch(removeCartItem({
+  //       itemId: cartItemId,
+  //       res: payload
+  //     }));
+  //   }
+  // };
+
+  const handleRemove = async () => {
     const payload = {
       order_type: orderType || "dine_in",
     };
@@ -62,11 +83,29 @@ const CartItem = ({ item }) => {
       payload.table_id = tableId;
     }
 
-    if (cartItemId && navigator.onLine) {
-      dispatch(removeCartItem({
-        itemId: cartItemId,
-        res: payload
-      }));
+    try {
+      if (isRunningOrderItem) {
+        await dispatch(
+          dineRemoveCartItem({
+            itemId: cartItemId,
+            res: payload,
+          })
+        ).unwrap();
+
+        await dispatch(loadTableOrders(tableId)).unwrap();
+        return;
+      }
+      // BEFORE order created: remove from cart
+      if (cartItemId && navigator.onLine) {
+        await dispatch(
+          removeCartItem({
+            itemId: cartItemId,
+            res: payload,
+          })
+        ).unwrap();
+      }
+    } catch (error) {
+      console.error("Remove item failed:", error);
     }
   };
 

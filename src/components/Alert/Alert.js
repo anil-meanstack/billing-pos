@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import "./Alert.css";
 
-const Alert = ({ message, type = "danger", show, onClose, duration = 1000 }) => {
+const Alert = ({ message, type = "danger", show, onClose, duration = 2000 }) => {
 
   useEffect(() => {
     if (show) {
@@ -21,7 +21,7 @@ const Alert = ({ message, type = "danger", show, onClose, duration = 1000 }) => 
 
       <button
         type="button"
-        className="btn-close"
+        className="btn-close btn-close-white"
         onClick={onClose}
       ></button>
     </div>

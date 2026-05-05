@@ -1,9 +1,9 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { addToCartItem, updateCartItemApi, removeCartItemApi, clearCartApi, tableSelectable, addComboApi, getCartApi, activeOrderApi } from "./cartApi";
+import { removeItemApiDineIn } from "../orders/ordersApi";
 import { applyDiscountApi, deleteDiscount } from "../discount/discountApi";
 import { loadTablesFromApi } from "../table/tableSlice";
 import { fetchTableOrdersApi } from "../table/tableOrderApi"
-
 
 export const placeOrder = createAsyncThunk(
   "cart/placeOrder",
@@ -85,6 +85,25 @@ export const removeCartItem = createAsyncThunk(
   }
 );
 
+export const dineRemoveCartItem = createAsyncThunk(
+  "cart/dineRemoveCartItem",
+  async ({ itemId, res }, { dispatch, rejectWithValue }) => {
+    try {
+      await removeItemApiDineIn(itemId, res);
+
+      if (res?.table_id) {
+        await dispatch(loadTableOrders(res.table_id)).unwrap();
+      }
+
+      await dispatch(loadTablesFromApi()).unwrap();
+
+      return itemId;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
 export const applyDiscount = createAsyncThunk(
   "cart/applyDiscount",
   async (payload, { rejectWithValue }) => {
@@ -100,6 +119,7 @@ export const applyDiscount = createAsyncThunk(
     }
   }
 );
+
 export const removeDiscount = createAsyncThunk(
   "cart/removeDiscount",
   async (payload, { rejectWithValue }) => {
@@ -215,6 +235,7 @@ const initialState = {
   tableOrders: [],
   activeTableOrder: null,
   tableOrdersLoading: false,
+  hasNewKotItems: false,
 };
 
 const cartSlice = createSlice({
@@ -308,6 +329,23 @@ const cartSlice = createSlice({
 
       state.tableNumber = order?.tableNumber || "";
     },
+
+    clearRunningOrder: (state) => {
+      state.activeTableOrder = null;
+      state.tableOrders = [];
+      state.items = [];
+      state.cartData = null;
+      state.cartSummary = {
+        subtotal: 0,
+        taxAmount: 0,
+        discountAmount: 0,
+        deliveryCharge: 0,
+        total_amount: 0,
+        itemCount: 0,
+        orderType: "dine_in",
+        tableNumber: state.tableNumber,
+      };
+    }
   },
 
   extraReducers: (builder) => {
@@ -319,6 +357,9 @@ const cartSlice = createSlice({
 
       .addCase(placeOrder.fulfilled, (state, action) => {
         state.loading = false;
+        if (state.activeTableOrder?.id) {
+          state.hasNewKotItems = true;
+        }
         updateCartState(state, action.payload?.cart);
       })
 
@@ -403,6 +444,9 @@ const cartSlice = createSlice({
 
       .addCase(addCombo.fulfilled, (state, action) => {
         state.loading = false;
+        if (state.activeTableOrder?.id) {
+          state.hasNewKotItems = true;
+        }
 
         updateCartState(state, action.payload?.cart);
       })
@@ -411,19 +455,6 @@ const cartSlice = createSlice({
         state.loading = false;
         state.error = action.payload || "Add combo failed";
       })
-      .addCase(loadTableOrders.fulfilled, (state, action) => {
-        const orders = Array.isArray(action.payload)
-          ? action.payload
-          : action.payload?.results || [];
-
-        state.tableOrders = orders;
-        state.tableOrdersLoading = false;
-
-        state.activeTableOrder = orders.find(
-          (order) =>
-            !["cancelled", "completed"].includes(order.status?.toLowerCase()) && order.payment_status === "pending"
-        ) || null;
-      })
       // .addCase(loadTableOrders.fulfilled, (state, action) => {
       //   const orders = Array.isArray(action.payload)
       //     ? action.payload
@@ -431,48 +462,65 @@ const cartSlice = createSlice({
 
       //   state.tableOrders = orders;
       //   state.tableOrdersLoading = false;
-      //   const activeOrder = orders.filter(
+
+      //   state.activeTableOrder = orders.find(
       //     (order) =>
-      //       !["cancelled", "completed"].includes(order.status?.toLowerCase()) &&
-      //       order.payment_status === "pending"
-      //   )
-      //     .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0] || null;
+      //       !["cancelled", "completed"].includes(order.status?.toLowerCase()) && order.payment_status === "pending"
+      //   ) || null;
+      // })
+      .addCase(dineRemoveCartItem.pending, (state) => {
+        state.loading = true;
+      })
 
-      //   state.activeTableOrder = activeOrder;
+      .addCase(dineRemoveCartItem.fulfilled, (state) => {
+        state.loading = false;
+      })
 
-      //   if (activeOrder) {
-      //     state.items = (activeOrder.items || []).map((item) => ({
-        //  updateCartState(state, item.cart);
-      //       id: item.menu_item_id || item.id,
-      //       cartItemId: item.id,
-      //       name: item.name || "",
-      //       quantity: Number(item.quantity) || 1,
-      //       base_price: Number(item.unit_price) || 0,
-      //       selectedPrice: Number(item.finalPrice || item.unit_price) || 0,
-      //       sizeName: item.variants?.[0]?.name || "",
-      //       variant_id: item.variants?.[0]?.id || "",
-      //       addons: item.addons || [],
-      //       instructions: item.special_instructions || "",
-      //       isCombo: item.is_combo || false,
-      //       comboDetails: item.combo_details || null,
-      //     }));
+      .addCase(dineRemoveCartItem.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload || "Remove running order item failed";
+      })
+      .addCase(loadTableOrders.fulfilled, (state, action) => {
+        const orders = Array.isArray(action.payload)
+          ? action.payload
+          : action.payload?.results || [];
+        state.hasNewKotItems = false;
+        state.tableOrders = orders;
+        state.tableOrdersLoading = false;
+        const activeOrder = orders.filter(
+          (order) =>
+            !["cancelled", "completed"].includes(order.status?.toLowerCase()) &&
+            order.payment_status === "pending"
+        )
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0] || null;
 
-      //     state.cartSummary = {
-      //       subtotal: Number(activeOrder.subtotal || 0),
-      //       taxAmount: Number(activeOrder.tax_amount || 0),
-      //       discountAmount: Number(activeOrder.discount_amount || 0),
-      //       deliveryCharge: Number(activeOrder.delivery_charge || 0),
-      //       total_amount: Number(activeOrder.total_amount || 0),
-      //       itemCount: Number(activeOrder.item_count || activeOrder.items?.length || 0),
-      //       orderType: activeOrder.order_type || "dine_in",
-      //       tableNumber: activeOrder.table_number || "",
-      //     };
+        state.activeTableOrder = activeOrder;
 
-      //     state.orderType = activeOrder.order_type || "dine_in";
-      //     state.tableNumber = activeOrder.table_number || "";
-      //     state.tableId = activeOrder.table || null;
-        // }
-  //     })
+        if (activeOrder) {
+          const normalizedCart = {
+            ...activeOrder,
+            id: activeOrder.id,
+            items: (activeOrder.items || []).map((item) => ({
+              ...item,
+              id: item.id,
+              menu_item_id: item.menu_item_id,
+              menu_item_name: item.name,
+              unit_price: item.unit_price,
+              item_total: item.finalPrice,
+              cart_item_id: item.id,
+              variant_name: item.variants?.[0]?.name || "",
+              variant: item.variants?.[0]?.id || "",
+              variant_price: item.variants?.[0]?.price_modifier || 0,
+            })),
+          };
+
+          updateCartState(state, normalizedCart);
+          state.tableId = activeOrder.table || null;
+        } else {
+          state.items = [];
+          state.activeTableOrder = null;
+        }
+      })
   },
 
 });
@@ -491,6 +539,7 @@ export const {
   setPickupTime,
   setOrderNotes,
   loadOrderToCart,
+  clearRunningOrder
 } = cartSlice.actions;
 
 

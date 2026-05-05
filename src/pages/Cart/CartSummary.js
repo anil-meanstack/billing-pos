@@ -3,8 +3,8 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import CustomerModal from "./components/CustomerModal";
 import Alert from "../../components/Alert/Alert";
-import { getDiscounts } from "../../features/discount/discountApi";
-import { clearCartServer, setOrderType, setCustomerInfo, selectCartTotal, selectItemCount, updateTable, applyDiscount, removeDiscount, setTableId, setTableNumber } from "../../features/cart/cartSlice";
+import { getDiscounts, dineApplyDiscountApi } from "../../features/discount/discountApi";
+import { clearCartServer, setOrderType, setCustomerInfo, selectCartTotal, selectItemCount, updateTable, applyDiscount, removeDiscount, setTableId, setTableNumber, loadTableOrders } from "../../features/cart/cartSlice";
 import { setTableStatus } from "../../features/table/tableSlice";
 import { checkoutOrder } from "../../features/orders/ordersSlice";
 import CartItem from "./components/CartItem";
@@ -13,6 +13,7 @@ import PrintTemplate from "../../components/PrintTemplate";
 import OrderDetailsModal from "../components/OrderDetailsModal";
 import CancelModal from "../menu/components/Modal/CancelModal";
 import PaymentModal from "./components/PaymentModal";
+import { settledOrderApi } from "../../features/orders/ordersApi"
 import { sendKotAndKeepOrderOpenApi } from "../../features/kitchen/kitchenApi";
 import "./CartSummary.css";
 
@@ -62,7 +63,7 @@ const CartSummary = (props) => {
   const kotRef = useRef();
   const billRef = useRef();
 
-  const { items, cartId, tableNumber, customerInfo, orderType, cartSummary } = useSelector((state) => state.cart);
+  const { items, cartId, tableNumber, customerInfo, orderType, cartSummary, activeTableOrder, hasNewKotItems } = useSelector((state) => state.cart);
   const { loading: orderLoading } = useSelector((state) => state.orders);
   const total = useSelector(selectCartTotal);
   const itemCountFromSelector = useSelector(selectItemCount);
@@ -70,17 +71,36 @@ const CartSummary = (props) => {
   const isDineIn = orderType === CONSTANTS.ORDER_TYPES.DINE_IN;
   const isDelivery = orderType === CONSTANTS.ORDER_TYPES.DELIVERY;
   const isCartEmpty = items.length === 0;
-  const tax_breakdown = useMemo(() => cartData?.tax_breakdown || [],
-    [cartData?.tax_breakdown]
-  )
+  // const tax_breakdown = useMemo(() => cartData?.tax_breakdown || [],
+  //   [cartData?.tax_breakdown]
+  // )
+  const isRunningOrder =
+    orderType === "dine_in" && activeTableOrder && activeTableOrder.id;
+  const showSettleButton = isRunningOrder && !hasNewKotItems;
+
+  const tax_breakdown = useMemo(() => {
+    if (isRunningOrder) {
+      return activeTableOrder?.tax_breakdown || [];
+    }
+
+    return cartData?.tax_breakdown || [];
+  }, [
+    isRunningOrder,
+    activeTableOrder?.tax_breakdown,
+    cartData?.tax_breakdown,
+  ]);
 
   const subtotal = useMemo(() => {
     if (items.length === 0) return 0;
 
+    if (isRunningOrder) {
+      return Number(activeTableOrder?.subtotal || 0);
+    }
+
     return cartSummary?.subtotal
       ? Number(cartSummary.subtotal)
       : total;
-  }, [cartSummary, total, items.length]);
+  }, [isRunningOrder, activeTableOrder?.subtotal, cartSummary, total, items.length]);
 
   const taxAmount = useMemo(() => {
     if (items.length === 0) return 0;
@@ -96,10 +116,14 @@ const CartSummary = (props) => {
     }
   }, [dispatch, orderType]);
 
-  const discountAmount = useMemo(() =>
-    Number(cartSummary?.discountAmount) || 0,
-    [cartSummary]
-  );
+  const discountAmount = useMemo(() => {
+    if (isRunningOrder) {
+      return Number(activeTableOrder?.discount_amount || 0);
+    }
+
+    return Number(cartSummary?.discountAmount || 0);
+  }, [isRunningOrder, activeTableOrder?.discount_amount, cartSummary]);
+
   const deliveryChargeFromSummary = useMemo(() =>
     cartSummary?.delivery_charge ?? deliveryCharge,
     [cartSummary?.delivery_charge, deliveryCharge]
@@ -107,10 +131,22 @@ const CartSummary = (props) => {
 
   const total_amount = useMemo(() => {
     if (items.length === 0) return 0;
-    return subtotal + taxAmount - discountAmount + deliveryChargeFromSummary + containerCharge
-  },
-    [subtotal, taxAmount, discountAmount, deliveryChargeFromSummary, containerCharge, items.length]
-  );
+
+    if (isRunningOrder) {
+      return Number(activeTableOrder?.total_amount || 0);
+    }
+
+    return subtotal + taxAmount - discountAmount + deliveryChargeFromSummary + containerCharge;
+  }, [
+    isRunningOrder,
+    activeTableOrder?.total_amount,
+    subtotal,
+    taxAmount,
+    discountAmount,
+    deliveryChargeFromSummary,
+    containerCharge,
+    items.length,
+  ]);
 
   const itemCount = useMemo(() =>
     cartSummary?.itemCount || itemCountFromSelector,
@@ -231,23 +267,6 @@ const CartSummary = (props) => {
     }
   }, [orderType, dispatch]);
 
-  useEffect(() => {
-    if (!cartSummary || discounts.length === 0) {
-      setSelectedDiscount(null);
-      return;
-    }
-
-    if (cartSummary.discount_code) {
-      const matched = discounts.find(
-        d => d.code === cartSummary.discount_code
-      );
-
-      setSelectedDiscount(matched || null);
-    } else {
-      setSelectedDiscount(null);
-    }
-  }, [cartSummary, discounts]);
-
   const validateCheckout = useCallback(() => {
     if (items.length === 0) {
       showError("Your cart is empty! Please add items first.");
@@ -280,6 +299,11 @@ const CartSummary = (props) => {
     if (type === CONSTANTS.ORDER_TYPES.DINE_IN) {
       if (!selectedTableId) {
         showError("Please select a table first");
+        window.dispatchEvent(
+        new CustomEvent("SHOW_TABLE_SELECT_ERROR", {
+          detail: "Please select a table first ",
+        })
+      );
         return;
       }
 
@@ -393,10 +417,6 @@ const CartSummary = (props) => {
           }),
         );
       }
-      // await dispatch(clearCartServer({
-      //   order_type: orderType,
-      //   table_id: selectedTableId || null
-      // }));
       await dispatch(clearCartServer({
         order_type: orderType,
         table_id: isDineIn ? selectedTableId : null
@@ -418,7 +438,74 @@ const CartSummary = (props) => {
       isDineIn, tableNumber, paymentMethod, cartId, selectedDiscount, items,
       dispatch, tableId, navigate, showError, showSuccess, orderNote, selectedTableId, subtotal, discountAmount, cartSummary?.total_amount, tax_breakdown]);
 
+  const handleSettleAndPrint = async () => {
+    try {
+      if (!activeTableOrder?.id) {
+        showError("Running order not found");
+        return;
+      }
 
+      await settledOrderApi({
+        action: "settle",
+        order_id: activeTableOrder.id,
+        payment_method: paymentMethod,
+        customer_name: customerInfo.name || "Guest",
+        customer_phone: customerInfo.phone || "9876543210",
+      });
+
+      const billData = {
+        ...activeTableOrder,
+        items,
+        subtotal,
+        total_amount,
+        discount_amount: discountAmount,
+        tax_breakdown,
+        tableNumber,
+        orderType,
+        paymentMethod,
+        customerName: customerInfo.name || "Guest",
+        customerPhone: customerInfo.phone || "9876543210",
+        time: new Date(),
+      };
+
+      setLastOrder(billData);
+      setShowReceiptModal(true);
+      await dispatch(updateTable({
+        table_id: selectedTableId || activeTableOrder.table,
+        order_type: "dine_in",
+        status: "available",
+      })).unwrap();
+      
+      setTimeout(() => {
+        if (!billRef.current) {
+          console.error("Bill content not ready");
+          return;
+        }
+
+        if (window.electronAPI) {
+          window.electronAPI.printBill(billRef.current.innerHTML);
+        } else {
+          printContent(billRef);
+        }
+
+        setShowReceiptModal(false);
+      }, 300);
+
+      dispatch(
+        setTableStatus({
+          id: selectedTableId,
+          status: "available",
+        })
+      );
+
+      await dispatch(loadTableOrders(selectedTableId)).unwrap();
+
+      showSuccess("Order settled successfully ✅");
+    } catch (error) {
+      console.error("Settle failed:", error);
+      showError("Failed to settle order");
+    }
+  };
   const printContent = (ref) => {
     if (!ref?.current) {
       console.error("Nothing to print");
@@ -477,24 +564,54 @@ const CartSummary = (props) => {
     }
 
     try {
-      const isSame =
-        selectedDiscount?.code === coupon.code ||
+      const isSame = isRunningOrder
+        ? selectedDiscount?.code === coupon.code ||
+        activeTableOrder?.discount_code === coupon.code ||
+        activeTableOrder?.discount?.code === coupon.code
+        : selectedDiscount?.code === coupon.code ||
         cartSummary?.discount_code === coupon.code;
+
+      if (isRunningOrder) {
+        if (isSame) {
+          await dineApplyDiscountApi({
+            action: "remove_discount",
+            order_id: activeTableOrder.id,
+            table_id: selectedTableId,
+          });
+
+          setSelectedDiscount(null);
+          await dispatch(loadTableOrders(selectedTableId)).unwrap();
+          showSuccess("Discount removed");
+          return;
+        }
+
+        await dineApplyDiscountApi({
+          action: "apply_discount",
+          order_id: activeTableOrder.id,
+          table_id: selectedTableId,
+          discount_code: coupon.code,
+        });
+
+        setSelectedDiscount(coupon);
+        await dispatch(loadTableOrders(selectedTableId)).unwrap();
+        showSuccess(`Discount ${coupon.code} applied`);
+        return;
+      }
 
       if (isSame) {
         await dispatch(removeDiscount({
           order_type: orderType,
-          table_id: selectedTableId || null
+          table_id: selectedTableId || null,
         })).unwrap();
 
-        setSelectedDiscount(null); // immediate UI update
+        setSelectedDiscount(null);
         showSuccess("Discount removed");
         return;
       }
 
       const payload = {
         order_type: orderType,
-        discount_code: coupon.code
+        discount_code: coupon.code,
       };
 
       if (orderType === "dine_in" && selectedTableId) {
@@ -505,17 +622,31 @@ const CartSummary = (props) => {
 
       setSelectedDiscount(coupon);
       showSuccess(`Discount ${coupon.code} applied`);
-
     } catch (error) {
-      console.error(error);
-
-      showError(
-        error?.message ||
-        error?.response?.data?.message ||
-        "Discount not valid at this time"
-      );
+      showError("Discount not valid");
     }
   };
+
+  useEffect(() => {
+    const code = isRunningOrder
+      ? activeTableOrder?.discount_code || activeTableOrder?.discount?.code
+      : cartSummary?.discount_code;
+
+    if (!code) {
+      setSelectedDiscount(null);
+      return;
+    }
+
+    const matched = discounts.find((d) => d.code === code);
+
+    setSelectedDiscount(matched || { code });
+  }, [
+    isRunningOrder,
+    activeTableOrder?.discount_code,
+    activeTableOrder?.discount?.code,
+    cartSummary?.discount_code,
+    discounts,
+  ]);
 
   const handleCancel = useCallback(async () => {
 
@@ -579,7 +710,7 @@ const CartSummary = (props) => {
           table_id: selectedTableId || null,
         })
       );
-      navigate("/order")
+
       showSuccess("KOT Printed ✅");
     } catch (error) {
       console.error(error);
@@ -690,12 +821,44 @@ const CartSummary = (props) => {
           </div>
 
           <div className="checkoutButtonsContainer">
+            {/* {orderType === "dine_in" && (
+              isRunningOrder ? (
+                <button
+                  className="place-order-btn text-center d-block"
+                  onClick={handleSettleAndPrint}
+                >
+                  🧾 Settled & Print Bill
+                </button>
+              ) : (
+                <button
+                  className="place-order-btn text-center d-block"
+                  onClick={kotPrint}
+                >
+                  🧾 KOT & Print
+                </button>
+              )
+            )} */}
+
             {orderType === "dine_in" && (
-              <button className="place-order-btn text-center d-block" onClick={kotPrint}>🧾 KOT & Print </button>
+              showSettleButton ? (
+                <button
+                  className="place-order-btn text-center d-block"
+                  onClick={handleSettleAndPrint}
+                >
+                   Settled & Print Bill
+                </button>
+              ) : (
+                <button
+                  className="place-order-btn text-center d-block"
+                  onClick={kotPrint}
+                >
+                   KOT & Print
+                </button>
+              )
             )}
 
-              {orderType !== "dine_in" && (
-                <button
+            {orderType !== "dine_in" && (
+              <button
                 className="place-order-btn"
                 onClick={() => setShowPaymentModal(true)}
                 disabled={placingOrder || orderLoading || isCartEmpty}
@@ -708,8 +871,8 @@ const CartSummary = (props) => {
                   </>
                 )}
               </button>
-              )}
-       
+            )}
+
 
           </div>
 

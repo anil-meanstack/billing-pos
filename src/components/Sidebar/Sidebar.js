@@ -1,27 +1,20 @@
-import React, { useState, useMemo, useRef } from "react";
+import { useState, useMemo, useEffect } from "react";
 import "./Sidebar.css";
-import { NavLink } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
-import { setTableNumber, setTableId, updateTable, setOrderType, fetchActiveOrder, loadTableOrders } from "../../features/cart/cartSlice";
+import { setTableNumber, setTableId, updateTable, setOrderType, loadTableOrders, clearRunningOrder } from "../../features/cart/cartSlice";
 import Alert from "../Alert/Alert";
-import OrderDetails from "../../pages/components/OrderDetails";
-
 
 const Sidebar = () => {
   const tables = useSelector((state) => state.tables.list);
   const { orders } = useSelector((state) => state.orders);
-  // const [selectedTableId, setSelectedTableId] = useState(null);
-  // setSelectedTableId(table.id);
   const orderType = useSelector((state) => state.cart.orderType);
+  const [tableSelectError, setTableSelectError] = useState("");
+  const navigate = useNavigate();
   const reduxSelectedTableId = useSelector((state) => state.cart.tableId);
   const { newCount = 0, preparingCount = 0, readyCount = 0 } = useSelector(
     (state) => state.kitchen
   );
-  const { activeTableOrder } = useSelector((state) => state.cart);
-
-  const [showOrderModal, setShowOrderModal] = useState(false);
-
-  const billRef = useRef();
 
   const printContent = (ref) => {
     if (!ref?.current) return;
@@ -41,6 +34,34 @@ const Sidebar = () => {
     message: "",
     type: "danger",
   });
+
+  useEffect(() => {
+    let timer;
+
+    const handleTableError = (e) => {
+      const message = e.detail || "↓";
+
+      setTableSelectError(message);
+
+      setShowAlert({
+        show: true,
+        message,
+        type: "danger",
+      });
+
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        setTableSelectError("");
+      }, 5000);
+    };
+
+    window.addEventListener("SHOW_TABLE_SELECT_ERROR", handleTableError);
+
+    return () => {
+      window.removeEventListener("SHOW_TABLE_SELECT_ERROR", handleTableError);
+      clearTimeout(timer);
+    };
+  }, []);
 
   const todayOrders = useMemo(() => {
     if (!orders) return [];
@@ -71,11 +92,9 @@ const Sidebar = () => {
 
   const getTableOrder = async (tableId) => {
     await dispatch(loadTableOrders(tableId)).unwrap();
-    setShowOrderModal(true);
   };
 
-  const handleTableClick = (table) => {
-
+  const handleTableClick = async (table) => {
     const unavailableStatuses = ["reserved", "booked", "maintenance"];
 
     if (unavailableStatuses.includes(table.status?.toLowerCase())) {
@@ -86,38 +105,30 @@ const Sidebar = () => {
       });
       return;
     }
-
-    const isOccupied = table.status?.toLowerCase() === "occupied";
-
-    // setSelectedTableId(table.id);
+    setTableSelectError("");
 
     dispatch(setTableNumber(table.tableNumber));
     dispatch(setTableId(table.id));
-
     dispatch(setOrderType("dine_in"));
 
-    if (orderType === "dine_in") {
-      dispatch(updateTable({
-        table_id: table.id,
-        order_type: "dine_in",
-      }));
-      dispatch(fetchActiveOrder(table.id))
-    }
+    dispatch(clearRunningOrder());
 
-    localStorage.setItem('selectedTable', JSON.stringify({
+    dispatch(updateTable({
+      table_id: table.id,
+      order_type: "dine_in",
+    }));
+    navigate("/menu-item")
+    localStorage.setItem("selectedTable", JSON.stringify({
       number: table.tableNumber,
-      id: table.id
+      id: table.id,
     }));
 
     setShowAlert({
       show: true,
-      message: isOccupied
-        ? `⚠️ Opening running order for Table ${table.tableNumber}`
-        : `Table ${table.tableNumber} selected successfully`,
-      type: isOccupied ? "warning" : "success",
+      message: `Table ${table.tableNumber} selected successfully`,
+      type: "success",
     });
   };
-
   const getStatusClass = (status) => {
     if (!status) return "available";
     return status.toLowerCase();
@@ -157,6 +168,33 @@ const Sidebar = () => {
       <div className="section">
         <p className="section-title">TABLES</p>
 
+        {/* {tableSelectError && (
+          <div className="table-select-error">
+            <span className="arrow">⬇</span>
+          </div>
+        )} */}
+        {tableSelectError && (
+          <div className="chev-indicator">
+            <div className="chevron-stack">
+              <div className="chev">
+                <svg viewBox="0 0 18 10" fill="none" width="18" height="10">
+                  <path d="M2 2l7 6 7-6" stroke="#e05c20" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div className="chev">
+                <svg viewBox="0 0 18 10" fill="none" width="18" height="10">
+                  <path d="M2 2l7 6 7-6" stroke="#e05c20" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+              <div className="chev">
+                <svg viewBox="0 0 18 10" fill="none" width="18" height="10">
+                  <path d="M2 2l7 6 7-6" stroke="#e05c20" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="table-grid">
           {tables.map((t, i) => {
             const isSelectable = isTableSelectable(t.status);
@@ -166,7 +204,7 @@ const Sidebar = () => {
               <div
                 key={i}
                 className={`table-card 
-                  ${reduxSelectedTableId  === t.id ? "active" : ""}
+                  ${reduxSelectedTableId === t.id ? "active" : ""}
                   ${t.highlight ? "highlight" : ""}
                   ${getStatusClass(t.status)}
                   ${!isSelectable ? "disabled" : ""}
@@ -183,17 +221,54 @@ const Sidebar = () => {
                 <div className={`table-status ${getStatusClass(t.status)}`}>
                   {t.status || "Available"}
                 </div>
-                {isOccupied && (
+                {/* {isOccupied && (
                   <>
                     <div className="occupancy-indicator">
                       <span className="occupancy-dot"></span>
                     </div>
-                    <i className="bi bi-eye-fill view" onClick={(e) => {
-                      e.stopPropagation();
-                      getTableOrder(t.id);
-                    }}></i>
+                   
+                    <i
+                      className="bi bi-eye-fill view"
+                      title="View Order"
+                      onClick={async (e) => {
+                        e.stopPropagation();
+
+                        dispatch(setTableNumber(t.tableNumber));
+                        dispatch(setTableId(t.id));
+                        dispatch(setOrderType("dine_in"));
+
+                        await dispatch(loadTableOrders(t.id)).unwrap();
+                        navigate("/menu-item")
+                      }}
+                    ></i>
+                    <span className="tooltip-text">View Order</span>
                   </>
-                )}
+                )} */}
+                {isOccupied && (
+  <>
+    <div className="occupancy-indicator">
+      <span className="occupancy-dot"></span>
+    </div>
+
+    <div className="view-wrapper">
+      <i
+        className="bi bi-eye-fill view"
+        onClick={async (e) => {
+          e.stopPropagation();
+
+          dispatch(setTableNumber(t.tableNumber));
+          dispatch(setTableId(t.id));
+          dispatch(setOrderType("dine_in"));
+
+          await dispatch(loadTableOrders(t.id)).unwrap();
+          navigate("/menu-item");
+        }}
+      ></i>
+
+      <span className="tooltip-text">View Order</span>
+    </div>
+  </>
+)}
               </div>
             );
           })}
@@ -212,29 +287,6 @@ const Sidebar = () => {
         type={showAlert.type}
         onClose={() => setShowAlert({ ...showAlert, show: false })}
       />
-      {showOrderModal && activeTableOrder && (
-        <OrderDetails
-          lastOrder={{
-            ...activeTableOrder,
-            tableNumber: activeTableOrder.table_number,
-            orderType: activeTableOrder.order_type,
-            paymentMethod: activeTableOrder.payment_method,
-            customerName: activeTableOrder.customer_name,
-            customerPhone: activeTableOrder.customer_phone,
-            subtotal: Number(activeTableOrder.subtotal || 0),
-            total_amount: Number(activeTableOrder.total_amount || 0),
-            discount_amount: Number(activeTableOrder.discount_amount || 0),
-            tax_breakdown: activeTableOrder.tax_breakdown || [],
-            items: activeTableOrder.items || [],
-            orderNotes: activeTableOrder.order_notes,
-            daily_number: activeTableOrder.daily_number,
-            time: activeTableOrder.created_at,
-          }}
-          setShowReceiptModal={setShowOrderModal}
-          printContent={printContent}
-          billRef={billRef}
-        />
-      )}
     </div>
   );
 };

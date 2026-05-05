@@ -165,8 +165,8 @@ const OrderDetails = ({
     const handleRemoveItem = async (itemId) => {
         try {
             await removeItemApiDineIn(itemId);
-             await dispatch(loadTableOrders(lastOrder.table)).unwrap();
-            
+            await dispatch(loadTableOrders(lastOrder.table)).unwrap();
+
         } catch (error) {
             console.log("Error removing item");
         }

@@ -1,6 +1,5 @@
 import getCsrfToken from "../../utils/csrf";
 
-
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL
 
 
@@ -210,7 +209,6 @@ export const removeItemApiDineIn = async (itemId, res) => {
       body: JSON.stringify(res)
     },
   );
-
   if (!response.ok) {
     const text = await response.text();
     try {
