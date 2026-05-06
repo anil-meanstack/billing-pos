@@ -45,6 +45,7 @@ const CartSummary = (props) => {
   const [selectedDiscount, setSelectedDiscount] = useState(null);
   const [loadingDiscounts, setLoadingDiscounts] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [pendingBillPrint, setPendingBillPrint] = useState(false);
   const selectedTableId = useSelector((state) => state.cart.tableId);
   const [orderNote, setOrderNote] = useState("");
   const [showPaymentModal, setShowPaymentModal] = useState(false);
@@ -71,36 +72,34 @@ const CartSummary = (props) => {
   const isDineIn = orderType === CONSTANTS.ORDER_TYPES.DINE_IN;
   const isDelivery = orderType === CONSTANTS.ORDER_TYPES.DELIVERY;
   const isCartEmpty = items.length === 0;
-  // const tax_breakdown = useMemo(() => cartData?.tax_breakdown || [],
-  //   [cartData?.tax_breakdown]
-  // )
-  const isRunningOrder =
-    orderType === "dine_in" && activeTableOrder && activeTableOrder.id;
+  const isRunningOrder = orderType === "dine_in" && activeTableOrder && activeTableOrder.id;
   const showSettleButton = isRunningOrder && !hasNewKotItems;
 
-  const tax_breakdown = useMemo(() => {
-    if (isRunningOrder) {
-      return activeTableOrder?.tax_breakdown || [];
-    }
+  const shouldShowOnlyNewItems = isRunningOrder && hasNewKotItems;
+  const shouldShowRunningOrder = isRunningOrder && !hasNewKotItems;
 
-    return cartData?.tax_breakdown || [];
-  }, [
-    isRunningOrder,
-    activeTableOrder?.tax_breakdown,
-    cartData?.tax_breakdown,
-  ]);
+  const cartTax = cartData?.tax_breakdown;
+  const activeTax = activeTableOrder?.tax_breakdown;
+
+  const tax_breakdown = useMemo(() => {
+    if (shouldShowOnlyNewItems) return cartTax || [];
+    if (shouldShowRunningOrder) return activeTax || [];
+    return cartTax || [];
+  }, [shouldShowOnlyNewItems, shouldShowRunningOrder, cartTax, activeTax]);
 
   const subtotal = useMemo(() => {
     if (items.length === 0) return 0;
 
-    if (isRunningOrder) {
+    if (shouldShowOnlyNewItems) {
+      return Number(cartSummary?.subtotal || 0) || total;
+    }
+
+    if (shouldShowRunningOrder) {
       return Number(activeTableOrder?.subtotal || 0);
     }
 
-    return cartSummary?.subtotal
-      ? Number(cartSummary.subtotal)
-      : total;
-  }, [isRunningOrder, activeTableOrder?.subtotal, cartSummary, total, items.length]);
+    return Number(cartSummary?.subtotal || 0) || total;
+  }, [items.length, shouldShowOnlyNewItems, shouldShowRunningOrder, cartSummary?.subtotal, activeTableOrder?.subtotal, total,]);
 
   const taxAmount = useMemo(() => {
     if (items.length === 0) return 0;
@@ -117,12 +116,16 @@ const CartSummary = (props) => {
   }, [dispatch, orderType]);
 
   const discountAmount = useMemo(() => {
-    if (isRunningOrder) {
+    if (shouldShowOnlyNewItems) {
+      return Number(cartSummary?.discountAmount || 0);
+    }
+
+    if (shouldShowRunningOrder) {
       return Number(activeTableOrder?.discount_amount || 0);
     }
 
     return Number(cartSummary?.discountAmount || 0);
-  }, [isRunningOrder, activeTableOrder?.discount_amount, cartSummary]);
+  }, [shouldShowOnlyNewItems, shouldShowRunningOrder, cartSummary?.discountAmount, activeTableOrder?.discount_amount,]);
 
   const deliveryChargeFromSummary = useMemo(() =>
     cartSummary?.delivery_charge ?? deliveryCharge,
@@ -132,21 +135,20 @@ const CartSummary = (props) => {
   const total_amount = useMemo(() => {
     if (items.length === 0) return 0;
 
-    if (isRunningOrder) {
+    if (shouldShowOnlyNewItems) {
+      return Number(cartSummary?.total_amount || 0) ||
+        subtotal + taxAmount - discountAmount + deliveryChargeFromSummary + containerCharge;
+    }
+
+    if (shouldShowRunningOrder) {
       return Number(activeTableOrder?.total_amount || 0);
     }
 
-    return subtotal + taxAmount - discountAmount + deliveryChargeFromSummary + containerCharge;
+    return Number(cartSummary?.total_amount || 0) ||
+      subtotal + taxAmount - discountAmount + deliveryChargeFromSummary + containerCharge;
   }, [
-    isRunningOrder,
-    activeTableOrder?.total_amount,
-    subtotal,
-    taxAmount,
-    discountAmount,
-    deliveryChargeFromSummary,
-    containerCharge,
-    items.length,
-  ]);
+    items.length, shouldShowOnlyNewItems, shouldShowRunningOrder, cartSummary?.total_amount, activeTableOrder?.total_amount, subtotal, taxAmount,
+    discountAmount, deliveryChargeFromSummary, containerCharge,]);
 
   const itemCount = useMemo(() =>
     cartSummary?.itemCount || itemCountFromSelector,
@@ -209,19 +211,11 @@ const CartSummary = (props) => {
   }, []);
 
   const showError = useCallback((message) => {
-    setShowAlert({
-      show: true,
-      message,
-      type: "danger",
-    });
+    setShowAlert({ show: true, message, type: "danger", });
   }, []);
 
   const showSuccess = useCallback((message) => {
-    setShowAlert({
-      show: true,
-      message,
-      type: "success",
-    });
+    setShowAlert({ show: true, message, type: "success", });
   }, []);
 
   const validateCustomerInfo = useCallback(() => {
@@ -300,10 +294,10 @@ const CartSummary = (props) => {
       if (!selectedTableId) {
         showError("Please select a table first");
         window.dispatchEvent(
-        new CustomEvent("SHOW_TABLE_SELECT_ERROR", {
-          detail: "Please select a table first ",
-        })
-      );
+          new CustomEvent("SHOW_TABLE_SELECT_ERROR", {
+            detail: "Please select a table first ",
+          })
+        );
         return;
       }
 
@@ -438,6 +432,30 @@ const CartSummary = (props) => {
       isDineIn, tableNumber, paymentMethod, cartId, selectedDiscount, items,
       dispatch, tableId, navigate, showError, showSuccess, orderNote, selectedTableId, subtotal, discountAmount, cartSummary?.total_amount, tax_breakdown]);
 
+  useEffect(() => {
+    if (!pendingBillPrint || !showReceiptModal || !lastOrder) return;
+
+    const timer = setTimeout(() => {
+      const billNode = billRef.current;
+
+      if (!billNode) {
+        setPendingBillPrint(false);
+        return;
+      }
+
+      if (window.electronAPI?.printBill) {
+        window.electronAPI.printBill(billNode.innerHTML);
+      } else {
+        printContent(billRef);
+      }
+
+      setPendingBillPrint(false);
+      setShowReceiptModal(false);
+    }, 800);
+
+    return () => clearTimeout(timer);
+  }, [pendingBillPrint, showReceiptModal, lastOrder]);
+
   const handleSettleAndPrint = async () => {
     try {
       if (!activeTableOrder?.id) {
@@ -475,22 +493,8 @@ const CartSummary = (props) => {
         order_type: "dine_in",
         status: "available",
       })).unwrap();
-      
-      setTimeout(() => {
-        if (!billRef.current) {
-          console.error("Bill content not ready");
-          return;
-        }
 
-        if (window.electronAPI) {
-          window.electronAPI.printBill(billRef.current.innerHTML);
-        } else {
-          printContent(billRef);
-        }
-
-        setShowReceiptModal(false);
-      }, 300);
-
+      setPendingBillPrint(true);
       dispatch(
         setTableStatus({
           id: selectedTableId,
@@ -547,7 +551,7 @@ const CartSummary = (props) => {
           }));
           setSelectedDiscount(null);
 
-          showSuccess("Discount removed (empty cart)");
+          showError("Discount removed (empty cart)");
         } catch (error) {
           console.error("Failed to remove discount", error);
         }
@@ -555,7 +559,7 @@ const CartSummary = (props) => {
     };
 
     removeDiscountIfCartEmpty();
-  }, [items.length, selectedDiscount, dispatch, showSuccess, orderType, selectedTableId]);
+  }, [items.length, selectedDiscount, dispatch, showError, orderType, selectedTableId]);
 
   const handleCouponClick = async (coupon) => {
     if (isCartEmpty) {
@@ -581,7 +585,7 @@ const CartSummary = (props) => {
 
           setSelectedDiscount(null);
           await dispatch(loadTableOrders(selectedTableId)).unwrap();
-          showSuccess("Discount removed");
+          showError("Discount removed");
           return;
         }
 
@@ -605,7 +609,7 @@ const CartSummary = (props) => {
         })).unwrap();
 
         setSelectedDiscount(null);
-        showSuccess("Discount removed");
+        setShowAlert("Discount removed");
         return;
       }
 
@@ -766,7 +770,7 @@ const CartSummary = (props) => {
             <span>{formatPrice(subtotal)}</span>
           </div>
 
-          {tax_breakdown.length > 0 &&
+          {!isCartEmpty && tax_breakdown.length > 0 &&
             tax_breakdown.map((tax, index) => (
               <div className="totalRow" key={index}>
                 <span>{tax.name}</span>
@@ -821,38 +825,20 @@ const CartSummary = (props) => {
           </div>
 
           <div className="checkoutButtonsContainer">
-            {/* {orderType === "dine_in" && (
-              isRunningOrder ? (
-                <button
-                  className="place-order-btn text-center d-block"
-                  onClick={handleSettleAndPrint}
-                >
-                  🧾 Settled & Print Bill
-                </button>
-              ) : (
-                <button
-                  className="place-order-btn text-center d-block"
-                  onClick={kotPrint}
-                >
-                  🧾 KOT & Print
-                </button>
-              )
-            )} */}
-
             {orderType === "dine_in" && (
               showSettleButton ? (
                 <button
                   className="place-order-btn text-center d-block"
                   onClick={handleSettleAndPrint}
                 >
-                   Settled & Print Bill
+                  Settled & Print Bill
                 </button>
               ) : (
                 <button
                   className="place-order-btn text-center d-block"
                   onClick={kotPrint}
                 >
-                   KOT & Print
+                  KOT & Print
                 </button>
               )
             )}
@@ -872,18 +858,10 @@ const CartSummary = (props) => {
                 )}
               </button>
             )}
-
-
           </div>
-
         </div>
 
-        <Alert
-          show={showAlert.show}
-          message={showAlert.message}
-          type={showAlert.type}
-          onClose={() => setShowAlert({ ...showAlert, show: false })}
-        />
+        <Alert show={showAlert.show} message={showAlert.message} type={showAlert.type} onClose={() => setShowAlert({ ...showAlert, show: false })} />
 
         {showCancelConfirm && (
           <CancelModal show={showCancelConfirm}

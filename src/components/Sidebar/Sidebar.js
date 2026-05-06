@@ -8,25 +8,12 @@ import Alert from "../Alert/Alert";
 const Sidebar = () => {
   const tables = useSelector((state) => state.tables.list);
   const { orders } = useSelector((state) => state.orders);
-  const orderType = useSelector((state) => state.cart.orderType);
   const [tableSelectError, setTableSelectError] = useState("");
   const navigate = useNavigate();
   const reduxSelectedTableId = useSelector((state) => state.cart.tableId);
   const { newCount = 0, preparingCount = 0, readyCount = 0 } = useSelector(
     (state) => state.kitchen
   );
-
-  const printContent = (ref) => {
-    if (!ref?.current) return;
-    const win = window.open("", "", "width=400");
-    win.document.write(`<html><body>${ref.current.innerHTML}</body></html>`);
-    win.document.close();
-    win.onload = () => {
-      win.print();
-      win.close();
-    };
-  };
-
 
   const dispatch = useDispatch();
   const [showAlert, setShowAlert] = useState({
@@ -90,10 +77,6 @@ const Sidebar = () => {
 
   const totalKitchenOrder = (newCount || 0) + (preparingCount || 0) + (readyCount || 0);
 
-  const getTableOrder = async (tableId) => {
-    await dispatch(loadTableOrders(tableId)).unwrap();
-  };
-
   const handleTableClick = async (table) => {
     const unavailableStatuses = ["reserved", "booked", "maintenance"];
 
@@ -141,7 +124,6 @@ const Sidebar = () => {
 
   return (
     <div className="sidebar">
-      {/* ORDERS */}
       <div className="section">
         <p className="section-title">ORDERS</p>
 
@@ -167,12 +149,6 @@ const Sidebar = () => {
       {/* TABLES */}
       <div className="section">
         <p className="section-title">TABLES</p>
-
-        {/* {tableSelectError && (
-          <div className="table-select-error">
-            <span className="arrow">⬇</span>
-          </div>
-        )} */}
         {tableSelectError && (
           <div className="chev-indicator">
             <div className="chevron-stack">
@@ -221,54 +197,31 @@ const Sidebar = () => {
                 <div className={`table-status ${getStatusClass(t.status)}`}>
                   {t.status || "Available"}
                 </div>
-                {/* {isOccupied && (
+                {isOccupied && (
                   <>
                     <div className="occupancy-indicator">
                       <span className="occupancy-dot"></span>
                     </div>
-                   
-                    <i
-                      className="bi bi-eye-fill view"
-                      title="View Order"
-                      onClick={async (e) => {
-                        e.stopPropagation();
 
-                        dispatch(setTableNumber(t.tableNumber));
-                        dispatch(setTableId(t.id));
-                        dispatch(setOrderType("dine_in"));
+                    <div className="view-wrapper">
+                      <i
+                        className="bi bi-eye-fill view"
+                        onClick={async (e) => {
+                          e.stopPropagation();
 
-                        await dispatch(loadTableOrders(t.id)).unwrap();
-                        navigate("/menu-item")
-                      }}
-                    ></i>
-                    <span className="tooltip-text">View Order</span>
+                          dispatch(setTableNumber(t.tableNumber));
+                          dispatch(setTableId(t.id));
+                          dispatch(setOrderType("dine_in"));
+
+                          await dispatch(loadTableOrders(t.id)).unwrap();
+                          navigate("/menu-item");
+                        }}
+                      ></i>
+
+                      <span className="tooltip-text">View Order</span>
+                    </div>
                   </>
-                )} */}
-                {isOccupied && (
-  <>
-    <div className="occupancy-indicator">
-      <span className="occupancy-dot"></span>
-    </div>
-
-    <div className="view-wrapper">
-      <i
-        className="bi bi-eye-fill view"
-        onClick={async (e) => {
-          e.stopPropagation();
-
-          dispatch(setTableNumber(t.tableNumber));
-          dispatch(setTableId(t.id));
-          dispatch(setOrderType("dine_in"));
-
-          await dispatch(loadTableOrders(t.id)).unwrap();
-          navigate("/menu-item");
-        }}
-      ></i>
-
-      <span className="tooltip-text">View Order</span>
-    </div>
-  </>
-)}
+                )}
               </div>
             );
           })}

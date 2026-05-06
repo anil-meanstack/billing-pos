@@ -455,19 +455,6 @@ const cartSlice = createSlice({
         state.loading = false;
         state.error = action.payload || "Add combo failed";
       })
-      // .addCase(loadTableOrders.fulfilled, (state, action) => {
-      //   const orders = Array.isArray(action.payload)
-      //     ? action.payload
-      //     : action.payload?.results || [];
-
-      //   state.tableOrders = orders;
-      //   state.tableOrdersLoading = false;
-
-      //   state.activeTableOrder = orders.find(
-      //     (order) =>
-      //       !["cancelled", "completed"].includes(order.status?.toLowerCase()) && order.payment_status === "pending"
-      //   ) || null;
-      // })
       .addCase(dineRemoveCartItem.pending, (state) => {
         state.loading = true;
       })

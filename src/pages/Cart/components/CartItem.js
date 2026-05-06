@@ -58,21 +58,6 @@ const CartItem = ({ item }) => {
     }
   };
 
-  // const handleRemove = (itemID) => {
-  //   const payload = {
-  //     order_type: orderType || "dine_in",
-  //   };
-
-  //   if (orderType === "dine_in" && tableId) {
-  //     payload.table_id = tableId;
-  //   }
-  //   if (cartItemId && navigator.onLine) {
-  //     dispatch(removeCartItem({
-  //       itemId: cartItemId,
-  //       res: payload
-  //     }));
-  //   }
-  // };
 
   const handleRemove = async () => {
     const payload = {

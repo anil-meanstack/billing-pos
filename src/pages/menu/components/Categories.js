@@ -41,7 +41,6 @@ const Categories = ({ setActiveTab, activeTab }) => {
   return (
     <div className="categoriesWrapper ">
 
-      {/* LEFT ARROW */}
       <button
         className="scrollBtn left"
         onClick={() => scroll("left")}
@@ -49,11 +48,9 @@ const Categories = ({ setActiveTab, activeTab }) => {
         ◀
       </button>
 
-      {/* SCROLL AREA */}
       <div
         className="categoriesContainer"
         ref={scrollRef}
-      // onWheel={handleWheel}
       >
         <div className="categoriesScroll">
           {categories.map((category) => (
@@ -77,7 +74,6 @@ const Categories = ({ setActiveTab, activeTab }) => {
         </div>
       </div>
 
-      {/* RIGHT ARROW */}
       <button
         className="scrollBtn right"
         onClick={() => scroll("right")}

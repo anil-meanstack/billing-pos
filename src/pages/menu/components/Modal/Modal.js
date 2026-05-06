@@ -132,7 +132,6 @@ const Modal = ({ show, onClose, item }) => {
         addons: {},
       }));
 
-      // ✅ Check if next step exists before moving
       setTimeout(() => {
         if (activeIndex < steps.length - 1 && steps[activeIndex + 1]) {
           setActiveIndex((prev) => prev + 1);

@@ -338,7 +338,6 @@
 
 }
 
-
 .paymentMethodBox {
   border-radius: 12px;
   padding: 10px 0px;
@@ -355,14 +354,13 @@
   background: #ffffff;
   border-radius: 10px;
   padding: 6px 4px;
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
   color: #444;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 3px;
-  transition: 0.3s;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
 }
 
@@ -437,6 +435,7 @@
   background: rgba(0, 0, 0, 0.4);
   display: flex;
   justify-content: center;
+  backdrop-filter: blur(4px);
   align-items: center;
   z-index: 999;
 }
@@ -459,6 +458,16 @@
   align-items: center;
 }
 
+
+.charges-header i {
+  color: #f59e0b;
+  transition: all 0.3s ease;
+}
+
+.charges-header i:hover {
+  transform: rotate(90deg);
+  color: #ffffff;
+}
 .charges-body {
   padding: 16px;
   display: flex;
@@ -677,7 +686,7 @@
 }
 }
 
-@media (min-width: 700px) and (max-width: 1350px) {
+@media (min-width: 998px) and (max-width: 1350px) {
   .orderSection {
     min-width: 300px !important;
   }
@@ -851,4 +860,11 @@
 .quantityButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+@media (min-width: 700px) and (max-width: 998px){
+  .orderSection{
+    min-width: 250px !important;
+  }
+
 }

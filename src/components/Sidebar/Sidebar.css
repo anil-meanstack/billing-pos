@@ -87,7 +87,7 @@
 .table-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 16px 8px;
+  gap: 16px 6px;
 }
 
 .table-card {
@@ -96,7 +96,8 @@
   background: #fff;
   border: 1px solid #eee5dd;
   border-radius: 14px;
-  padding: 12px 10px;
+  /* padding: 12px 10px; */
+  padding:4px 6px;
   text-align: left;
   cursor: pointer;
   transition: var(--transition);
@@ -126,18 +127,6 @@
   color: #fff;
 }
 
-/* i.bi.bi-eye-fill.view {
-  position: absolute;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  font-size: 18px;
-  color: #ffffff;
-  bottom: -28px;
-  border: 1px solid #d7370e;
-  padding: 0px 6px;
-  background: #e05c20;
-  border-radius: 6px;
-} */
  .view {
   font-size: 18px;
   color: #fff;
@@ -158,7 +147,7 @@
 .table-id {
   font-size: 18px;
   font-weight: 700;
-  margin-bottom: 8px;
+  /* margin-bottom: 8px; */
 }
 
 .table-status {
@@ -350,7 +339,7 @@
   visibility: hidden;
   opacity: 0;
   position: absolute;
-  bottom: 125%;   /* show above icon */
+  bottom: 125%;  
   left: 50%;
   transform: translateX(-50%);
   background: #000;
@@ -367,8 +356,19 @@
   opacity: 1;
 }
 .view-wrapper {
-  position: absolute;   /* or relative depending on layout */
+  position: absolute; 
   left: 50%;
   transform: translateX(-50%);
   bottom: -28px;
+}
+
+@media (min-width: 700px) and (max-width: 998px){
+  .sidebar{
+    width: 170px;
+    padding: 6px;
+  }
+  .item{
+    gap: 6px;
+    font-size: 12px;
+  }
 }
