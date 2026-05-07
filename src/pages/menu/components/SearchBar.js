@@ -110,7 +110,7 @@ const SearchBar = ({ setActiveTab, activeTab }) => {
           <div>
             <strong style={{ fontSize: "10px" }}>Food Type</strong>
 
-            <label style={{ display: "block", marginTop: "6px", fontSize: "12px" }}>
+            <label htmlFor='veg' style={{ display: "block", marginTop: "6px", fontSize: "12px" }}>
               <input
                 type="checkbox"
                 checked={filters.foodTypes.includes('veg')}
@@ -124,7 +124,7 @@ const SearchBar = ({ setActiveTab, activeTab }) => {
               /> Veg
             </label>
 
-            <label style={{ display: "block", fontSize: "12px" }}>
+            <label htmlFor='non-veg' style={{ display: "block", fontSize: "12px" }}>
               <input
                 type="checkbox"
                 checked={filters.foodTypes.includes('non-veg')}
@@ -142,7 +142,7 @@ const SearchBar = ({ setActiveTab, activeTab }) => {
           <div style={{ marginTop: "10px", fontSize: "10px" }}>
             <strong>Sort By Price</strong>
 
-            <label style={{ display: "block", marginTop: "6px" }}>
+            <label htmlFor='low-high' style={{ display: "block", marginTop: "6px" }}>
               <input
                 type="radio"
                 name="sort"
@@ -151,7 +151,7 @@ const SearchBar = ({ setActiveTab, activeTab }) => {
               /> Low → High
             </label>
 
-            <label style={{ display: "block" }}>
+            <label htmlFor='high-low' style={{ display: "block" }}>
               <input
                 type="radio"
                 name="sort"

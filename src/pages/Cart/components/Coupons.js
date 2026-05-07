@@ -74,7 +74,7 @@ const Coupons = (props) => {
 
                 {/* Body */}
                 <div className="mb-3 p-3">
-                  <label className="form-label text-muted " style={{fontSize:"11px"}}>
+                  <label htmlFor="note" className="form-label text-muted " style={{fontSize:"11px"}}>
                     Special instructions for kitchen
                   </label>
                   <textarea

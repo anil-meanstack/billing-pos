@@ -5,8 +5,8 @@ import CustomerModal from "./components/CustomerModal";
 import Alert from "../../components/Alert/Alert";
 import { getDiscounts, dineApplyDiscountApi } from "../../features/discount/discountApi";
 import { clearCartServer, setOrderType, setCustomerInfo, selectCartTotal, selectItemCount, updateTable, applyDiscount, removeDiscount, setTableId, setTableNumber, loadTableOrders } from "../../features/cart/cartSlice";
-import { setTableStatus } from "../../features/table/tableSlice";
-import { checkoutOrder } from "../../features/orders/ordersSlice";
+import { setTableStatus, loadTablesFromApi } from "../../features/table/tableSlice";
+import { checkoutOrder, fetchOrderHistory } from "../../features/orders/ordersSlice";
 import CartItem from "./components/CartItem";
 import Coupons from "./components/Coupons"
 import PrintTemplate from "../../components/PrintTemplate";
@@ -14,7 +14,8 @@ import OrderDetailsModal from "../components/OrderDetailsModal";
 import CancelModal from "../menu/components/Modal/CancelModal";
 import PaymentModal from "./components/PaymentModal";
 import { settledOrderApi } from "../../features/orders/ordersApi"
-import { sendKotAndKeepOrderOpenApi } from "../../features/kitchen/kitchenApi";
+import { sendKotAndKeepOrderOpenApi, getKitchenTickets } from "../../features/kitchen/kitchenApi";
+import { setKitchenCounts } from "../../features/kitchen/kitchenSlice";
 import "./CartSummary.css";
 
 const CONSTANTS = {
@@ -288,6 +289,23 @@ const CartSummary = (props) => {
     return true;
   }, [items.length, validateCustomerInfo, isDineIn, tableNumber, selectedTableId, tables, showError]);
 
+
+  const refreshKitchenCounts = async () => {
+    const [pending, preparing, ready] = await Promise.all([
+      getKitchenTickets("pending"),
+      getKitchenTickets("preparing"),
+      getKitchenTickets("ready"),
+    ]);
+
+    const normalize = (res) =>
+      Array.isArray(res) ? res : res?.results || [];
+
+    dispatch(setKitchenCounts({
+      new: normalize(pending).length,
+      preparing: normalize(preparing).length,
+      ready: normalize(ready).length,
+    }));
+  };
 
   const handleOrderTypeChange = useCallback((type) => {
     if (type === CONSTANTS.ORDER_TYPES.DINE_IN) {
@@ -699,7 +717,7 @@ const CartSummary = (props) => {
           })
         );
 
-        const data = await sendKotAndKeepOrderOpenApi({
+       await sendKotAndKeepOrderOpenApi({
           customer_name: customerInfo.name,
           customer_phone: customerInfo.phone,
           customer_address: isDelivery ? customerInfo.address : null,
@@ -713,7 +731,14 @@ const CartSummary = (props) => {
           order_type: orderType,
           table_id: selectedTableId || null,
         })
-      );
+      ).unwrap();
+      await refreshKitchenCounts();
+      await dispatch(fetchOrderHistory()).unwrap();
+      await dispatch(loadTablesFromApi()).unwrap();
+
+      if (selectedTableId) {
+        await dispatch(loadTableOrders(selectedTableId)).unwrap();
+      }
 
       showSuccess("KOT Printed ✅");
     } catch (error) {
@@ -831,14 +856,14 @@ const CartSummary = (props) => {
                   className="place-order-btn text-center d-block"
                   onClick={handleSettleAndPrint}
                 >
-                  Settled & Print Bill
+                  Complete Order
                 </button>
               ) : (
                 <button
                   className="place-order-btn text-center d-block"
                   onClick={kotPrint}
                 >
-                  KOT & Print
+                  Place Order
                 </button>
               )
             )}

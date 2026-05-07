@@ -68,7 +68,6 @@ const menuSlice = createSlice({
           { id: 'all', name: 'All Items', slug: 'all' },
           ...action.payload.categories,
         ];
-        // state.restaurant_name = action?.payload?.restaurant_name || 'Restaurant Name';
 
         state.lastUpdated = new Date().toISOString();
       })
@@ -79,6 +78,6 @@ const menuSlice = createSlice({
   },
 });
 
-export const { setSelectedCategory, setSearchTerm,setFoodType,   // ✅ ADD THIS
+export const { setSelectedCategory, setSearchTerm,setFoodType,   
   setSortBy, clearError, setRestaurantName } = menuSlice.actions;
 export default menuSlice.reducer;

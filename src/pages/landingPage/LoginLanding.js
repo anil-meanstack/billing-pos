@@ -137,7 +137,7 @@ const LoginLanding = () => {
             )}
 
             <div className="form-group">
-              <label className="form-label">
+              <label className="form-label" htmlFor="user-id">
                 <i className="bi bi-person-badge"></i> User ID / Email
               </label>
               <div className="input-wrapper">
@@ -154,7 +154,7 @@ const LoginLanding = () => {
             </div>
 
             <div className="form-group">
-              <label className="form-label">
+              <label className="form-label" htmlFor="password">
                 <i className="bi bi-key"></i> Password
               </label>
               <div className="input-wrapper">

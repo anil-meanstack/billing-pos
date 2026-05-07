@@ -1,21 +1,18 @@
 import { useState, useMemo, useEffect } from "react";
 import "./Sidebar.css";
-import { NavLink, useNavigate } from "react-router-dom";
-import { useSelector, useDispatch } from "react-redux";
-import { setTableNumber, setTableId, updateTable, setOrderType, loadTableOrders, clearRunningOrder } from "../../features/cart/cartSlice";
+import { NavLink } from "react-router-dom";
+import { useSelector } from "react-redux";
+import Table from "../Table/Table";
 import Alert from "../Alert/Alert";
 
 const Sidebar = () => {
-  const tables = useSelector((state) => state.tables.list);
   const { orders } = useSelector((state) => state.orders);
   const [tableSelectError, setTableSelectError] = useState("");
-  const navigate = useNavigate();
-  const reduxSelectedTableId = useSelector((state) => state.cart.tableId);
   const { newCount = 0, preparingCount = 0, readyCount = 0 } = useSelector(
     (state) => state.kitchen
   );
 
-  const dispatch = useDispatch();
+
   const [showAlert, setShowAlert] = useState({
     show: false,
     message: "",
@@ -75,53 +72,11 @@ const Sidebar = () => {
     });
   }, [orders]);
 
+ 
+
   const totalKitchenOrder = (newCount || 0) + (preparingCount || 0) + (readyCount || 0);
 
-  const handleTableClick = async (table) => {
-    const unavailableStatuses = ["reserved", "booked", "maintenance"];
-
-    if (unavailableStatuses.includes(table.status?.toLowerCase())) {
-      setShowAlert({
-        show: true,
-        message: `Table ${table.tableNumber} is ${table.status} and cannot be selected`,
-        type: "danger",
-      });
-      return;
-    }
-    setTableSelectError("");
-
-    dispatch(setTableNumber(table.tableNumber));
-    dispatch(setTableId(table.id));
-    dispatch(setOrderType("dine_in"));
-
-    dispatch(clearRunningOrder());
-
-    dispatch(updateTable({
-      table_id: table.id,
-      order_type: "dine_in",
-    }));
-    navigate("/menu-item")
-    localStorage.setItem("selectedTable", JSON.stringify({
-      number: table.tableNumber,
-      id: table.id,
-    }));
-
-    setShowAlert({
-      show: true,
-      message: `Table ${table.tableNumber} selected successfully`,
-      type: "success",
-    });
-  };
-  const getStatusClass = (status) => {
-    if (!status) return "available";
-    return status.toLowerCase();
-  };
-
-  const isTableSelectable = (status) => {
-    const unavailableStatuses = ["reserved", "booked", "maintenance"];
-    return !unavailableStatuses.includes(status?.toLowerCase());
-  };
-
+  
   return (
     <div className="sidebar">
       <div className="section">
@@ -170,62 +125,8 @@ const Sidebar = () => {
             </div>
           </div>
         )}
-
-        <div className="table-grid">
-          {tables.map((t, i) => {
-            const isSelectable = isTableSelectable(t.status);
-            const isOccupied = t.status?.toLowerCase() === "occupied";
-
-            return (
-              <div
-                key={i}
-                className={`table-card 
-                  ${reduxSelectedTableId === t.id ? "active" : ""}
-                  ${t.highlight ? "highlight" : ""}
-                  ${getStatusClass(t.status)}
-                  ${!isSelectable ? "disabled" : ""}
-                  ${isOccupied ? "occupied" : ""}`}
-                onClick={() => handleTableClick(t)}
-                style={{
-                  cursor: isSelectable ? "pointer" : "not-allowed",
-                  opacity: isSelectable ? 1 : 0.6,
-                  pointerEvents: "auto"
-                }}
-                title={!isSelectable ? `Table ${t.tableNumber} is ${t.status || 'unavailable'}` : `Select Table ${t.tableNumber}`}
-              >
-                <div className="table-id">{t.tableNumber}</div>
-                <div className={`table-status ${getStatusClass(t.status)}`}>
-                  {t.status || "Available"}
-                </div>
-                {isOccupied && (
-                  <>
-                    <div className="occupancy-indicator">
-                      <span className="occupancy-dot"></span>
-                    </div>
-
-                    <div className="view-wrapper">
-                      <i
-                        className="bi bi-eye-fill view"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-
-                          dispatch(setTableNumber(t.tableNumber));
-                          dispatch(setTableId(t.id));
-                          dispatch(setOrderType("dine_in"));
-
-                          await dispatch(loadTableOrders(t.id)).unwrap();
-                          navigate("/menu-item");
-                        }}
-                      ></i>
-
-                      <span className="tooltip-text">View Order</span>
-                    </div>
-                  </>
-                )}
-              </div>
-            );
-          })}
-        </div>
+        <Table setShowAlert={setShowAlert} />
+        
       </div>
       <div className="section">
         <NavLink to="/staff" className={({ isActive }) => isActive ? "item active" : "item"}>

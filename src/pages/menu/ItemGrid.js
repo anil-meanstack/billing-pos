@@ -30,14 +30,12 @@ const ItemGrid = () => {
   const [activeTab, setActiveTab] = useState("menu");
 
   useEffect(() => {
+   if (items.length === 0) {
     dispatch(fetchMenuData());
-
-  }, [dispatch]);
-
-  useEffect(() => {
+  }
     dispatch(fetchOrderHistory());
     dispatch(loadTablesFromApi())
-  }, [dispatch]);
+  }, [dispatch,items.length]);
 
   
 

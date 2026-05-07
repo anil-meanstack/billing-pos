@@ -20,7 +20,6 @@ const OrderDetails = ({
     const billRef = useRef();
     const dispatch = useDispatch();
     const [discounts, setDiscounts] = useState([]);
-    const [loadingDiscounts, setLoadingDiscounts] = useState(false);
     const [selectedDiscount, setSelectedDiscount] = useState(null);
 
     const [showAlert, setShowAlert] = useState({
@@ -47,7 +46,6 @@ const OrderDetails = ({
         let isMounted = true;
 
         const loadDiscounts = async () => {
-            setLoadingDiscounts(true);
             try {
                 const data = await getDiscounts();
                 if (isMounted) {
@@ -67,7 +65,6 @@ const OrderDetails = ({
                 }
             } finally {
                 if (isMounted) {
-                    setLoadingDiscounts(false);
                 }
             }
         };

@@ -352,7 +352,7 @@ const Modal = ({ show, onClose, item }) => {
         </div>
 
         <div className="mb-3 px-3">
-          <label className="form-label text-muted " style={{ fontSize: "11px" }}>
+          <label htmlFor="note" className="form-label text-muted " style={{ fontSize: "11px" }}>
           Special Instructions (optional)
           </label>
           <textarea

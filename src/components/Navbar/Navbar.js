@@ -11,6 +11,10 @@ const Navbar = (props) => {
   const tableNumber = useSelector((state) => state.cart.tableNumber);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const orderType = useSelector((state) => state.cart.orderType);
+   const { newCount = 0, preparingCount = 0, readyCount = 0 } = useSelector(
+    (state) => state.kitchen
+  );
+  const totalKitchenOrder = (newCount || 0) + (preparingCount || 0) + (readyCount || 0);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -109,7 +113,7 @@ const Navbar = (props) => {
 
         <div className="status">
           <span className="dot red"></span>
-          0 Pending KOTs
+          {totalKitchenOrder} Pending KOTs
         </div>
 
         <div className="status">

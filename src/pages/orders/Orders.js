@@ -1,8 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import "./Orders.css";
 import { fetchOrderHistory } from "../../features/orders/ordersSlice";
-import { getKitchenTickets } from "../../features/kitchen/kitchenApi";
-import { setKitchenCounts } from "../../features/kitchen/kitchenSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { orderStatus } from "../../features/table/tableApi";
 import OrderDetailsModal from "../components/OrderDetailsModal";
@@ -16,7 +14,6 @@ const Orders = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [viewType, setViewType] = useState("column");
     const [expandedOrders, setExpandedOrders] = useState({});
-    const [order, setOrders] = useState([]);
     const [showReceiptModal, setShowReceiptModal] = useState(false);
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [showCancelModal, setShowCancelModal] = useState(false);
@@ -24,7 +21,6 @@ const Orders = () => {
 
     useEffect(() => {
         dispatch(fetchOrderHistory());
-        loadOrders();
         const timeInterval = setInterval(() => {
             setCurrentTime(new Date());
         }, 1000);
@@ -36,40 +32,6 @@ const Orders = () => {
             clearInterval(pollInterval);
         };
     }, [dispatch]);
-
-    const newOrders = order.filter((o) => o.status === "pending");
-    const preparingOrders = order.filter((o) => o.status === "preparing");
-    const readyOrders = order.filter((o) => o.status === "ready")
-
-    const loadOrders = async () => {
-        try {
-            const [pending, preparing, ready] = await Promise.all([
-                getKitchenTickets("pending"),
-                getKitchenTickets("preparing"),
-                getKitchenTickets("ready"),
-
-            ]);
-            const normalize = (res) =>
-                Array.isArray(res) ? res : res?.results || [];
-            const allOrders = [
-                ...normalize(pending),
-                ...normalize(preparing),
-                ...normalize(ready),
-            ];
-
-            setOrders(allOrders);
-        } catch (err) {
-            console.error(err);
-        }
-    };
-    useEffect(() => {
-        dispatch(setKitchenCounts({
-            new: newOrders.length,
-            preparing: preparingOrders.length,
-            ready: readyOrders.length
-        }));
-    }, [dispatch, newOrders.length, preparingOrders.length, readyOrders.length]);
-
 
 
     const todayOrders = useMemo(() => {

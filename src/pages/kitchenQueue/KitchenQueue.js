@@ -1,10 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./KitchenQueue.css";
-import {
-    getKitchenTickets,
-    getKitchenTicketById,
-    TicketStatus,
-} from "../../features/kitchen/kitchenApi";
+import { getKitchenTickets, getKitchenTicketById, TicketStatus, } from "../../features/kitchen/kitchenApi";
 import { setKitchenCounts } from "../../features/kitchen/kitchenSlice";
 import { useDispatch } from "react-redux";
 
@@ -38,13 +34,20 @@ const KitchenQueue = () => {
             console.error(err);
         }
     };
+    // useEffect(() => {
+    //     dispatch(setKitchenCounts({
+    //         new: newOrders.length,
+    //         preparing: preparingOrders.length,
+    //         ready: readyOrders.length
+    //     }));
+    // }, [orders]);
     useEffect(() => {
         dispatch(setKitchenCounts({
-            new: newOrders.length,
-            preparing: preparingOrders.length,
-            ready: readyOrders.length
+            new: orders.filter(o => o.status === "pending").length,
+            preparing: orders.filter(o => o.status === "preparing").length,
+            ready: orders.filter(o => o.status === "ready").length
         }));
-    }, [orders]);
+    }, [orders, dispatch]);
 
     useEffect(() => {
         orders.forEach(async (order) => {
@@ -60,7 +63,7 @@ const KitchenQueue = () => {
                 console.error(err);
             }
         });
-    }, [orders]);
+    }, [orders,detailedOrders]);
 
     const handleStatusChange = async (ticketId, nextStatus) => {
         try {
@@ -91,13 +94,13 @@ const KitchenQueue = () => {
                     <div>
                         <span className="kotid">KOT #{order?.kot_number}</span>
                         <div className="order-type">
-                        {detail?.order?.table_number && (
-                            <span>
-                                Table: {detail?.order?.table_number} - 
-                            </span>
-                        )}
-                         {detail?.order?.order_type_display}
-                    </div>
+                            {detail?.order?.table_number && (
+                                <span>
+                                    Table: {detail?.order?.table_number} -
+                                </span>
+                            )}
+                            {detail?.order?.order_type_display}
+                        </div>
                     </div>
                     <div className="order-times">
                         <span className="waiting">{getMinutes(order.created_at)}m ago</span>
@@ -165,7 +168,7 @@ const KitchenQueue = () => {
                                 handleStatusChange(order.id, "ready")
                             }
                         >
-                           ✓ Mark Ready
+                            ✓ Mark Ready
                         </button>
                     )}
 
@@ -176,7 +179,7 @@ const KitchenQueue = () => {
                                 handleStatusChange(order.id, "served")
                             }
                         >
-                           ✓ Served - Close
+                            ✓ Served - Close
                         </button>
                     )}
                 </div>

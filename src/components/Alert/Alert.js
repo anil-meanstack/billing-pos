@@ -11,19 +11,13 @@ const Alert = ({ message, type = "danger", show, onClose, duration = 2000 }) => 
 
       return () => clearTimeout(timer);
     }
-  }, [show, onClose]);
+  }, [show, onClose,duration]);
 
   if (!show) return null;
 
   return (
     <div className={`custom-alert alert alert-${type} alert-dismissible fade show`}>
       {message}
-
-      <button
-        type="button"
-        className="btn-close btn-close-white"
-        onClick={onClose}
-      ></button>
     </div>
   );
 };
