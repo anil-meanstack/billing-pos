@@ -1,6 +1,8 @@
 import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PrintTemplate from "../../components/PrintTemplate";
+import { loadTablesFromApi } from "../../features/table/tableSlice";
+import { useDispatch } from "react-redux";
 
 const OrderDetailsModal = ({
     lastOrder = {},
@@ -10,6 +12,7 @@ const OrderDetailsModal = ({
     const navigate = useNavigate();
     const receiptRef = useRef();
     const billRef = useRef();
+    const dispatch=useDispatch()
     if (!lastOrder || !lastOrder.items) return null;
 
     const getAuthData = () => {
@@ -163,11 +166,12 @@ const OrderDetailsModal = ({
                                 }} >
                                 Close
                             </button>
-                            <button className="btn btn-print w-50" onClick={() => {
+                            <button className="btn btn-print w-50" onClick={async () => {
                                 if (window.electronAPI) {
                                     const content = billRef.current.innerHTML;
                                     window.electronAPI.printBill(content);
                                     setShowReceiptModal(false);
+                                    await dispatch(loadTablesFromApi()).unwrap();
                                 } else {
                                     printContent(billRef);
 

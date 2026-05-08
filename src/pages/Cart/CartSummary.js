@@ -73,7 +73,8 @@ const CartSummary = (props) => {
   const isDineIn = orderType === CONSTANTS.ORDER_TYPES.DINE_IN;
   const isDelivery = orderType === CONSTANTS.ORDER_TYPES.DELIVERY;
   const isCartEmpty = items.length === 0;
-  const isRunningOrder = orderType === "dine_in" && activeTableOrder && activeTableOrder.id;
+  const selectedTable = tables.find(t => Number(t.id) === Number(selectedTableId));
+  const isRunningOrder = orderType === "dine_in" && selectedTable?.has_active_order === true &&  activeTableOrder && activeTableOrder.id;
   const showSettleButton = isRunningOrder && !hasNewKotItems;
 
   const shouldShowOnlyNewItems = isRunningOrder && hasNewKotItems;
@@ -203,6 +204,15 @@ const CartSummary = (props) => {
     }
   }, []);
 
+ const loginUser = () => {
+  const auth = getAuth();
+
+  return {
+    name: auth?.user?.full_name || "Guest",
+    phone: auth?.user?.phone || "9876543210",
+  };
+};
+
   const formatPrice = useCallback((price) => {
     if (price === undefined || price === null || isNaN(price)) {
       return "₹0.00";
@@ -254,9 +264,10 @@ const CartSummary = (props) => {
 
   useEffect(() => {
     if (orderType === CONSTANTS.ORDER_TYPES.DINE_IN) {
+      const user = loginUser();
       dispatch(setCustomerInfo({
-        name: "Guest",
-        phone: "9876543210",
+        name: user.name,
+        phone: user.phone,
         address: ""
       }));
     }
@@ -480,32 +491,52 @@ const CartSummary = (props) => {
         showError("Running order not found");
         return;
       }
+      const user=loginUser()
+
+      const updatedName = customerInfo.name || user.name;
+      const updatedPhone = customerInfo.phone || user.phone;
 
       await settledOrderApi({
         action: "settle",
         order_id: activeTableOrder.id,
         payment_method: paymentMethod,
-        customer_name: customerInfo.name || "Guest",
-        customer_phone: customerInfo.phone || "9876543210",
+        customer_name: updatedName,
+        customer_phone: updatedPhone,
       });
 
+      const updatedOrders = await dispatch(loadTableOrders(selectedTableId)).unwrap();
+
+      const updatedOrder =
+        Array.isArray(updatedOrders)
+          ? updatedOrders.find(o => Number(o.id) === Number(activeTableOrder.id))
+          : updatedOrders;
+
+      const finalOrder = updatedOrder || activeTableOrder;
+
       const billData = {
-        ...activeTableOrder,
-        items,
-        subtotal,
-        total_amount,
-        discount_amount: discountAmount,
-        tax_breakdown,
-        tableNumber,
-        orderType,
-        paymentMethod,
-        customerName: customerInfo.name || "Guest",
-        customerPhone: customerInfo.phone || "9876543210",
+        ...finalOrder,
+
+        items: finalOrder.items || items,
+        subtotal: finalOrder.subtotal || subtotal,
+        total_amount: finalOrder.total_amount || total_amount,
+        discount_amount: finalOrder.discount_amount || discountAmount,
+        tax_breakdown: finalOrder.tax_breakdown || tax_breakdown,
+
+        tableNumber: finalOrder.table_number || tableNumber,
+        orderType: finalOrder.order_type || orderType,
+        paymentMethod: finalOrder.payment_method || paymentMethod,
+
+        customer_name: finalOrder.customer_name || updatedName,
+        customer_phone: finalOrder.customer_phone || updatedPhone,
+        customerName: finalOrder.customer_name || updatedName,
+        customerPhone: finalOrder.customer_phone || updatedPhone,
+
         time: new Date(),
       };
 
       setLastOrder(billData);
       setShowReceiptModal(true);
+
       await dispatch(updateTable({
         table_id: selectedTableId || activeTableOrder.table,
         order_type: "dine_in",
@@ -513,21 +544,20 @@ const CartSummary = (props) => {
       })).unwrap();
 
       setPendingBillPrint(true);
-      dispatch(
-        setTableStatus({
-          id: selectedTableId,
-          status: "available",
-        })
-      );
 
-      await dispatch(loadTableOrders(selectedTableId)).unwrap();
-
+      dispatch(setTableStatus({
+        id: selectedTableId,
+        status: "available",
+      }));
+     await dispatch(loadTableOrders(selectedTableId)).unwrap();
+     await dispatch(loadTablesFromApi()).unwrap();
       showSuccess("Order settled successfully ✅");
     } catch (error) {
       console.error("Settle failed:", error);
       showError("Failed to settle order");
     }
   };
+
   const printContent = (ref) => {
     if (!ref?.current) {
       console.error("Nothing to print");
@@ -717,7 +747,7 @@ const CartSummary = (props) => {
           })
         );
 
-       await sendKotAndKeepOrderOpenApi({
+        await sendKotAndKeepOrderOpenApi({
           customer_name: customerInfo.name,
           customer_phone: customerInfo.phone,
           customer_address: isDelivery ? customerInfo.address : null,

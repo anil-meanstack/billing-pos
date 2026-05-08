@@ -1,6 +1,6 @@
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import { setTableNumber, setTableId, updateTable, setOrderType, loadTableOrders, clearRunningOrder } from "../../features/cart/cartSlice";
+import { setTableNumber, setTableId, updateTable, setOrderType, loadTableOrders } from "../../features/cart/cartSlice";
 
 const Table = ({ setShowAlert }) => {
     const dispatch = useDispatch();
@@ -35,6 +35,8 @@ const Table = ({ setShowAlert }) => {
 
     const getTableDisplayStatus = (table, activeOrder) => {
         if (reduxSelectedTableId === table.id) return "Active";
+
+        if (table.has_active_cart) return "Saved";
         if (!activeOrder) return "Free";
 
         const status = activeOrder.status?.toLowerCase();
@@ -47,6 +49,7 @@ const Table = ({ setShowAlert }) => {
 
         return activeOrder.status_display || activeOrder.status;
     };
+
 
     const timeAgo = (dateString) => {
         if (!dateString) return "";
@@ -65,11 +68,59 @@ const Table = ({ setShowAlert }) => {
         return `${diffDay}d ago`;
     };
 
+    // const handleTableClick = async (table) => {
+    //     const activeOrder = getTableOrder(table.id);
+    //     const unavailableStatuses = ["reserved", "booked", "maintenance"];
+
+    //     if (unavailableStatuses.includes(table.status?.toLowerCase())) {
+    //         setShowAlert({
+    //             show: true,
+    //             message: `Table ${table.tableNumber} is ${table.status} and cannot be selected`,
+    //             type: "danger",
+    //         });
+    //         return;
+    //     }
+
+    //     dispatch(setTableNumber(table.tableNumber));
+    //     dispatch(setTableId(table.id));
+    //     dispatch(setOrderType("dine_in"));
+
+    //     if (activeOrder || table.has_active_cart || table.has_active_order) {
+    //         await dispatch(loadTableOrders(table.id)).unwrap();
+    //         navigate("/menu-item");
+    //         return;
+    //     }
+
+    //     dispatch(clearRunningOrder());
+
+    //     await dispatch(
+    //         updateTable({
+    //             table_id: table.id,
+    //             order_type: "dine_in",
+    //         })
+    //     ).unwrap();
+
+    //     navigate("/menu-item");
+
+    //     localStorage.setItem(
+    //         "selectedTable",
+    //         JSON.stringify({
+    //             number: table.tableNumber,
+    //             id: table.id,
+    //         })
+    //     );
+
+    //     setShowAlert({
+    //         show: true,
+    //         message: `Table ${table.tableNumber} selected successfully`,
+    //         type: "success",
+    //     });
+    // };
+
     const handleTableClick = async (table) => {
         const activeOrder = getTableOrder(table.id);
-        const unavailableStatuses = ["reserved", "booked", "maintenance"];
 
-        if (unavailableStatuses.includes(table.status?.toLowerCase())) {
+        if (["reserved", "booked", "maintenance"].includes(table.status?.toLowerCase())) {
             setShowAlert({
                 show: true,
                 message: `Table ${table.tableNumber} is ${table.status} and cannot be selected`,
@@ -82,23 +133,24 @@ const Table = ({ setShowAlert }) => {
         dispatch(setTableId(table.id));
         dispatch(setOrderType("dine_in"));
 
-        if (activeOrder || table.has_active_cart || table.has_active_order) {
+        localStorage.setItem(
+            "selectedTable",
+            JSON.stringify({
+                number: table.tableNumber,
+                id: table.id,
+            })
+        );
+
+        await dispatch(updateTable({
+            table_id: table.id,
+            order_type: "dine_in",
+        })).unwrap();
+
+        if (activeOrder || table.has_active_order) {
             await dispatch(loadTableOrders(table.id)).unwrap();
-            navigate("/menu-item");
-            return;
         }
 
-        dispatch(clearRunningOrder());
-
-        await dispatch(
-            updateTable({
-                table_id: table.id,
-                order_type: "dine_in",
-            })
-        ).unwrap();
-
         navigate("/menu-item");
-
         localStorage.setItem(
             "selectedTable",
             JSON.stringify({
@@ -131,17 +183,19 @@ const Table = ({ setShowAlert }) => {
                     cartSummary?.tableNumber === t.tableNumber ||
                     cartData?.table_number === t.tableNumber;
 
-                const tableItemCount = activeOrder?.item_count
-                    ? activeOrder.item_count
-                    : isCurrentCartTable
-                        ? cartSummary?.itemCount || cartData?.item_count || 0
-                        : 0;
+                const tableItemCount =
+                    (t.cart_item_count || activeOrder?.item_count)
+                        ? (activeOrder?.item_count || t.cart_item_count)
+                        : (isCurrentCartTable
+                            ? (cartSummary?.itemCount || cartData?.item_count || 0)
+                            : 0);
 
-                const tableTotalAmount = activeOrder?.total_amount
-                    ? activeOrder.total_amount
-                    : isCurrentCartTable
-                        ? cartSummary?.total_amount || cartData?.total_amount || 0
-                        : 0;
+                const tableTotalAmount =
+                    (t.cart_subtotal || activeOrder?.total_amount)
+                        ? (activeOrder?.total_amount || t.cart_subtotal)
+                        : (isCurrentCartTable
+                            ? (cartSummary?.total_amount || cartData?.total_amount || 0)
+                            : 0);
 
                 const displayStatus = getTableDisplayStatus(t, activeOrder);
                 const statusClass = displayStatus.toLowerCase();
@@ -197,7 +251,7 @@ const Table = ({ setShowAlert }) => {
                                 </span>
 
                                 <span className="tc-strip-timer">
-                                    {timeAgo(activeOrder?.created_at || cartData?.created_at)}
+                                    {timeAgo(activeOrder?.created_at)}
                                 </span>
                             </div>
                         )}

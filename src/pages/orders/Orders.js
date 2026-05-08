@@ -95,7 +95,6 @@ const Orders = () => {
 
         try {
             await orderStatus.updateOrderStatus(orderId, { status: nextStatus });
-            // Optionally refetch orders
             dispatch(fetchOrderHistory());
         } catch (error) {
             console.error("Failed to update order status:", error);
@@ -230,6 +229,8 @@ const Orders = () => {
                         </svg>
                         <input
                             type="text"
+                            id="orderSearch"
+                            name="orderSearch"
                             placeholder="Search orders..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}

@@ -359,8 +359,8 @@ textarea {
   border-radius: 20%;
   height: 60px;
   margin-top: -6px;
-  object-fit: cover;
-  padding: 8px;
+  /* object-fit: cover; */
+  padding: 2px;
   width: 60px;
   transition: all 0.3s ease;
 }

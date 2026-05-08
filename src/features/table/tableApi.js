@@ -13,7 +13,7 @@ const getAuthData = () => {
 };
 const getToken = () => {
   const auth = getAuthData();
-  return auth?.accessToken || null; 
+  return auth?.accessToken || null;
 };
 
 const getRestaurantId = () => {
@@ -40,12 +40,16 @@ export const fetchTablesApi = async () => {
 
     const data = await response.json();
 
-     return data.map((table) => ({
+    return data.map((table) => ({
       id: table.id,
       tableNumber: table.table_number,
       capacity: table.capacity,
       status: table.status,
       isAvailable: table.is_available,
+      has_active_cart: table.has_active_cart,
+      has_active_order: table.has_active_order,
+      cart_item_count: table.cart_item_count,
+      cart_subtotal: table.cart_subtotal,
       amount: 0,
       orderId: null,
     }));

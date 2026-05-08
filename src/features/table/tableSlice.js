@@ -49,10 +49,23 @@ const tableSlice = createSlice({
       .addCase(loadTablesFromApi.pending, (state) => {
         state.loading = true;
       })
+      // .addCase(loadTablesFromApi.fulfilled, (state, action) => {
+      //   state.loading = false;
+      //   state.list = action.payload;
+      // })
       .addCase(loadTablesFromApi.fulfilled, (state, action) => {
-        state.loading = false;
-        state.list = action.payload;
-      })
+      state.loading = false;
+      state.error = null;
+
+      state.list = action.payload.map((t) => ({
+        ...t,
+        tableNumber: t.table_number || t.tableNumber,
+        cart_item_count: Number(t.cart_item_count || 0),
+        cart_subtotal: Number(t.cart_subtotal || 0),
+        has_active_cart: Boolean(t.has_active_cart),
+        has_active_order: Boolean(t.has_active_order),
+      }));
+    })
       .addCase(loadTablesFromApi.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
