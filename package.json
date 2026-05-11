@@ -23,6 +23,7 @@
   "build": {
     "appId": "com.netsaprked.billingpos",
     "productName": "Billing POS",
+    "artifactName": "Billing-POS-Setup-${version}.${ext}",
     "npmRebuild": true,
     "buildDependenciesFromSource": true,
     "extends": null,
