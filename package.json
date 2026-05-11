@@ -1,6 +1,6 @@
 {
   "name": "billing-pos",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "proxy": "http://localhost:3000",
   "homepage": "./",
   "private": true,
