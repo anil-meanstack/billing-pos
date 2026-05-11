@@ -8,6 +8,7 @@
     "@reduxjs/toolkit": "^2.11.2",
     "bootstrap": "^5.3.8",
     "bootstrap-icons": "^1.13.1",
+    "electron-updater": "^6.8.3",
     "js-cookie": "^3.0.5",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
@@ -56,7 +57,14 @@
     "nsis": {
       "installerIcon": "billing.ico",
       "uninstallerIcon": "billing.ico"
-    }
+    },
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "anil-meanstack",
+        "repo": "billing-pos"
+      }
+    ]
   },
   "scripts": {
     "start": "react-scripts start",

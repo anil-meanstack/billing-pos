@@ -1,5 +1,6 @@
-const { app, BrowserWindow, ipcMain, Menu } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu ,dialog } = require("electron");
 const path = require("path");
+const { autoUpdater } = require("electron-updater");
 
 let win;
 
@@ -22,7 +23,15 @@ function createWindow() {
   win.loadURL(`file://${path.join(__dirname, "build/index.html")}`);
 }
 
-app.whenReady().then(createWindow);
+// app.whenReady().then(createWindow);
+
+app.whenReady().then(() => {
+  createWindow();
+
+  if (app.isPackaged) {
+    autoUpdater.checkForUpdatesAndNotify();
+  }
+});
 
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") app.quit();
@@ -118,4 +127,33 @@ ipcMain.handle("print-kot", async (_, content) => {
 
 ipcMain.handle("print-bill", async (_, content) => {
   return await printContent(content);
+});
+
+autoUpdater.on("checking-for-update", () => {
+  console.log("Checking for update...");
+});
+
+autoUpdater.on("update-available", () => {
+  console.log("Update available. Downloading...");
+});
+
+autoUpdater.on("update-not-available", () => {
+  console.log("No update available.");
+});
+
+autoUpdater.on("error", (err) => {
+  console.log("Auto update error:", err);
+});
+
+autoUpdater.on("update-downloaded", () => {
+  dialog.showMessageBox({
+    type: "info",
+    title: "Update Ready",
+    message: "New update download ho gaya hai. App restart karke install kare?",
+    buttons: ["Restart Now", "Later"],
+  }).then((result) => {
+    if (result.response === 0) {
+      autoUpdater.quitAndInstall();
+    }
+  });
 });
