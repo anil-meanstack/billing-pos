@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, Menu ,dialog } = require("electron");
+const { app, BrowserWindow, ipcMain, Menu, dialog } = require("electron");
 const path = require("path");
 const { autoUpdater } = require("electron-updater");
 
@@ -27,7 +27,9 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
-
+  dialog.showMessageBox({
+    message: `App packaged: ${app.isPackaged}, Version: ${app.getVersion()}`
+  });
   if (app.isPackaged) {
     autoUpdater.checkForUpdatesAndNotify();
   }
@@ -130,19 +132,28 @@ ipcMain.handle("print-bill", async (_, content) => {
 });
 
 autoUpdater.on("checking-for-update", () => {
-  console.log("Checking for update...");
+  dialog.showMessageBox({
+    message: "Checking for update..."
+  });
 });
 
-autoUpdater.on("update-available", () => {
-  console.log("Update available. Downloading...");
+autoUpdater.on("update-available", (info) => {
+  dialog.showMessageBox({
+    message: `Update available: ${info.version}`
+  });
 });
 
-autoUpdater.on("update-not-available", () => {
-  console.log("No update available.");
+autoUpdater.on("update-not-available", (info) => {
+  dialog.showMessageBox({
+    message: `No update available. Current latest: ${info.version}`
+  });
 });
 
 autoUpdater.on("error", (err) => {
-  console.log("Auto update error:", err);
+  dialog.showErrorBox(
+    "Auto Update Error",
+    err == null ? "Unknown error" : err.message
+  );
 });
 
 autoUpdater.on("update-downloaded", () => {
