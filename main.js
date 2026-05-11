@@ -137,30 +137,11 @@ autoUpdater.on("checking-for-update", () => {
   });
 });
 
-autoUpdater.on("update-available", (info) => {
-  dialog.showMessageBox({
-    message: `Update available: ${info.version}`
-  });
-});
-
-autoUpdater.on("update-not-available", (info) => {
-  dialog.showMessageBox({
-    message: `No update available. Current latest: ${info.version}`
-  });
-});
-
-autoUpdater.on("error", (err) => {
-  dialog.showErrorBox(
-    "Auto Update Error",
-    err == null ? "Unknown error" : err.message
-  );
-});
-
 autoUpdater.on("update-downloaded", () => {
   dialog.showMessageBox({
     type: "info",
     title: "Update Ready",
-    message: "New update download ho gaya hai. App restart karke install kare?",
+    message: "A new update is ready to install. Restart Billing POS now?",
     buttons: ["Restart Now", "Later"],
   }).then((result) => {
     if (result.response === 0) {
