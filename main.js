@@ -3,6 +3,7 @@ const path = require("path");
 const { autoUpdater } = require("electron-updater");
 
 let win;
+let updateInfo = null;
 
 function createWindow() {
   win = new BrowserWindow({
@@ -27,12 +28,6 @@ function createWindow() {
 
 app.whenReady().then(() => {
   createWindow();
-  dialog.showMessageBox({
-    message: `App packaged: ${app.isPackaged}, Version: ${app.getVersion()}`
-  });
-  if (app.isPackaged) {
-    autoUpdater.checkForUpdatesAndNotify();
-  }
 });
 
 app.on("window-all-closed", () => {
@@ -131,11 +126,52 @@ ipcMain.handle("print-bill", async (_, content) => {
   return await printContent(content);
 });
 
-autoUpdater.on("checking-for-update", () => {
-  dialog.showMessageBox({
-    message: "Checking for update..."
-  });
+ipcMain.handle("check-for-updates", async () => {
+  try {
+    const result = await autoUpdater.checkForUpdates();
+
+    const info = result?.updateInfo || updateInfo || null;
+    updateInfo = info;
+
+    return {
+      success: true,
+      currentVersion: app.getVersion(),
+      latestVersion: info?.version || null,
+      releaseDate: info?.releaseDate
+        ? new Date(info.releaseDate).toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })
+        : null,
+      updateAvailable: !!info && info.version !== app.getVersion(),
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message,
+    };
+  }
 });
+
+autoUpdater.on("update-available", (info) => {
+  updateInfo = info;
+});
+
+ipcMain.handle("get-update-info", () => {
+
+  const formattedDate = updateInfo?.releaseDate
+    ? new Date(updateInfo.releaseDate).toDateString()
+    : null;
+
+  return {
+    currentVersion: app.getVersion(),
+    latestVersion: updateInfo?.version || null,
+    releaseDate: formattedDate,
+    updateAvailable: !!updateInfo
+  };
+});
+
 
 autoUpdater.on("update-downloaded", () => {
   dialog.showMessageBox({

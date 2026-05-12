@@ -11,7 +11,17 @@ const Sidebar = () => {
   const { newCount = 0, preparingCount = 0, readyCount = 0 } = useSelector(
     (state) => state.kitchen
   );
+  const [updateInfo, setUpdateInfo] = useState(null);
 
+  useEffect(() => {
+    loadUpdateInfo();
+  }, []);
+  const loadUpdateInfo = async () => {
+    if (window.electronAPI?.checkUpdateInfo) {
+      const info = await window.electronAPI.checkUpdateInfo();
+      setUpdateInfo(info);
+    }
+  };
 
   const [showAlert, setShowAlert] = useState({
     show: false,
@@ -72,11 +82,24 @@ const Sidebar = () => {
     });
   }, [orders]);
 
- 
+
+  const handleUpdate = async () => {
+    if (window.electronAPI?.checkForUpdates) {
+      const result = await window.electronAPI.checkForUpdates();
+
+      if (result.success) {
+        setUpdateInfo(result);
+        alert("Checking for updates...");
+      } else {
+        alert(result.message);
+      }
+    }
+  };
+
 
   const totalKitchenOrder = (newCount || 0) + (preparingCount || 0) + (readyCount || 0);
 
-  
+
   return (
     <div className="sidebar">
       <div className="section">
@@ -126,13 +149,54 @@ const Sidebar = () => {
           </div>
         )}
         <Table setShowAlert={setShowAlert} />
-        
+
       </div>
       <div className="section">
-        <NavLink to="/staff" className={({ isActive }) => isActive ? "item active" : "item"}>
+        <NavLink to="/staff" className={({ isActive }) => isActive ? "item active " : "item"}>
           <i className="bi bi-person"></i>
           <span>Manage Staff</span>
         </NavLink>
+      </div>
+      <div className="section">
+        <button
+          type="button"
+          className="item update-menu-btn"
+          onClick={handleUpdate}
+        >
+          <i className="bi bi-arrow-repeat"></i>
+
+          <span>Check for Updates</span>
+
+          {updateInfo?.updateAvailable && (
+            <span className="update-badge">
+              New
+            </span>
+          )}
+        </button>
+
+        <div className="update-tooltip">
+
+          <div className="tooltip-title">
+            Restart to Update
+          </div>
+
+          <div>
+            Billing POS
+          </div>
+
+          <div>
+            Current Version: {updateInfo?.currentVersion}
+          </div>
+
+          <div>
+            Latest Version: {updateInfo?.latestVersion || "Latest"}
+          </div>
+
+          <div>
+            Released {updateInfo?.releaseDate || "-"}
+          </div>
+
+        </div>
       </div>
 
       <Alert
