@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { setCustomerInfo } from "../../../features/cart/cartSlice";
+import { getUserApi } from "../../../features/cart/cartApi";
 import "./CustomerModal.css";
 
 const CustomerModal = ({
@@ -27,7 +28,27 @@ const CustomerModal = ({
   }, [customerInfo]);
 
 
-  const handleChange = (e) => {
+  // const handleChange = (e) => {
+  //   const { name, value } = e.target;
+
+  //   if (name === "phone") {
+  //     if (!/^\d*$/.test(value)) return;
+
+  //     if (value.length > 10) return;
+  //   }
+
+  //   setForm({
+  //     ...form,
+  //     [name]: value,
+  //   });
+
+  //   setErrors((prev) => ({
+  //     ...prev,
+  //     [name]: "",
+  //   }));
+  // };
+
+  const handleChange = async (e) => {
     const { name, value } = e.target;
 
     if (name === "phone") {
@@ -36,15 +57,39 @@ const CustomerModal = ({
       if (value.length > 10) return;
     }
 
-    setForm({
+    const updatedForm = {
       ...form,
       [name]: value,
-    });
+    };
+
+    setForm(updatedForm);
 
     setErrors((prev) => ({
       ...prev,
       [name]: "",
     }));
+
+    // AUTO CUSTOMER LOOKUP
+    if (name === "phone" && value.length === 10) {
+      try {
+        const response = await getUserApi(value);
+
+        if (response?.success && response?.customer) {
+          const customer = response.customer;
+
+          const customerForm = {
+            name: customer?.name || "",
+            phone: customer?.phone || value,
+            address: customer?.address || "",
+          };
+
+          setForm(customerForm);
+          dispatch(setCustomerInfo(customerForm));
+        }
+      } catch (error) {
+        console.log("Customer not found");
+      }
+    }
   };
 
   const handleBlur = (e) => {

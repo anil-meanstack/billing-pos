@@ -276,3 +276,26 @@ export const addComboApi = async (res) => {
 
   return await response.json();
 };
+
+//get user
+
+export const getUserApi = async (phone) => {
+  const slug = getRestaurantSlug();
+  const token = getToken();
+
+  const url = `${API_BASE_URL}/restaurant/${slug}/customer-lookup/?phone=${phone}`;
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error("Failed to fetch customer");
+  }
+
+  return await response.json();
+};

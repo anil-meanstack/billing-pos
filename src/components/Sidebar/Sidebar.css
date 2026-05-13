@@ -520,7 +520,7 @@
 
 
 .update-tooltip {
-  position: absolute;
+  /* position: absolute; */
   /* left: 105%;
   top: 0; */
   width: auto;
@@ -529,7 +529,7 @@
   padding: 12px;
   border-radius: 8px;
   display: none;
-  z-index: 999;
+  /* z-index: 999; */
   font-size: 13px;
 }
 

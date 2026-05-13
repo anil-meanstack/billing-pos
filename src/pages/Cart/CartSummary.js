@@ -55,6 +55,7 @@ const CartSummary = (props) => {
   const [showReceiptModal, setShowReceiptModal] = useState(false);
   const [lastOrder, setLastOrder] = useState(null);
   const tables = useSelector((state) => state.tables.list);
+  const previousTableRef = useRef(null);
 
   const [showAlert, setShowAlert] = useState({
     show: false,
@@ -74,7 +75,7 @@ const CartSummary = (props) => {
   const isDelivery = orderType === CONSTANTS.ORDER_TYPES.DELIVERY;
   const isCartEmpty = items.length === 0;
   const selectedTable = tables.find(t => Number(t.id) === Number(selectedTableId));
-  const isRunningOrder = orderType === "dine_in" && selectedTable?.has_active_order === true &&  activeTableOrder && activeTableOrder.id;
+  const isRunningOrder = orderType === "dine_in" && selectedTable?.has_active_order === true && activeTableOrder && activeTableOrder.id;
   const showSettleButton = isRunningOrder && !hasNewKotItems;
 
   const shouldShowOnlyNewItems = isRunningOrder && hasNewKotItems;
@@ -204,14 +205,14 @@ const CartSummary = (props) => {
     }
   }, []);
 
- const loginUser = () => {
-  const auth = getAuth();
+  const loginUser = () => {
+    const auth = getAuth();
 
-  return {
-    name: auth?.user?.full_name || "Guest",
-    phone: auth?.user?.phone || "9876543210",
+    return {
+      name: auth?.user?.full_name || "Guest",
+      phone: auth?.user?.phone || "9876543210",
+    };
   };
-};
 
   const formatPrice = useCallback((price) => {
     if (price === undefined || price === null || isNaN(price)) {
@@ -262,17 +263,50 @@ const CartSummary = (props) => {
     return true;
   }, [customerInfo, isDelivery, orderType, showError]);
 
+  // useEffect(() => {
+  //   if (orderType === CONSTANTS.ORDER_TYPES.DINE_IN) {
+  //     const user = loginUser();
+  //     dispatch(setCustomerInfo({
+  //       name: user.name,
+  //       phone: user.phone,
+  //       address: ""
+  //     }));
+  //   }
+  // }, [orderType, dispatch]);
   useEffect(() => {
-    if (orderType === CONSTANTS.ORDER_TYPES.DINE_IN) {
-      const user = loginUser();
+    if (!isDineIn || !selectedTableId) return;
+
+    // SAME table with running order: show saved customer details
+    if (activeTableOrder?.id) {
       dispatch(setCustomerInfo({
-        name: user.name,
-        phone: user.phone,
-        address: ""
+        name: activeTableOrder.customer_name || "",
+        phone: activeTableOrder.customer_phone || "",
+        address: activeTableOrder.customer_address || "",
+      }));
+
+      previousTableRef.current = selectedTableId;
+      return;
+    }
+
+    // DIFFERENT table / no running order: empty customer details
+    if (previousTableRef.current !== selectedTableId) {
+      dispatch(setCustomerInfo({
+        name: "",
+        phone: "",
+        address: "",
       }));
     }
-  }, [orderType, dispatch]);
 
+    previousTableRef.current = selectedTableId;
+  }, [
+    isDineIn,
+    selectedTableId,
+    activeTableOrder?.id,
+    activeTableOrder?.customer_name,
+    activeTableOrder?.customer_phone,
+    activeTableOrder?.customer_address,
+    dispatch,
+  ]);
   const validateCheckout = useCallback(() => {
     if (items.length === 0) {
       showError("Your cart is empty! Please add items first.");
@@ -491,7 +525,7 @@ const CartSummary = (props) => {
         showError("Running order not found");
         return;
       }
-      const user=loginUser()
+      const user = loginUser()
 
       const updatedName = customerInfo.name || user.name;
       const updatedPhone = customerInfo.phone || user.phone;
@@ -549,8 +583,8 @@ const CartSummary = (props) => {
         id: selectedTableId,
         status: "available",
       }));
-     await dispatch(loadTableOrders(selectedTableId)).unwrap();
-     await dispatch(loadTablesFromApi()).unwrap();
+      await dispatch(loadTableOrders(selectedTableId)).unwrap();
+      await dispatch(loadTablesFromApi()).unwrap();
       showSuccess("Order settled successfully ✅");
     } catch (error) {
       console.error("Settle failed:", error);

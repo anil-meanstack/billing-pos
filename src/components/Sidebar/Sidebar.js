@@ -16,6 +16,7 @@ const Sidebar = () => {
   useEffect(() => {
     loadUpdateInfo();
   }, []);
+  
   const loadUpdateInfo = async () => {
     if (window.electronAPI?.checkUpdateInfo) {
       const info = await window.electronAPI.checkUpdateInfo();
