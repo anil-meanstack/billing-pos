@@ -158,7 +158,7 @@ const Sidebar = () => {
           <span>Manage Staff</span>
         </NavLink>
       </div>
-      <div className="section">
+      {/* <div className="section">
         <button
           type="button"
           className="item update-menu-btn"
@@ -198,7 +198,7 @@ const Sidebar = () => {
           </div>
 
         </div>
-      </div>
+      </div> */}
 
       <Alert
         show={showAlert.show}

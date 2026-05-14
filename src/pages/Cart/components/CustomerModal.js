@@ -116,8 +116,11 @@ const CustomerModal = ({
       if (!value.trim()) error = "Customer name is required";
     }
 
-    if (name === "address" && orderType === "delivery") {
-      if (!value.trim()) error = "Address is required for delivery";
+    // if (name === "address" && orderType === "delivery") {
+    //   if (!value.trim()) error = "Address is required for delivery";
+    // }
+    if (name === "address") {
+      error = "";
     }
 
     setErrors((prev) => ({

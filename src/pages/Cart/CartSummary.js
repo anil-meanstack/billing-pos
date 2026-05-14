@@ -254,11 +254,11 @@ const CartSummary = (props) => {
       return false;
     }
 
-    if (isDelivery && !customerInfo.address?.trim()) {
-      setShowCustomerModal(true);
-      showError("Address is required");
-      return false;
-    }
+    // if (isDelivery && !customerInfo.address?.trim()) {
+    //   setShowCustomerModal(true);
+    //   showError("Address is required");
+    //   return false;
+    // }
 
     return true;
   }, [customerInfo, isDelivery, orderType, showError]);
@@ -527,7 +527,11 @@ const CartSummary = (props) => {
       }
       const user = loginUser()
 
-      const updatedName = customerInfo.name || user.name;
+      const updatedName =
+        customerInfo?.name &&
+          customerInfo.name !== "Walk-in Customer"
+          ? customerInfo.name
+          : user.name;
       const updatedPhone = customerInfo.phone || user.phone;
 
       await settledOrderApi({

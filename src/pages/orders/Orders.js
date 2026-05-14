@@ -5,6 +5,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { orderStatus } from "../../features/table/tableApi";
 import OrderDetailsModal from "../components/OrderDetailsModal";
 import CancelModal from "../menu/components/Modal/CancelModal";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import Select from "react-select";
 
 const Orders = () => {
     const dispatch = useDispatch();
@@ -18,6 +21,16 @@ const Orders = () => {
     const [selectedOrder, setSelectedOrder] = useState(null);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [cancelOrderId, setCancelOrderId] = useState(null);
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [selectedOrderType, setSelectedOrderType] = useState("all");
+
+    const orderOptions = [
+        { value: "all", label: "All Orders" },
+        { value: "dine_in", label: "Dine In" },
+        { value: "takeaway", label: "Takeaway" },
+        { value: "delivery", label: "Delivery" }
+    ];
+
 
     useEffect(() => {
         dispatch(fetchOrderHistory());
@@ -59,22 +72,22 @@ const Orders = () => {
         });
     }, [orders]);
 
-    const statistics = useMemo(() => {
-        if (!todayOrders || todayOrders.length === 0) {
-            return { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, itemsSold: 0 };
-        }
-        const totalRevenue = todayOrders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
-        const totalItemsSold = todayOrders.reduce((sum, order) => {
-            const itemCount = order.items?.length || order.item_count || 0;
-            return sum + itemCount;
-        }, 0);
-        return {
-            totalRevenue: totalRevenue.toFixed(2),
-            totalOrders: todayOrders.length,
-            avgOrderValue: todayOrders.length > 0 ? (totalRevenue / todayOrders.length).toFixed(2) : 0,
-            itemsSold: totalItemsSold
-        };
-    }, [todayOrders]);
+    // const statistics = useMemo(() => {
+    //     if (!todayOrders || todayOrders.length === 0) {
+    //         return { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, itemsSold: 0 };
+    //     }
+    //     const totalRevenue = todayOrders.reduce((sum, order) => sum + parseFloat(order.total_amount || 0), 0);
+    //     const totalItemsSold = todayOrders.reduce((sum, order) => {
+    //         const itemCount = order.items?.length || order.item_count || 0;
+    //         return sum + itemCount;
+    //     }, 0);
+    //     return {
+    //         totalRevenue: totalRevenue.toFixed(2),
+    //         totalOrders: todayOrders.length,
+    //         avgOrderValue: todayOrders.length > 0 ? (totalRevenue / todayOrders.length).toFixed(2) : 0,
+    //         itemsSold: totalItemsSold
+    //     };
+    // }, [todayOrders]);
 
     const orderFlow = {
         confirmed: { nextStatus: "preparing", buttonLabel: "▶ Start Preparing" },
@@ -119,23 +132,118 @@ const Orders = () => {
             setCancelOrderId(null);
         }
     };
+    // const filteredOrders = useMemo(() => {
+    //     if (!todayOrders) return [];
+    //     let filtered = [...todayOrders];
+    //     if (selectedCategory !== 'all') {
+    //         filtered = filtered.filter(order => order.status === selectedCategory);
+    //     }
+    //     if (searchTerm) {
+    //         const term = searchTerm.toLowerCase();
+    //         filtered = filtered.filter(order =>
+    //             order.order_number?.toLowerCase().includes(term) ||
+    //             order.customer_name?.toLowerCase().includes(term) ||
+    //             order.table_number?.toString().includes(term) ||
+    //             order.customer?.name?.toLowerCase().includes(term)
+    //         );
+    //     }
+    //     return filtered;
+    // }, [todayOrders, selectedCategory, searchTerm]);
+
     const filteredOrders = useMemo(() => {
-        if (!todayOrders) return [];
-        let filtered = [...todayOrders];
+        const allOrders = orders || [];
+        const term = searchTerm.trim().toLowerCase();
+
+        let filtered = [...allOrders];
+
+        // If no search and no date filter, show only today's orders
+        if (!term && !selectedDate) {
+            filtered = [...todayOrders];
+        }
+
         if (selectedCategory !== 'all') {
             filtered = filtered.filter(order => order.status === selectedCategory);
         }
-        if (searchTerm) {
-            const term = searchTerm.toLowerCase();
+
+        // if (selectedDate) {
+        //     filtered = filtered.filter(order => {
+        //         if (!order.created_at) return false;
+
+        //         const orderDate = new Date(order.created_at);
+        //         // const selected = new Date(selectedDate);
+        //         const selected = selectedDate;
+
+        //         return (
+        //             orderDate.getFullYear() === selected.getFullYear() &&
+        //             orderDate.getMonth() === selected.getMonth() &&
+        //             orderDate.getDate() === selected.getDate()
+        //         );
+        //     });
+        // }
+        if (selectedDate) {
+            filtered = filtered.filter(order => {
+                if (!order.created_at) return false;
+
+                const orderDate = new Date(order.created_at);
+
+                return (
+                    orderDate.getFullYear() === selectedDate.getFullYear() &&
+                    orderDate.getMonth() === selectedDate.getMonth() &&
+                    orderDate.getDate() === selectedDate.getDate()
+                );
+            });
+        }
+        if (term) {
             filtered = filtered.filter(order =>
                 order.order_number?.toLowerCase().includes(term) ||
+                order.customer_phone?.toString().includes(term) ||
                 order.customer_name?.toLowerCase().includes(term) ||
-                order.table_number?.toString().includes(term) ||
-                order.customer?.name?.toLowerCase().includes(term)
+                order.customer?.phone?.toString().includes(term) ||
+                order.customer?.name?.toLowerCase().includes(term) ||
+                order.daily_number?.toString().includes(term) ||
+                order.kot_number?.toString().includes(term) ||
+                order.table_number?.toString().includes(term)
             );
         }
+        if (selectedOrderType !== "all") {
+            filtered = filtered.filter(
+                order => order.order_type === selectedOrderType
+            );
+        }
+
         return filtered;
-    }, [todayOrders, selectedCategory, searchTerm]);
+    }, [orders, todayOrders, selectedCategory, searchTerm, selectedDate, selectedOrderType]);
+
+    const statistics = useMemo(() => {
+        const statsOrders = selectedDate ? filteredOrders : todayOrders;
+
+        if (!statsOrders || statsOrders.length === 0) {
+            return { totalRevenue: 0, totalOrders: 0, avgOrderValue: 0, itemsSold: 0 };
+        }
+
+        const totalRevenue = statsOrders.reduce(
+            (sum, order) => sum + parseFloat(order.total_amount || 0),
+            0
+        );
+
+        const totalItemsSold = statsOrders.reduce((sum, order) => {
+            const itemCount = order.items?.reduce(
+                (itemSum, item) => itemSum + Number(item.quantity || 0),
+                0
+            ) || Number(order.item_count || 0);
+
+            return sum + itemCount;
+        }, 0);
+
+        return {
+            totalRevenue: totalRevenue.toFixed(2),
+            totalOrders: statsOrders.length,
+            avgOrderValue: statsOrders.length > 0
+                ? (totalRevenue / statsOrders.length).toFixed(2)
+                : 0,
+            itemsSold: totalItemsSold
+        };
+    }, [todayOrders, filteredOrders, selectedDate]);
 
     const getFormattedDate = () => {
         return currentTime.toLocaleDateString('en-US', {
@@ -174,13 +282,15 @@ const Orders = () => {
         return null;
     };
 
+    const categoryOrders = selectedDate ? filteredOrders : todayOrders;
     const categories = [
-        { id: 'all', label: 'All', count: todayOrders.length },
-        { id: 'completed', label: 'Completed', count: todayOrders.filter(o => o.status === 'completed').length },
-        { id: 'preparing', label: 'Preparing', count: todayOrders.filter(o => o.status === 'preparing').length },
-        { id: 'confirmed', label: 'Pending', count: todayOrders.filter(o => o.status === 'confirmed').length },
-        { id: 'cancelled', label: 'Cancelled', count: todayOrders.filter(o => o.status === 'cancelled').length }
+        { id: 'all', label: 'All', count: categoryOrders.length },
+        { id: 'completed', label: 'Completed', count: categoryOrders.filter(o => o.status === 'completed').length },
+        { id: 'preparing', label: 'Preparing', count: categoryOrders.filter(o => o.status === 'preparing').length },
+        { id: 'confirmed', label: 'Pending', count: categoryOrders.filter(o => o.status === 'confirmed').length },
+        { id: 'cancelled', label: 'Cancelled', count: categoryOrders.filter(o => o.status === 'cancelled').length }
     ];
+
 
     const toggleItems = (orderId) => {
         setExpandedOrders(prev => ({
@@ -221,21 +331,127 @@ const Orders = () => {
                     <h1 className="page-title">Today's Orders</h1>
                     <p className="header-date">{getFormattedDate()}</p>
                 </div>
+
                 <div className="header-right">
-                    <div className="search-box">
-                        <svg className="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                        <input
-                            type="text"
-                            id="orderSearch"
-                            name="orderSearch"
-                            placeholder="Search orders..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="search-input"
-                        />
+                    <div className="filters-row d-flex gap-2">
+                        <div className="search-box">
+                            <svg className="search-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <circle cx="11" cy="11" r="8"></circle>
+                                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                            </svg>
+
+                            <input
+                                type="text"
+                                id="orderSearch"
+                                name="orderSearch"
+                                placeholder="Search orders..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="search-input"
+                            />
+                        </div>
+
+                        <div className="date-filter-wrapper">
+                            <DatePicker
+                                selected={selectedDate}
+                                onChange={(date) => setSelectedDate(date)}
+                                dateFormat="dd/MM/yyyy"
+                                popperPlacement="bottom-end"
+                                placeholderText=""
+                                customInput={
+                                    selectedDate ? (
+                                        <div className="selected-date-input">
+                                            <span>{selectedDate.toLocaleDateString("en-GB")}</span>
+                                            <i className="bi bi-calendar3"></i>
+                                        </div>
+                                    ) : (
+                                        <button type="button" className="calendar-btn">
+                                            <i className="bi bi-calendar3"></i>
+                                        </button>
+                                    )
+                                }
+                            />
+
+                            {selectedDate && (
+                                <button
+                                    type="button"
+                                    className="clear-date-btn"
+                                    onClick={() => setSelectedDate(null)}
+                                >
+                                    <i className="bi bi-x-lg"></i>
+                                </button>
+                            )}
+                        </div>
+                        {/* {selectedDate && (
+                            <select
+                                value={selectedOrderType}
+                                onChange={(e) => setSelectedOrderType(e.target.value)}
+                                className="order-type-filter"
+                            >
+                                <option value="all">All Orders</option>
+                                <option value="dine_in">Dine In</option>
+                                <option value="takeaway">Takeaway</option>
+                                <option value="delivery">Delivery</option>
+                            </select>
+                        )} */}
+                        {selectedDate && 
+                        <Select
+                            options={orderOptions}
+                            value={orderOptions.find(
+                                option => option.value === selectedOrderType
+                            )}
+                            onChange={(selected) => setSelectedOrderType(selected.value)}
+
+                            styles={{
+                                control: (base, state) => ({
+                                    ...base,
+                                    minHeight: 35,
+                                    height: 35,
+                                    borderRadius: 8,
+                                    borderColor: state.isFocused ? "#e05c20" : "#92aed4",
+                                    boxShadow: "none",
+                                    cursor: "pointer",
+                                    "&:hover": {
+                                        borderColor: "#e05c20",
+                                    },
+                                }),
+
+                                valueContainer: (base) => ({
+                                    ...base,
+                                    height: 35,
+                                    padding: "0 10px",
+                                }),
+
+                                input: (base) => ({
+                                    ...base,
+                                    margin: 0,
+                                    padding: 0,
+                                }),
+
+                                indicatorsContainer: (base) => ({
+                                    ...base,
+                                    height: 35,
+                                }),
+
+                                indicatorSeparator: () => ({
+                                    display: "none",
+                                }),
+
+                                option: (base, state) => ({
+                                    ...base,
+                                    backgroundColor: state.isFocused ? "#e05c20" : "#fff",
+                                    color: state.isFocused ? "#fff" : "#496da8",
+                                    cursor: "pointer",
+                                    fontSize: "14px",
+                                }),
+
+                                menu: (base) => ({
+                                    ...base,
+                                    borderRadius: 10,
+                                    overflow: "hidden",
+                                }),
+                            }}
+                        />}
                     </div>
                 </div>
             </div>
@@ -245,8 +461,12 @@ const Orders = () => {
                     <div className="stat-icon"><i className="bi bi-cash-stack"></i></div>
                     <div className="stat-content">
                         <div className="stat-value">₹{statistics.totalRevenue}</div>
-                        <div className="stat-label">Today's Revenue</div>
-                        <div className="stat-sub">{statistics.totalOrders} orders today</div>
+                        <div className="stat-label">
+                            {selectedDate ? "Selected Date Revenue" : "Today's Revenue"}
+                        </div>
+                        <div className="stat-sub">
+                            {statistics.totalOrders} orders
+                        </div>
                     </div>
                 </div>
 
@@ -316,7 +536,7 @@ const Orders = () => {
                     </div>
                 )}
 
-                {todayOrders.length > 0 && filteredOrders.length === 0 && (
+                {filteredOrders.length === 0 && (
                     <div className="empty-state">
                         <div className="empty-state-icon">🔍</div>
                         <h3 className="empty-state-title">No matching orders</h3>
