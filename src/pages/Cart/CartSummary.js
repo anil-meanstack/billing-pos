@@ -171,9 +171,19 @@ const CartSummary = (props) => {
       try {
         const data = await getDiscounts();
         if (isMounted) {
-          const activeDiscounts = (Array.isArray(data) ? data : data.results || []).filter(
-            (d) => d.status === "active"
-          );
+          // const activeDiscounts = (Array.isArray(data) ? data : data.results || []).filter(
+          //   (d) => d.status === "active"
+          // );
+          const jsDay = new Date().getDay();
+          const today = jsDay === 0 ? 6 : jsDay - 1;
+
+          const activeDiscounts = (Array.isArray(data) ? data : data.results || []).filter((d) => {
+            if (d.status !== "active") return false;
+            if (d.apply_on_weekdays) {
+              return d.applicable_weekdays.includes(today);
+            }
+            return true;
+          });
           setDiscounts(activeDiscounts);
         }
       } catch (error) {
@@ -627,25 +637,25 @@ const CartSummary = (props) => {
     };
   };
 
-  useEffect(() => {
-    const removeDiscountIfCartEmpty = async () => {
-      if (items.length === 0 && selectedDiscount?.code) {
-        try {
-          await dispatch(removeDiscount({
-            order_type: orderType,
-            table_id: selectedTableId
-          }));
-          setSelectedDiscount(null);
+  // useEffect(() => {
+  //   const removeDiscountIfCartEmpty = async () => {
+  //     if (items.length === 0 && selectedDiscount?.code) {
+  //       try {
+  //         await dispatch(removeDiscount({
+  //           order_type: orderType,
+  //           table_id: selectedTableId
+  //         }));
+  //         setSelectedDiscount(null);
 
-          showError("Discount removed (empty cart)");
-        } catch (error) {
-          console.error("Failed to remove discount", error);
-        }
-      }
-    };
+  //         showError("Discount removed (empty cart)");
+  //       } catch (error) {
+  //         console.error("Failed to remove discount", error);
+  //       }
+  //     }
+  //   };
 
-    removeDiscountIfCartEmpty();
-  }, [items.length, selectedDiscount, dispatch, showError, orderType, selectedTableId]);
+  //   removeDiscountIfCartEmpty();
+  // }, [items.length, selectedDiscount, dispatch, showError, orderType, selectedTableId]);
 
   const handleCouponClick = async (coupon) => {
     if (isCartEmpty) {
@@ -717,26 +727,63 @@ const CartSummary = (props) => {
     }
   };
 
-  useEffect(() => {
-    const code = isRunningOrder
-      ? activeTableOrder?.discount_code || activeTableOrder?.discount?.code
-      : cartSummary?.discount_code;
+  // useEffect(() => {
+  //   const code = isRunningOrder
+  //     ? activeTableOrder?.discount_code || activeTableOrder?.discount?.code
+  //     : cartSummary?.discount_code;
 
-    if (!code) {
-      setSelectedDiscount(null);
-      return;
-    }
+  //   if (!code) {
+  //     setSelectedDiscount(null);
+  //     return;
+  //   }
 
+  //   const matched = discounts.find((d) => d.code === code);
+
+  //   setSelectedDiscount(matched || { code });
+  // }, [
+  //   isRunningOrder,
+  //   activeTableOrder?.discount_code,
+  //   activeTableOrder?.discount?.code,
+  //   cartSummary?.discount_code,
+  //   discounts,
+  // ]);
+
+ useEffect(() => {
+  const code = isRunningOrder
+    ? activeTableOrder?.discount_code ||
+      activeTableOrder?.discount?.code ||
+      selectedDiscount?.code
+    : cartSummary?.discount_code ||
+      cartData?.discount_code ||
+      selectedDiscount?.code;
+
+  const runningDiscountAmount = Number(activeTableOrder?.discount_amount || 0);
+  const normalDiscountAmount = Number(discountAmount || 0);
+
+  const hasDiscountAmount = isRunningOrder
+    ? runningDiscountAmount > 0
+    : normalDiscountAmount > 0;
+
+  if (code && hasDiscountAmount) {
     const matched = discounts.find((d) => d.code === code);
-
     setSelectedDiscount(matched || { code });
-  }, [
-    isRunningOrder,
-    activeTableOrder?.discount_code,
-    activeTableOrder?.discount?.code,
-    cartSummary?.discount_code,
-    discounts,
-  ]);
+    return;
+  }
+
+  if (!hasDiscountAmount) {
+    setSelectedDiscount(null);
+  }
+}, [
+  isRunningOrder,
+  activeTableOrder?.discount_code,
+  activeTableOrder?.discount?.code,
+  activeTableOrder?.discount_amount,
+  cartSummary?.discount_code,
+  cartData?.discount_code,
+  discounts,
+  discountAmount,
+]);
+
 
   const handleCancel = useCallback(async () => {
 
@@ -873,7 +920,10 @@ const CartSummary = (props) => {
           }
           {discountAmount > 0 && (
             <div className="totalRow text-success">
-              <span className="d-flex gap-2 align-items-center">Discount {cartSummary?.discount_code ? `(${cartSummary.discount_code})` : ''}</span>
+              {/* <span className="d-flex gap-2 align-items-center">Discount {cartSummary?.discount_code ? `(${cartSummary.discount_code})` : ''}</span> */}
+              <span className="d-flex gap-2 align-items-center">
+                Discount {selectedDiscount?.code ? `(${selectedDiscount.code})` : ""}
+              </span>
               <span>-{formatPrice(discountAmount)}</span>
             </div>
           )}

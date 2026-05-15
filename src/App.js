@@ -86,6 +86,15 @@ function App() {
                   }
                 />
 
+                {/* <Route
+                  path="/online-order"
+                  element={
+                    <ProtectedRoute>
+                      <OnlineOrder />
+                    </ProtectedRoute>
+                  }
+                /> */}
+
               </Routes>
             </div>
           </div>

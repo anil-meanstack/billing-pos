@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 const Coupons = (props) => {
+    const discounts = props.discounts || [];
   const [showModal, setShowModal] = useState(false);
   const [note, setNote] = useState("");
 
@@ -13,14 +14,14 @@ const Coupons = (props) => {
   return (
     <div className="coupon-section">
       <p className="title mb-0">COUPONS — TAP TO APPLY</p>
-      {props.discounts.length === 0 && (
+      {discounts.length === 0 && (
         <p className="mb-0" style={{ textAlign: "center", color: "#888", fontSize:"12px" }}>
           No offers available
         </p>
       )}
 
       <div className="coupon-grid my-2">
-        {props.discounts.map((c, i) => (
+       {discounts.map((c, i) => (
           <div
             key={i}
             className={`coupon-card ${props.disabled ? "disabled" : ""} ${c.color} 

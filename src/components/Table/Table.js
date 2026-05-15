@@ -68,55 +68,6 @@ const Table = ({ setShowAlert }) => {
         return `${diffDay}d ago`;
     };
 
-    // const handleTableClick = async (table) => {
-    //     const activeOrder = getTableOrder(table.id);
-    //     const unavailableStatuses = ["reserved", "booked", "maintenance"];
-
-    //     if (unavailableStatuses.includes(table.status?.toLowerCase())) {
-    //         setShowAlert({
-    //             show: true,
-    //             message: `Table ${table.tableNumber} is ${table.status} and cannot be selected`,
-    //             type: "danger",
-    //         });
-    //         return;
-    //     }
-
-    //     dispatch(setTableNumber(table.tableNumber));
-    //     dispatch(setTableId(table.id));
-    //     dispatch(setOrderType("dine_in"));
-
-    //     if (activeOrder || table.has_active_cart || table.has_active_order) {
-    //         await dispatch(loadTableOrders(table.id)).unwrap();
-    //         navigate("/menu-item");
-    //         return;
-    //     }
-
-    //     dispatch(clearRunningOrder());
-
-    //     await dispatch(
-    //         updateTable({
-    //             table_id: table.id,
-    //             order_type: "dine_in",
-    //         })
-    //     ).unwrap();
-
-    //     navigate("/menu-item");
-
-    //     localStorage.setItem(
-    //         "selectedTable",
-    //         JSON.stringify({
-    //             number: table.tableNumber,
-    //             id: table.id,
-    //         })
-    //     );
-
-    //     setShowAlert({
-    //         show: true,
-    //         message: `Table ${table.tableNumber} selected successfully`,
-    //         type: "success",
-    //     });
-    // };
-
     const handleTableClick = async (table) => {
         const activeOrder = getTableOrder(table.id);
 

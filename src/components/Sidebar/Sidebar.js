@@ -11,18 +11,18 @@ const Sidebar = () => {
   const { newCount = 0, preparingCount = 0, readyCount = 0 } = useSelector(
     (state) => state.kitchen
   );
-  const [updateInfo, setUpdateInfo] = useState(null);
+  // const [updateInfo, setUpdateInfo] = useState(null);
 
-  useEffect(() => {
-    loadUpdateInfo();
-  }, []);
-  
-  const loadUpdateInfo = async () => {
-    if (window.electronAPI?.checkUpdateInfo) {
-      const info = await window.electronAPI.checkUpdateInfo();
-      setUpdateInfo(info);
-    }
-  };
+  // useEffect(() => {
+  //   loadUpdateInfo();
+  // }, []);
+
+  // const loadUpdateInfo = async () => {
+  //   if (window.electronAPI?.checkUpdateInfo) {
+  //     const info = await window.electronAPI.checkUpdateInfo();
+  //     setUpdateInfo(info);
+  //   }
+  // };
 
   const [showAlert, setShowAlert] = useState({
     show: false,
@@ -84,18 +84,18 @@ const Sidebar = () => {
   }, [orders]);
 
 
-  const handleUpdate = async () => {
-    if (window.electronAPI?.checkForUpdates) {
-      const result = await window.electronAPI.checkForUpdates();
+  // const handleUpdate = async () => {
+  //   if (window.electronAPI?.checkForUpdates) {
+  //     const result = await window.electronAPI.checkForUpdates();
 
-      if (result.success) {
-        setUpdateInfo(result);
-        alert("Checking for updates...");
-      } else {
-        alert(result.message);
-      }
-    }
-  };
+  //     if (result.success) {
+  //       setUpdateInfo(result);
+  //       alert("Checking for updates...");
+  //     } else {
+  //       alert(result.message);
+  //     }
+  //   }
+  // };
 
 
   const totalKitchenOrder = (newCount || 0) + (preparingCount || 0) + (readyCount || 0);
@@ -116,7 +116,19 @@ const Sidebar = () => {
           <span>Order History</span>
           <span className="badge orange">{todayOrders.length}</span>
         </NavLink>
-
+        {/* <NavLink to="/online-order" className={({ isActive }) => isActive ? "item active" : "item"}>
+          <svg
+            viewBox="0 0 16 16"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="1.6"
+            style={{ width: "16px" }}
+          >
+            <path d="M3 13V7.5a5 5 0 0110 0V13M1 13h14M6 13v-2a2 2 0 014 0v2" />
+          </svg>
+          <span>Online Orders</span>
+          <span className="badge orange">{totalKitchenOrder}</span>
+        </NavLink> */}
         <NavLink to="/kitchen" className={({ isActive }) => isActive ? "item active" : "item"}>
           <i className="bi bi-clock"></i>
           <span>Kitchen Queue</span>
