@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import "./Navbar.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+import OnlinePlatformStatus from "../../pages/onlineOrder/components/OnlinePlatformStatus";
 
 const Navbar = (props) => {
   const location = useLocation();
@@ -11,7 +12,7 @@ const Navbar = (props) => {
   const tableNumber = useSelector((state) => state.cart.tableNumber);
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const orderType = useSelector((state) => state.cart.orderType);
-   const { newCount = 0, preparingCount = 0, readyCount = 0 } = useSelector(
+  const { newCount = 0, preparingCount = 0, readyCount = 0 } = useSelector(
     (state) => state.kitchen
   );
   const totalKitchenOrder = (newCount || 0) + (preparingCount || 0) + (readyCount || 0);
@@ -123,6 +124,10 @@ const Navbar = (props) => {
       </div>
 
       <div className="pos-right">
+        {/* <div>
+          <i className="bi bi-broadcast"></i>
+        </div> */}
+         <OnlinePlatformStatus />
         <div className="time">{time}</div>
 
         <div className="shift">Morning Shift</div>
@@ -150,6 +155,7 @@ const Navbar = (props) => {
           </button>
         )}
       </div>
+      
     </div>
   );
 };

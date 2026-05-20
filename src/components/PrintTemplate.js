@@ -121,7 +121,7 @@ const PrintTemplate = ({
                     {item.addons?.length > 0 && (
                         <div style={{ fontSize: "9px", marginLeft: "4px", lineHeight: "1.1", fontWeight: "bold" }}>
                             {item.addons.map((addon, idx) => (
-                                <div key={idx}>+ {addon.name}</div>
+                                <div key={idx}>+ {addon.name || addon} </div>
                             ))}
                         </div>
                     )}

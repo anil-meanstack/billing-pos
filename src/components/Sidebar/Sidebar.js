@@ -116,7 +116,7 @@ const Sidebar = () => {
           <span>Order History</span>
           <span className="badge orange">{todayOrders.length}</span>
         </NavLink>
-        {/* <NavLink to="/online-order" className={({ isActive }) => isActive ? "item active" : "item"}>
+        <NavLink to="/online-order" className={({ isActive }) => isActive ? "item active" : "item"}>
           <svg
             viewBox="0 0 16 16"
             fill="none"
@@ -128,7 +128,7 @@ const Sidebar = () => {
           </svg>
           <span>Online Orders</span>
           <span className="badge orange">{totalKitchenOrder}</span>
-        </NavLink> */}
+        </NavLink>
         <NavLink to="/kitchen" className={({ isActive }) => isActive ? "item active" : "item"}>
           <i className="bi bi-clock"></i>
           <span>Kitchen Queue</span>

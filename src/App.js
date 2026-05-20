@@ -8,6 +8,7 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 import KitchenQueue from "./pages/kitchenQueue/KitchenQueue"
 import Orders from "./pages/orders/Orders";
 import ManageStaff from "./pages/manageStaff/ManageStaff";
+import OnlineOrders from "./pages/onlineOrder/OnlineOrders";
 
 function App() {
   const location = useLocation();
@@ -86,14 +87,14 @@ function App() {
                   }
                 />
 
-                {/* <Route
+                <Route
                   path="/online-order"
                   element={
                     <ProtectedRoute>
-                      <OnlineOrder />
+                      <OnlineOrders />
                     </ProtectedRoute>
                   }
-                /> */}
+                />
 
               </Routes>
             </div>
