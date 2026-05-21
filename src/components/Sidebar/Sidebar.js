@@ -104,7 +104,7 @@ const Sidebar = () => {
   return (
     <div className="sidebar">
       <div className="section">
-        <p className="section-title">ORDERS</p>
+        <p className="sidebar-section-title">ORDERS</p>
 
         <NavLink to="/menu-item" className={({ isActive }) => isActive ? "item active" : "item"}>
           <i className="bi bi-grid"></i>
@@ -139,7 +139,7 @@ const Sidebar = () => {
 
       {/* TABLES */}
       <div className="section">
-        <p className="section-title">TABLES</p>
+        <p className="sidebar-section-title">TABLES</p>
         {tableSelectError && (
           <div className="chev-indicator">
             <div className="chevron-stack">

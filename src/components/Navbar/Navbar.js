@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import "./Navbar.css";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
-import OnlinePlatformStatus from "../../pages/onlineOrder/components/OnlinePlatformStatus";
+import OnlinePlatformStatus from "../../pages/onlineOrder/components/OnlinePlatformStatus/OnlinePlatformStatus";
 
 const Navbar = (props) => {
   const location = useLocation();
