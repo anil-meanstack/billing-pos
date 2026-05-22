@@ -9,7 +9,7 @@ import KitchenQueue from "./pages/kitchenQueue/KitchenQueue"
 import Orders from "./pages/orders/Orders";
 import ManageStaff from "./pages/manageStaff/ManageStaff";
 import OnlineOrders from "./pages/onlineOrder/OnlineOrders";
-import GlobalOnlineOrderModal from "./pages/onlineOrder/components/GlobalOnlineOrderModal/GlobalOnlineOrderModal "
+// import GlobalOnlineOrderModal from "./pages/onlineOrder/components/GlobalOnlineOrderModal/GlobalOnlineOrderModal"
 
 function App() {
   const location = useLocation();
@@ -99,7 +99,7 @@ function App() {
 
               </Routes>
             </div>
-            <GlobalOnlineOrderModal />
+            {/* <GlobalOnlineOrderModal /> */}
           </div>
         </div>
       )}
