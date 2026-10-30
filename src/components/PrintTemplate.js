@@ -85,53 +85,117 @@ const PrintTemplate = ({
             <div style={{ borderTop: "1px dashed #000", margin: "2px 0" }} />
 
             {/* ITEMS */}
-            {items.map((item, i) => (
-                <div key={i} style={{ marginBottom: "2px" }}>
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            fontWeight: isBill ? "normal" : "bold"
-                        }}
-                    >
-                        <span style={{
-                            width: isBill ? "130px" : "100%",
-                            wordWrap: "break-word",
-                            fontSize: isBill ? "11px" : "12px",
-                            fontWeight: "600"
-                        }}>
-                            {item.quantity}x {item.name}
-                            {item.sizeName ? ` (${item.sizeName})` : ""}
-                        </span>
+            {items.map((item, i) => {
+                const quantity = Number(item.quantity) || 0;
 
-                        {isBill && (
-                            <span style={{
-                                width: "60px",
-                                textAlign: "right",
-                                whiteSpace: "nowrap",
-                                paddingRight: "4px",
-                                fontWeight: "600"
-                            }}>
-                                ₹{(parseFloat(item.finalPrice ?? item.selectedPrice ?? item.price ?? 0) || 0).toFixed(2)}
-                            </span>
-                        )}
+                const unitPrice =
+                    Number(item.unit_price) ||
+                    Number(item.selectedPrice) ||
+                    Number(item.price) ||
+                    Number(item.basePrice) ||
+                    (
+                        Number(item.finalPrice) && quantity > 0
+                            ? Number(item.finalPrice) / quantity
+                            : 0
+                    );
+
+                // Total price for this item
+                const itemTotal = unitPrice * quantity;
+
+                return (
+                    <div key={i} style={{ marginBottom: "4px" }}>
+                        <div
+                            style={{
+                                display: "flex",
+                                alignItems: "flex-start",
+                                fontWeight: isBill ? "normal" : "bold"
+                            }}
+                        >
+                            {/* LEFT SIDE */}
+                            <div
+                                style={{
+                                    width: isBill ? "130px" : "100%",
+                                    borderBottom: isBill ? "1px dashed #000" : "none",
+                                    paddingBottom: "2px"
+                                }}
+                            >
+                                <span
+                                    style={{
+                                        wordWrap: "break-word",
+                                        fontSize: isBill ? "11px" : "12px",
+                                        fontWeight: "600"
+                                    }}
+                                >
+                                    {quantity}x {item.name}
+                                    {item.sizeName ? ` (${item.sizeName})` : ""}
+                                </span>
+
+                                {/* UNIT PRICE */}
+                                {isBill && (
+                                    <div
+                                        style={{
+                                            fontSize: "9px",
+                                            marginLeft: "4px",
+                                            fontWeight: "600"
+                                        }}
+                                    >
+                                        ₹{unitPrice.toFixed(2)}
+                                    </div>
+                                )}
+
+                                {/* ADDONS */}
+                                {item.addons?.length > 0 && (
+                                    <div
+                                        style={{
+                                            fontSize: "9px",
+                                            marginLeft: "4px",
+                                            lineHeight: "1.1",
+                                            fontWeight: "bold"
+                                        }}
+                                    >
+                                        {item.addons.map((addon, idx) => (
+                                            <div key={idx}>
+                                                + {addon.name || addon}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* INSTRUCTIONS */}
+                                {item.special_instructions && (
+                                    <div
+                                        style={{
+                                            fontSize: "9px",
+                                            marginLeft: "4px",
+                                            lineHeight: "1.1",
+                                            fontWeight: "bold"
+                                        }}
+                                    >
+                                        <div>+ {item.special_instructions}</div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* TOTAL ITEM PRICE */}
+                            {isBill && (
+                                <span
+                                    style={{
+                                        width: "60px",
+                                        textAlign: "right",
+                                        whiteSpace: "nowrap",
+                                        paddingRight: "4px",
+                                        fontWeight: "600",
+                                        fontSize: "11px"
+                                    }}
+                                >
+                                    ₹{itemTotal.toFixed(2)}
+                                </span>
+                            )}
+                        </div>
                     </div>
+                );
+            })}
 
-                    {/* ADDONS */}
-                    {item.addons?.length > 0 && (
-                        <div style={{ fontSize: "9px", marginLeft: "4px", lineHeight: "1.1", fontWeight: "bold" }}>
-                            {item.addons.map((addon, idx) => (
-                                <div key={idx}>+ {addon.name || addon} </div>
-                            ))}
-                        </div>
-                    )}
-                    {item.instructions && (
-                        <div style={{ fontSize: "9px", marginLeft: "4px", lineHeight: "1.1", fontWeight: "bold" }}>
-                            <div>+ {item.instructions}</div>
-                        </div>
-                    )}
-                </div>
-            ))}
             {orderNotes && (
                 <>
                     <div style={{ borderTop: "1px dashed #000", margin: "4px 0" }} />

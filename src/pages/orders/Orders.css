@@ -466,6 +466,7 @@
 .action-buttons {
     display: flex;
     gap: 8px;
+     
 }
 
 .btn-update,

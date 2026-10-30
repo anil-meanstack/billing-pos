@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import PrintTemplate from "../../components/PrintTemplate";
+import PdfTemplate from "../../components/PdfTemplate";
 import { loadTablesFromApi } from "../../features/table/tableSlice";
 import { useDispatch } from "react-redux";
 
@@ -8,11 +9,13 @@ const OrderDetailsModal = ({
     lastOrder = {},
     setShowReceiptModal,
     printContent,
+    receiptMode = "print",
 }) => {
     const navigate = useNavigate();
     const receiptRef = useRef();
     const billRef = useRef();
-    const dispatch=useDispatch()
+    const billRefs = useRef();
+    const dispatch = useDispatch()
     if (!lastOrder || !lastOrder.items) return null;
 
     const getAuthData = () => {
@@ -33,11 +36,11 @@ const OrderDetailsModal = ({
             restaurant: auth?.currentRestaurant?.name || "No Restaurant Selected",
             address: auth?.currentRestaurant?.address || "",
             gst_number: auth?.currentRestaurant?.gst_number || "",
-            fssai_number:auth?.currentRestaurant?.fssai_number || ""
+            fssai_number: auth?.currentRestaurant?.fssai_number || ""
         };
     };
 
-    const { restaurant, address, gst_number ,fssai_number} = restaurantName();
+    const { restaurant, address, gst_number, fssai_number } = restaurantName();
 
     const getOrderDateTime = (order) => {
         return order?.created_at || order?.time || null;
@@ -166,6 +169,7 @@ const OrderDetailsModal = ({
                                 }} >
                                 Close
                             </button>
+                              {receiptMode === "print" && (
                             <button className="btn btn-print w-50" onClick={async () => {
                                 if (window.electronAPI) {
                                     const content = billRef.current.innerHTML;
@@ -179,11 +183,73 @@ const OrderDetailsModal = ({
                             }} >
                                 Print
                             </button>
+                              )}
+
+                             {receiptMode === "pdf" && (
+                            <button
+                                className="btn btn-print w-50"
+                                style={{
+                                    flex: 1
+                                }}
+                                onClick={async () => {
+                                    try {
+
+                                        const content = billRefs.current.innerHTML;
+
+                                        const result = await window.electronAPI.downloadBillPdf(
+                                                content,
+                                                lastOrder?.daily_number
+                                            );
+
+
+                                        if (result.success) {
+
+                                            alert(
+                                                "PDF saved successfully!"
+                                            );
+
+                                            console.log(
+                                                "PDF saved at:",
+                                                result.filePath
+                                            );
+
+                                        } else if (result.cancelled) {
+
+                                            console.log(
+                                                "PDF save cancelled"
+                                            );
+
+                                        } else {
+
+                                            alert(
+                                                `PDF failed: ${result.error || "Unknown error"}`
+                                            );
+
+                                        }
+
+                                    } catch (error) {
+
+                                        console.error(
+                                            "PDF download error:",
+                                            error
+                                        );
+
+                                        alert(
+                                            "Unable to generate PDF"
+                                        );
+
+                                    }
+
+                                }}
+                            >
+                                📄 PDF
+                            </button>
+                            )}
                         </div>
                     </div>
                 </div>
             </div>
-
+  
             <div style={{ position: "fixed", top: 0, left: 0, opacity: 0, pointerEvents: "none" }}  >
                 <div ref={billRef}>
                     <PrintTemplate
@@ -198,8 +264,32 @@ const OrderDetailsModal = ({
                         restaurant={restaurant}
                         gst_number={gst_number}
                         fssai_number={fssai_number}
-                        customerName={lastOrder?.customer_name_display ?? lastOrder?.customerName }
-                        customerPhone={lastOrder?.customer_phone ?? lastOrder?.customerPhone }
+                        customerName={lastOrder?.customer_name_display ?? lastOrder?.customerName}
+                        customerPhone={lastOrder?.customer_phone ?? lastOrder?.customerPhone}
+                        customerAddress={lastOrder?.customer_address}
+                        orderNotes={lastOrder?.order_notes}
+                        discountAmount={lastOrder?.discount_amount}
+                        restaurantAddress={address}
+                        orderNumber={lastOrder?.daily_number}
+                    />
+                </div>
+            </div>
+            <div style={{ position: "fixed", top: 0, left: 0, opacity: 0, pointerEvents: "none" }}  >
+                <div ref={billRefs}>
+                    <PdfTemplate
+                        type="bill"
+                        items={lastOrder.items}
+                        tableNumber={lastOrder.tableNumber ?? lastOrder.table_number}
+                        orderType={lastOrder.order_type_display ?? lastOrder.orderType}
+                        subtotal={lastOrder.subtotal}
+                        tax_breakdown={lastOrder.tax_breakdown}
+                        total_amount={lastOrder.total_amount}
+                        paymentMethod={lastOrder.paymentMethod ?? lastOrder.payment_method_display}
+                        restaurant={restaurant}
+                        gst_number={gst_number}
+                        fssai_number={fssai_number}
+                        customerName={lastOrder?.customer_name_display ?? lastOrder?.customerName}
+                        customerPhone={lastOrder?.customer_phone ?? lastOrder?.customerPhone}
                         customerAddress={lastOrder?.customer_address}
                         orderNotes={lastOrder?.order_notes}
                         discountAmount={lastOrder?.discount_amount}

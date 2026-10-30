@@ -23,6 +23,7 @@ const Orders = () => {
     const [cancelOrderId, setCancelOrderId] = useState(null);
     const [selectedDate, setSelectedDate] = useState(null);
     const [selectedOrderType, setSelectedOrderType] = useState("all");
+    const [receiptMode, setReceiptMode] = useState("print");
 
     const orderOptions = [
         { value: "all", label: "All Orders" },
@@ -165,21 +166,6 @@ const Orders = () => {
             filtered = filtered.filter(order => order.status === selectedCategory);
         }
 
-        // if (selectedDate) {
-        //     filtered = filtered.filter(order => {
-        //         if (!order.created_at) return false;
-
-        //         const orderDate = new Date(order.created_at);
-        //         // const selected = new Date(selectedDate);
-        //         const selected = selectedDate;
-
-        //         return (
-        //             orderDate.getFullYear() === selected.getFullYear() &&
-        //             orderDate.getMonth() === selected.getMonth() &&
-        //             orderDate.getDate() === selected.getDate()
-        //         );
-        //     });
-        // }
         if (selectedDate) {
             filtered = filtered.filter(order => {
                 if (!order.created_at) return false;
@@ -382,18 +368,6 @@ const Orders = () => {
                                 </button>
                             )}
                         </div>
-                        {/* {selectedDate && (
-                            <select
-                                value={selectedOrderType}
-                                onChange={(e) => setSelectedOrderType(e.target.value)}
-                                className="order-type-filter"
-                            >
-                                <option value="all">All Orders</option>
-                                <option value="dine_in">Dine In</option>
-                                <option value="takeaway">Takeaway</option>
-                                <option value="delivery">Delivery</option>
-                            </select>
-                        )} */}
                         {selectedDate && 
                         <Select
                             options={orderOptions}
@@ -643,7 +617,8 @@ const Orders = () => {
                         </div>
                         <div className="order-footer">
 
-                            {(order.status || "").toLowerCase() !== "completed" &&
+                            <div className="d-flex gap-3">
+                                {(order.status || "").toLowerCase() !== "completed" &&
                                 orderFlow[order.status] && (
                                     <button
                                         className={`btn-update start-btn ${order.status === 'preparing' || order.status === 'ready'
@@ -659,10 +634,12 @@ const Orders = () => {
                             <div className="action-buttons">
                                 <button className="btn-view" onClick={() => {
                                     setSelectedOrder(order);
+                                    setReceiptMode("print");
                                     setShowReceiptModal(true);
                                 }}>
-                                    🧾 Receipt
+                                    🧾 Print Receipt
                                 </button>
+                                
                             </div>
 
                             {order.status !== "completed" && (
@@ -678,7 +655,17 @@ const Orders = () => {
                                     </button>
                                 </div>
                             )}
-
+                            </div>
+                               <div className="action-buttons">
+                                <button className="btn-view" onClick={() => {
+                                    setSelectedOrder(order);
+                                    setReceiptMode("pdf");
+                                    setShowReceiptModal(true);
+                                }}>
+                                    🧾 Pdf
+                                </button>
+                                
+                            </div>
                         </div>
                     </div>
                 ))}
@@ -688,6 +675,7 @@ const Orders = () => {
                 <OrderDetailsModal
                     lastOrder={selectedOrder}
                     setShowReceiptModal={setShowReceiptModal}
+                    receiptMode={receiptMode}
                 />
             )}
 

@@ -362,7 +362,7 @@ const OnlineOrders = () => {
   }, [orders]);
   const createAudio = useCallback(() => {
     if (!audioRef.current) {
-      audioRef.current = new Audio(SOUND_PATH);
+      audioRef.current = new Audio("");
       audioRef.current.loop = true;
     }
 
